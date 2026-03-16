@@ -1,0 +1,351 @@
+import React, { useState } from "react";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Users,
+  Gift,
+  Wallet,
+  History,
+  LogOut,
+  Menu,
+  X,
+  ChevronDown,
+  Bell,
+  User,
+  CreditCard,
+  HelpCircle,
+  Plus,
+  ChevronRight,
+} from "lucide-react";
+
+const Layout = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  const navigation = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      current: location.pathname === "/dashboard",
+    },
+    {
+      name: "Investments",
+      href: "/investments",
+      icon: TrendingUp,
+      current: location.pathname.startsWith("/investments"),
+    },
+    {
+      name: "Referrals",
+      href: "/referrals",
+      icon: Users,
+      current: location.pathname === "/referrals",
+    },
+    {
+      name: "Bonuses",
+      href: "/bonuses",
+      icon: Gift,
+      current: location.pathname === "/bonuses",
+    },
+    {
+      name: "Transactions",
+      href: "/transactions",
+      icon: History,
+      current: location.pathname === "/transactions",
+    },
+    {
+      name: "Withdrawals",
+      href: "/withdrawals",
+      icon: Wallet,
+      current: location.pathname === "/withdrawals",
+    },
+  ];
+
+  const bottomNavigation = [
+    {
+      name: "Profile",
+      href: "/profile",
+      icon: User,
+      current: location.pathname === "/profile",
+    },
+    {
+      name: "Help & Support",
+      href: "/support",
+      icon: HelpCircle,
+      current: location.pathname === "/support",
+    },
+  ];
+
+  const currentPage =
+    [...navigation, ...bottomNavigation].find((item) => item.current)?.name ||
+    "Dashboard";
+
+  return (
+    <div className="min-h-screen bg-[#f4f6f9] font-sans">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── SIDEBAR ── */}
+      <aside
+        className={`fixed inset-y-0 left-0 w-60 bg-[#0b0f1a] flex flex-col z-30 transform transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+      >
+        {/* Subtle top accent line */}
+        <div className="h-0.5 w-full bg-gradient-to-r from-blue-500 via-emerald-400 to-transparent" />
+
+        {/* Logo */}
+        <div className="flex items-center justify-between px-5 h-16 shrink-0">
+          <Link to="/dashboard" className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <span className="text-white font-bold text-sm leading-none">
+                A
+              </span>
+            </div>
+            <span className="text-white font-bold tracking-tight text-base">
+              APEX<span className="text-emerald-400 font-light">Trading</span>
+            </span>
+          </Link>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden text-white/40 hover:text-white transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* User card */}
+        <div className="mx-3 mb-4 rounded-xl bg-white/5 border border-white/8 px-3 py-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-semibold text-sm shadow-md shrink-0">
+            {user?.firstName?.[0] || user?.email?.[0] || "U"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-white text-sm font-medium truncate leading-tight">
+              {user?.firstName || "User"}
+            </p>
+            <p className="text-white/40 text-xs truncate leading-tight mt-0.5">
+              {user?.email}
+            </p>
+          </div>
+        </div>
+
+        {/* Section label */}
+        <p className="px-5 text-[10px] font-semibold uppercase tracking-widest text-white/25 mb-1.5">
+          Menu
+        </p>
+
+        {/* Main nav */}
+        <nav className="flex-1 overflow-y-auto px-3 space-y-0.5 pb-4">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => setSidebarOpen(false)}
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
+                  ${
+                    item.current
+                      ? "bg-gradient-to-r from-blue-600/80 to-emerald-600/80 text-white shadow-sm shadow-blue-900/40"
+                      : "text-white/50 hover:text-white hover:bg-white/6"
+                  }`}
+              >
+                <Icon
+                  className={`w-4 h-4 shrink-0 transition-colors ${
+                    item.current
+                      ? "text-white"
+                      : "text-white/40 group-hover:text-white/80"
+                  }`}
+                />
+                <span className="truncate">{item.name}</span>
+                {item.current && (
+                  <ChevronRight className="w-3.5 h-3.5 ml-auto opacity-60" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Bottom nav */}
+        <div className="px-3 pb-4 border-t border-white/8 pt-3 space-y-0.5">
+          {bottomNavigation.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={() => setSidebarOpen(false)}
+                className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
+                  ${
+                    item.current
+                      ? "bg-white/10 text-white"
+                      : "text-white/40 hover:text-white hover:bg-white/6"
+                  }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+          <button
+            onClick={() => {
+              handleLogout();
+              setSidebarOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ── MAIN AREA ── */}
+      <div className="lg:pl-60 flex flex-col min-h-screen">
+        {/* ── TOPBAR ── */}
+        <header className="fixed top-0 right-0 left-0 lg:left-60 h-14 bg-white/90 backdrop-blur-md border-b border-gray-200/70 z-10 flex items-center px-4 lg:px-6 gap-4">
+          {/* Hamburger */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          {/* Breadcrumb / page title */}
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-gray-400 text-xs hidden sm:inline">
+              APEX Trading
+            </span>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-300 hidden sm:inline" />
+            <span className="text-gray-800 text-sm font-semibold truncate">
+              {currentPage}
+            </span>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {/* New Investment CTA */}
+            <Link
+              to="/investments/create"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-emerald-500 text-white rounded-lg text-xs font-semibold shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 transition-all duration-200"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Investment
+            </Link>
+
+            {/* Mobile CTA — icon only */}
+            <Link
+              to="/investments/create"
+              className="sm:hidden flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-emerald-500 text-white rounded-lg shadow-sm hover:shadow-md transition-all"
+            >
+              <Plus className="w-4 h-4" />
+            </Link>
+
+            {/* Notifications */}
+            <button className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white" />
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-200 hidden md:block" />
+
+            {/* Profile dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-semibold text-xs shadow-sm">
+                  {user?.firstName?.[0] || user?.email?.[0] || "U"}
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-xs font-semibold text-gray-700 leading-tight">
+                    {user?.firstName || "User"}
+                  </p>
+                </div>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${showProfileMenu ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {showProfileMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowProfileMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20 overflow-hidden">
+                    {/* Mini user info */}
+                    <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
+                      <p className="text-xs font-semibold text-gray-800">
+                        {user?.firstName || "User"}
+                      </p>
+                      <p className="text-[11px] text-gray-400 truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <User className="w-3.5 h-3.5 text-gray-400" />
+                      Profile
+                    </Link>
+                    <Link
+                      to="/profile#bank"
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+                      Bank Details
+                    </Link>
+                    <div className="border-t border-gray-100 my-1" />
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        handleLogout();
+                      }}
+                      className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* ── PAGE CONTENT ── */}
+        <main className="flex-1 pt-14">
+          <div className="px-4 lg:px-8 py-7">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default Layout;
