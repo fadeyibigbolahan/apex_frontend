@@ -15,6 +15,7 @@ import AdminLayout from "./components/AdminLayout";
 const HomePage = lazy(() => import("./pages/HomePage"));
 const Login = lazy(() => import("./pages/SigninPage"));
 const Register = lazy(() => import("./pages/SignupPage"));
+const Support = lazy(() => import("./pages/SupportPage"));
 
 // User Pages
 const UserDashboard = lazy(() => import("./pages/DashboardPage"));
@@ -117,6 +118,15 @@ function App() {
         </ProtectedRoute>
       ),
       children: [{ index: true, element: <WithdrawalsPage /> }],
+    },
+    {
+      path: "/support",
+      element: (
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      ),
+      children: [{ index: true, element: <Support /> }],
     },
 
     // Admin Routes (with AdminLayout)

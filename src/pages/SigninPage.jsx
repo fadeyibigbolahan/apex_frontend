@@ -78,6 +78,7 @@ const Login = () => {
         1000,
       );
     } catch (err) {
+      console.log("error signin", err);
       setError(
         err.response?.data?.message || "Invalid credentials. Please try again.",
       );
