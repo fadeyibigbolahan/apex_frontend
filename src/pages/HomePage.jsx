@@ -29,6 +29,7 @@ import {
   DollarSign,
   Calendar,
 } from "lucide-react";
+import apex from "../assets/apex.jpeg";
 
 // ─── tiny helpers ────────────────────────────────────────────────────────────
 const formatCurrency = (n) =>
@@ -51,15 +52,15 @@ const packages = [
   {
     id: "apex1",
     name: "APEX 1",
-    accent: "#2563EB",
-    accentLight: "#EFF6FF",
-    accentMid: "#BFDBFE",
+    accent: "#9333EA",
+    accentLight: "#F3E8FF",
+    accentMid: "#D8B4FE",
     icon: Zap,
-    returnRate: 30, // Changed to number
+    returnRate: 30,
     duration: "10 working days",
     payments: "2 payments · 50% each",
-    minAmount: 10000, // Changed to number
-    maxAmount: 500000, // Changed to number
+    minAmount: 10000,
+    maxAmount: 500000,
     features: [
       "Perfect entry point",
       "Returns in 10 working days",
@@ -71,15 +72,15 @@ const packages = [
   {
     id: "apex2",
     name: "APEX 2",
-    accent: "#059669",
-    accentLight: "#ECFDF5",
-    accentMid: "#A7F3D0",
+    accent: "#A855F7",
+    accentLight: "#FAF5FF",
+    accentMid: "#E9D5FF",
     icon: TrendingUp,
-    returnRate: 50, // Changed to number
+    returnRate: 50,
     duration: "15 working days",
     payments: "3 equal payments",
-    minAmount: 20000, // Changed to number
-    maxAmount: 1000000, // Changed to number
+    minAmount: 20000,
+    maxAmount: 1000000,
     features: [
       "Maximum return potential",
       "3 staggered withdrawals",
@@ -96,43 +97,43 @@ const features = [
     icon: Shield,
     title: "Bank-grade security",
     desc: "256-bit encryption protects every transaction and your personal data.",
-    color: "#2563EB",
-    bg: "#EFF6FF",
+    color: "#9333EA",
+    bg: "rgba(147, 51, 234, 0.15)",
   },
   {
     icon: Zap,
     title: "Fast withdrawals",
     desc: "Automated payouts every 5 working days, no waiting, no friction.",
-    color: "#059669",
-    bg: "#ECFDF5",
+    color: "#A855F7",
+    bg: "rgba(168, 85, 247, 0.15)",
   },
   {
     icon: Gift,
     title: "Referral bonuses",
     desc: "Earn 5% one-time bonus every time a friend you refer invests.",
-    color: "#7C3AED",
-    bg: "#F5F3FF",
+    color: "#C084FC",
+    bg: "rgba(192, 132, 252, 0.15)",
   },
   {
     icon: TrendingUp,
     title: "Retrading bonus",
     desc: "Reinvest before full payout and receive an extra 3% on your new amount.",
-    color: "#EA580C",
-    bg: "#FFF7ED",
+    color: "#D8B4FE",
+    bg: "rgba(216, 180, 254, 0.15)",
   },
   {
     icon: Users,
     title: "Growing community",
     desc: "Over 15,000 active investors building wealth on the platform.",
-    color: "#DB2777",
-    bg: "#FDF2F8",
+    color: "#9333EA",
+    bg: "rgba(147, 51, 234, 0.15)",
   },
   {
     icon: Clock,
     title: "24/7 support",
     desc: "Our team is available around the clock to assist with any questions.",
-    color: "#4F46E5",
-    bg: "#EEF2FF",
+    color: "#A855F7",
+    bg: "rgba(168, 85, 247, 0.15)",
   },
 ];
 
@@ -168,7 +169,7 @@ const testimonials = [
     name: "Oluwaseun A.",
     location: "Lagos",
     initials: "OA",
-    bg: "#2563EB",
+    bg: "linear-gradient(135deg, #9333EA, #A855F7)",
     investment: "APEX 2 · ₦500k",
     profit: "₦750,000",
     rating: 5,
@@ -180,7 +181,7 @@ const testimonials = [
     name: "Chioma M.",
     location: "Abuja",
     initials: "CM",
-    bg: "#059669",
+    bg: "linear-gradient(135deg, #A855F7, #C084FC)",
     investment: "APEX 1 · ₦200k",
     profit: "₦260,000",
     rating: 5,
@@ -192,7 +193,7 @@ const testimonials = [
     name: "Ahmed K.",
     location: "Kano",
     initials: "AK",
-    bg: "#7C3AED",
+    bg: "linear-gradient(135deg, #7E22CE, #9333EA)",
     investment: "APEX 2 · ₦1M",
     profit: "₦1,500,000",
     rating: 5,
@@ -277,62 +278,112 @@ const HomePage = () => {
     handleInitialScroll();
   }, []);
 
-  // Starfield canvas animation
+  // Animated stars and light effect
   useEffect(() => {
-    const c = document.getElementById("starfield");
-    if (!c) return;
-    const ctx = c.getContext("2d");
-    const resize = () => {
-      c.width = c.offsetWidth;
-      c.height = c.offsetHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    const stars = Array.from({ length: 240 }, () => ({
-      x: Math.random(),
-      y: Math.random(),
-      r: Math.random() * 1.4 + 0.2,
-      o: Math.random() * 0.65 + 0.15,
-      speed: Math.random() * 0.004 + 0.001,
-      t: Math.random() * Math.PI * 2,
-    }));
-    const blooms = Array.from({ length: 10 }, () => ({
-      x: Math.random(),
-      y: Math.random() * 0.75,
-      r: Math.random() * 2 + 1.5,
-      o: Math.random() * 0.35 + 0.15,
-      speed: Math.random() * 0.002 + 0.0005,
-      t: Math.random() * Math.PI * 2,
-    }));
-    let raf;
-    const draw = () => {
-      ctx.clearRect(0, 0, c.width, c.height);
-      stars.forEach((s) => {
-        s.t += s.speed;
-        const opacity = s.o * (0.4 + 0.6 * Math.sin(s.t));
-        ctx.beginPath();
-        ctx.arc(s.x * c.width, s.y * c.height, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${opacity})`;
-        ctx.fill();
-      });
-      blooms.forEach((s) => {
-        s.t += s.speed;
-        const opacity = s.o * (0.4 + 0.6 * Math.sin(s.t));
-        ctx.beginPath();
-        ctx.arc(s.x * c.width, s.y * c.height, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${opacity})`;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(s.x * c.width, s.y * c.height, s.r * 4, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(160,200,255,${opacity * 0.12})`;
-        ctx.fill();
-      });
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
+    const container = document.getElementById("stars-container");
+    if (!container) return;
+
+    // Create stars
+    for (let i = 0; i < 150; i++) {
+      const star = document.createElement("div");
+      star.className = "star";
+
+      // Random position
+      const left = Math.random() * 100;
+      const top = Math.random() * 100;
+
+      // Random size (0.5px to 3px)
+      const size = Math.random() * 2.5 + 0.5;
+
+      // Random animation duration (2s to 6s)
+      const duration = Math.random() * 4 + 2;
+
+      // Random delay
+      const delay = Math.random() * 5;
+
+      // Random opacity
+      const opacity = Math.random() * 0.7 + 0.3;
+
+      star.style.cssText = `
+        position: absolute;
+        left: ${left}%;
+        top: ${top}%;
+        width: ${size}px;
+        height: ${size}px;
+        background: white;
+        border-radius: 50%;
+        opacity: ${opacity};
+        box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, 0.8);
+        animation: twinkle ${duration}s ease-in-out infinite;
+        animation-delay: ${delay}s;
+      `;
+
+      container.appendChild(star);
+    }
+
+    // Create larger glowing orbs
+    for (let i = 0; i < 20; i++) {
+      const orb = document.createElement("div");
+      orb.className = "orb";
+
+      const left = Math.random() * 100;
+      const top = Math.random() * 100;
+      const size = Math.random() * 150 + 50;
+      const duration = Math.random() * 20 + 20;
+      const delay = Math.random() * 10;
+
+      // Random color from purple palette
+      const colors = ["#481B73", "#5A2A71", "#723A69", "#8A4A61"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      orb.style.cssText = `
+        position: absolute;
+        left: ${left}%;
+        top: ${top}%;
+        width: ${size}px;
+        height: ${size}px;
+        background: radial-gradient(circle at 30% 30%, ${color}80, transparent 70%);
+        border-radius: 50%;
+        filter: blur(40px);
+        animation: float ${duration}s ease-in-out infinite;
+        animation-delay: ${delay}s;
+        pointer-events: none;
+      `;
+
+      container.appendChild(orb);
+    }
+
+    // Create shooting stars
+    for (let i = 0; i < 10; i++) {
+      const shootingStar = document.createElement("div");
+      shootingStar.className = "shooting-star";
+
+      const startX = Math.random() * 100;
+      const startY = Math.random() * 100;
+      const delay = Math.random() * 15;
+      const duration = Math.random() * 3 + 2;
+
+      shootingStar.style.cssText = `
+        position: absolute;
+        left: ${startX}%;
+        top: ${startY}%;
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3), transparent);
+        transform: rotate(-45deg);
+        filter: blur(1px);
+        animation: shoot ${duration}s linear infinite;
+        animation-delay: ${delay}s;
+        opacity: 0;
+      `;
+
+      container.appendChild(shootingStar);
+    }
+
     return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(raf);
+      if (container) {
+        container.innerHTML = "";
+      }
     };
   }, []);
 
@@ -354,7 +405,6 @@ const HomePage = () => {
       return;
     }
     const numValue = parseInt(value);
-    // Clamp to min/max
     const clampedValue = Math.min(
       Math.max(numValue, currentPackage.minAmount),
       currentPackage.maxAmount,
@@ -366,7 +416,6 @@ const HomePage = () => {
   const handlePackageSelect = (pkgName) => {
     setSelectedPackage(pkgName);
     const pkg = packages.find((p) => p.name === pkgName);
-    // Adjust amount if outside new package limits
     if (pkg) {
       let newAmount = investmentAmount;
       if (investmentAmount < pkg.minAmount) {
@@ -394,13 +443,11 @@ const HomePage = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  // Helper function to handle scroll to section
   const scrollToSection = (sectionId) => {
     setMobileMenuOpen(false);
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
-      // Update URL hash without causing a page jump
       window.history.pushState(null, "", `#${sectionId}`);
     }
   };
@@ -415,15 +462,23 @@ const HomePage = () => {
 
   return (
     <div
-      className="min-h-screen bg-white"
+      className="min-h-screen relative"
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
         .serif { font-family: 'DM Serif Display', Georgia, serif; }
-        .hero-grid { background-image: radial-gradient(circle, #d1d5db 1px, transparent 1px); background-size: 28px 28px; }
-        .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 60px -12px rgba(0,0,0,0.12); }
+        .card-hover { 
+          transition: transform 0.25s ease, box-shadow 0.25s ease; 
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+        .card-hover:hover { 
+          transform: translateY(-4px); 
+          box-shadow: 0 20px 60px -12px rgba(147, 51, 234, 0.3);
+          border-color: rgba(147, 51, 234, 0.4);
+        }
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         input[type=number]::-webkit-inner-spin-button, 
@@ -432,23 +487,125 @@ const HomePage = () => {
           margin: 0; 
         }
         input[type=number] { -moz-appearance: textfield; }
+        
+        /* Glass morphism effects */
+        .glass-card {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+        .glass-card:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(147, 51, 234, 0.4);
+        }
+        
+        /* Text contrast improvements */
+        .text-on-dark {
+          color: rgba(255, 255, 255, 0.95);
+        }
+        .text-on-dark-secondary {
+          color: rgba(255, 255, 255, 0.7);
+        }
+        .text-on-dark-muted {
+          color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Increased font sizes for body text */
+        body p, body li, body .text-sm, body .text-base {
+          font-size: 1rem !important;
+        }
+        .text-lg {
+          font-size: 1.125rem !important;
+        }
+        .stat-value {
+          font-size: 1.25rem !important;
+        }
+        .stat-label {
+          font-size: 0.875rem !important;
+        }
+
+        /* Star animations */
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(2%, 2%) scale(1.05); }
+          50% { transform: translate(-1%, 3%) scale(0.95); }
+          75% { transform: translate(-2%, -1%) scale(1.02); }
+        }
+
+        @keyframes shoot {
+          0% {
+            transform: translateX(0) translateY(0) rotate(-45deg);
+            opacity: 1;
+          }
+          70% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(300px) translateY(300px) rotate(-45deg);
+            opacity: 0;
+          }
+        }
+
+        #stars-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 1;
+          overflow: hidden;
+        }
+
+        .star, .orb, .shooting-star {
+          will-change: transform, opacity;
+        }
       `}</style>
 
+      {/* Gradient Background */}
+      <div
+        className="fixed inset-0 w-full h-full"
+        style={{
+          background:
+            "linear-gradient(135deg, #1a0b2e 0%, #2d1b3a 40%, #3d2a3a 70%, #4d353a 100%)",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Stars Container */}
+      <div id="stars-container" />
+
+      {/* Subtle radial gradient overlay for depth */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 40%, rgba(114, 58, 105, 0.15) 0%, transparent 60%), radial-gradient(circle at 70% 60%, rgba(72, 27, 115, 0.1) 0%, transparent 60%)",
+          zIndex: 2,
+        }}
+      />
+
       {/* ── NAV ── */}
-      <nav className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <nav
+        className="fixed top-0 w-full z-50 bg-black/40 backdrop-blur-xl border-b border-purple-500/20"
+        style={{ zIndex: 50 }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link
             to="/"
             className="flex items-center gap-2.5"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm tracking-tight">
-                A
-              </span>
+            <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
+              <img src={apex} alt="apex logo" />
             </div>
-            <span className="font-semibold text-gray-900 text-lg tracking-tight">
-              APEX <span className="text-emerald-600 font-normal">Trading</span>
+            <span className="font-semibold text-white text-lg tracking-tight">
+              APEX <span className="text-purple-300 font-normal">Trading</span>
             </span>
           </Link>
 
@@ -457,7 +614,7 @@ const HomePage = () => {
               <button
                 key={l.id}
                 onClick={() => scrollToSection(l.id)}
-                className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                className="text-base text-gray-300 hover:text-white transition-colors"
               >
                 {l.label}
               </button>
@@ -467,13 +624,13 @@ const HomePage = () => {
           <div className="hidden md:flex items-center gap-3">
             <button
               onClick={() => navigate("/login")}
-              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition"
+              className="text-base text-gray-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition"
             >
               Sign in
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition shadow-sm"
+              className="text-base font-medium text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 px-4 py-2 rounded-lg transition shadow-lg shadow-purple-600/30"
             >
               Get started
             </button>
@@ -481,7 +638,7 @@ const HomePage = () => {
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+            className="md:hidden p-2 rounded-lg hover:bg-white/10 transition text-white"
           >
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -493,28 +650,28 @@ const HomePage = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t border-gray-100 bg-white overflow-hidden"
+              className="md:hidden border-t border-purple-500/20 bg-black/60 backdrop-blur-xl overflow-hidden"
             >
               <div className="px-4 py-4 space-y-1">
                 {navLinks.map((l) => (
                   <button
                     key={l.id}
                     onClick={() => scrollToSection(l.id)}
-                    className="block w-full text-left py-2.5 px-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition"
+                    className="block w-full text-left py-2.5 px-3 text-base text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition"
                   >
                     {l.label}
                   </button>
                 ))}
-                <div className="pt-3 space-y-2 border-t border-gray-100 mt-3">
+                <div className="pt-3 space-y-2 border-t border-purple-500/20 mt-3">
                   <button
                     onClick={() => navigate("/login")}
-                    className="w-full py-2.5 text-sm border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                    className="w-full py-2.5 text-base border border-purple-500/30 text-white rounded-lg hover:bg-white/10 transition"
                   >
                     Sign in
                   </button>
                   <button
                     onClick={() => navigate("/register")}
-                    className="w-full py-2.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    className="w-full py-2.5 text-base font-medium bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition"
                   >
                     Get started
                   </button>
@@ -525,700 +682,691 @@ const HomePage = () => {
         </AnimatePresence>
       </nav>
 
-      {/* ── HERO ── */}
-      <section className="pt-28 pb-20 md:pt-36 md:pb-28 relative overflow-hidden">
-        {/* Deep space base */}
-        <div className="absolute inset-0 bg-[#050818]" />
-        {/* Nebula layers */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 60% 40%, rgba(37,99,235,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 20% 70%, rgba(5,150,105,0.14) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 80% 80%, rgba(124,58,237,0.12) 0%, transparent 50%)",
-          }}
-        />
-        {/* Star field */}
-        <canvas
-          id="starfield"
-          className="absolute inset-0 w-full h-full pointer-events-none"
-        />
-        {/* Soft vignette at bottom to blend into white sections */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
-        <style>{`
-          #starfield { opacity: 0.9; }
-        `}</style>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left */}
-            <motion.div
-              initial={{ opacity: 0, x: -24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="inline-flex items-center gap-2 bg-white/10 text-blue-200 px-3.5 py-1.5 rounded-full text-xs font-medium mb-8 border border-white/15 backdrop-blur-sm">
-                <Sparkles className="w-3.5 h-3.5" />
-                Trusted by 15,000+ investors across Nigeria
-              </div>
-
-              <h1 className="serif text-5xl md:text-6xl lg:text-7xl text-white leading-[1.05] mb-6">
-                Grow your wealth
-                <br />
-                <em className="not-italic text-emerald-400">intelligently.</em>
-              </h1>
-
-              <p className="text-lg text-gray-300 leading-relaxed mb-10 max-w-md">
-                Earn up to{" "}
-                <strong className="text-white font-semibold">
-                  50% returns
-                </strong>{" "}
-                in 15 working days. Start with as little as ₦10,000 and withdraw
-                on a predictable schedule.
-              </p>
-
-              <div className="flex flex-wrap gap-3 mb-14">
-                <button
-                  onClick={() => navigate("/register")}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-900/60"
-                >
-                  Start investing <ArrowRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setShowReferralModal(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 text-white text-sm font-semibold rounded-xl border border-white/20 hover:bg-white/15 transition backdrop-blur-sm"
-                >
-                  <Gift className="w-4 h-4 text-emerald-400" /> Get referral
-                  link
-                </button>
-              </div>
-
-              {/* Stats row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  {
-                    label: "Users",
-                    value: statsReady ? stats.totalUsers.toLocaleString() : "—",
-                  },
-                  { label: "Invested", value: statsReady ? "₦1.25B+" : "—" },
-                  { label: "Withdrawn", value: statsReady ? "₦875M+" : "—" },
-                  {
-                    label: "Active now",
-                    value: statsReady
-                      ? stats.activeInvestments.toLocaleString()
-                      : "—",
-                  },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="bg-white/8 backdrop-blur-sm rounded-xl border border-white/10 p-3"
-                  >
-                    <p className="text-xs text-gray-400 mb-1">{s.label}</p>
-                    <p className="text-sm font-bold text-white">{s.value}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Right — calculator card (FIXED) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{
-                duration: 0.7,
-                delay: 0.15,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="relative"
-            >
-              <div
-                className="absolute -inset-px rounded-3xl opacity-40"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(37,99,235,0.5), rgba(5,150,105,0.3))",
-                }}
-              />
-              <div className="relative bg-gray-900/80 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl shadow-black/40 p-8">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
-                  Investment calculator
-                </p>
-
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <p className="text-xs text-gray-400 mb-2">Package</p>
-                    <div className="flex gap-2">
-                      {packages.map((pkg) => (
-                        <button
-                          key={pkg.name}
-                          onClick={() => handlePackageSelect(pkg.name)}
-                          className={`flex-1 text-center py-2 rounded-lg text-sm font-semibold transition-all ${
-                            selectedPackage === pkg.name
-                              ? pkg.name === "APEX 1"
-                                ? "bg-blue-600 text-white"
-                                : "bg-emerald-600 text-white"
-                              : "bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white"
-                          }`}
-                        >
-                          {pkg.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 mb-2">Amount (₦)</p>
-                    <div className="flex items-center gap-2 border border-white/15 rounded-lg px-3 py-2.5 bg-white/5 focus-within:border-blue-500/50 transition">
-                      <span className="text-gray-400 text-sm">₦</span>
-                      <input
-                        type="text"
-                        value={customAmount}
-                        onChange={handleAmountChange}
-                        className="w-full text-sm font-semibold text-white outline-none bg-transparent"
-                        placeholder="Enter amount"
-                      />
-                    </div>
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {[50000, 100000, 250000, 500000].map((amt) => (
-                        <button
-                          key={amt}
-                          onClick={() => handleQuickAmount(amt)}
-                          className="text-xs bg-white/10 hover:bg-white/20 text-gray-300 px-2 py-1 rounded transition"
-                        >
-                          ₦{amt.toLocaleString()}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Min: ₦{currentPackage.minAmount.toLocaleString()} · Max: ₦
-                      {currentPackage.maxAmount.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Principal</span>
-                    <span className="font-semibold text-white">
-                      {formatCurrency(investmentAmount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">
-                      Return ({returnRate}%)
-                    </span>
-                    <span className="font-semibold text-blue-400">
-                      +{formatCurrency(returnAmount)}
-                    </span>
-                  </div>
-                  <div className="h-px bg-white/10" />
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-300 font-medium">
-                      Total payout
-                    </span>
-                    <span className="font-bold text-emerald-400 text-base">
-                      {formatCurrency(totalPayout)}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-center text-gray-500 mt-4">
-                  {currentPackage.payments} · {currentPackage.duration}
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PACKAGES ── */}
-      <section id="packages" className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp()} className="max-w-2xl mb-14">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">
-              Investment packages
-            </p>
-            <h2 className="serif text-4xl md:text-5xl text-gray-900 leading-tight mb-4">
-              Two plans,
-              <br />
-              one goal.
-            </h2>
-            <p className="text-gray-500 text-lg">
-              Choose based on your capital and timeline.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
-            {packages.map((pkg, i) => {
-              const Icon = pkg.icon;
-              return (
-                <motion.div
-                  key={pkg.id}
-                  {...fadeUp(i * 0.15)}
-                  className={`relative bg-white rounded-2xl overflow-hidden card-hover border ${pkg.highlight ? "border-emerald-200 shadow-lg shadow-emerald-100/40" : "border-gray-200"}`}
-                >
-                  {pkg.badge && (
-                    <div className="absolute top-4 right-4 bg-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                      {pkg.badge}
-                    </div>
-                  )}
-                  <div
-                    className="p-7 border-b border-gray-100"
-                    style={{
-                      background: `linear-gradient(135deg, ${pkg.accentLight} 0%, white 100%)`,
-                    }}
-                  >
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                      style={{ background: pkg.accent }}
-                    >
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="font-bold text-xl text-gray-900 mb-1">
-                      {pkg.name}
-                    </h3>
-                    <div className="flex items-baseline gap-1.5">
-                      <span
-                        className="text-5xl font-bold"
-                        style={{ color: pkg.accent }}
-                      >
-                        {pkg.returnRate}%
-                      </span>
-                      <span className="text-gray-500 text-sm">return</span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {pkg.duration} · {pkg.payments}
-                    </p>
-                  </div>
-
-                  <div className="p-7">
-                    <div className="flex justify-between text-sm mb-5 pb-5 border-b border-gray-100">
-                      <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Minimum</p>
-                        <p className="font-semibold text-gray-900">
-                          ₦{pkg.minAmount.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400 mb-0.5">Maximum</p>
-                        <p className="font-semibold text-gray-900">
-                          ₦{pkg.maxAmount.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <ul className="space-y-2.5 mb-7">
-                      {pkg.features.map((f) => (
-                        <li
-                          key={f}
-                          className="flex items-center gap-2.5 text-sm text-gray-600"
-                        >
-                          <CheckCircle
-                            className="w-4 h-4 flex-shrink-0"
-                            style={{ color: pkg.accent }}
-                          />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button
-                      onClick={() => navigate("/register")}
-                      className="w-full py-3 rounded-xl text-sm font-semibold transition-all"
-                      style={{ background: pkg.accent, color: "white" }}
-                    >
-                      Invest in {pkg.name}
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp()} className="max-w-2xl mb-14">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">
-              Process
-            </p>
-            <h2 className="serif text-4xl md:text-5xl text-gray-900 leading-tight mb-4">
-              Up and running
-              <br />
-              in four steps.
-            </h2>
-            <p className="text-gray-500 text-lg">
-              Simple onboarding, no complexity.
-            </p>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <motion.div
-                  key={step.n}
-                  {...fadeUp(i * 0.1)}
-                  className="relative"
-                >
-                  {i < steps.length - 1 && (
-                    <div className="hidden lg:block absolute top-10 left-[calc(100%-16px)] w-[calc(100%-48px)] h-px bg-gradient-to-r from-gray-200 to-transparent z-10" />
-                  )}
-                  <div className="bg-gray-50 rounded-2xl p-6 h-full border border-gray-100 card-hover">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
-                        <Icon className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <span className="text-2xl font-bold text-gray-200">
-                        {step.n}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 leading-relaxed">
-                      {step.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ── */}
-      <section id="features" className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp()} className="max-w-2xl mb-14">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">
-              Why us
-            </p>
-            <h2 className="serif text-4xl md:text-5xl text-gray-900 leading-tight mb-4">
-              Built for serious
-              <br />
-              investors.
-            </h2>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <motion.div
-                  key={f.title}
-                  {...fadeUp(i * 0.07)}
-                  className="bg-white rounded-2xl p-6 border border-gray-100 card-hover"
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: f.bg }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color: f.color }} />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    {f.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    {f.desc}
-                  </p>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section id="testimonials" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp()} className="max-w-2xl mb-14">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">
-              Testimonials
-            </p>
-            <h2 className="serif text-4xl md:text-5xl text-gray-900 leading-tight mb-4">
-              Real returns,
-              <br />
-              real people.
-            </h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
+      {/* Main Content - with relative positioning to appear above canvas */}
+      <div className="relative" style={{ zIndex: 10 }}>
+        {/* ── HERO ── */}
+        <section className="pt-28 pb-20 md:pt-36 md:pb-28 relative overflow-hidden">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              {/* Left */}
               <motion.div
-                key={t.name}
-                {...fadeUp(i * 0.1)}
-                className="bg-gray-50 rounded-2xl p-6 border border-gray-100 card-hover flex flex-col"
+                initial={{ opacity: 0, x: -24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="flex mb-3">
-                  {[...Array(t.rating)].map((_, j) => (
-                    <Star
-                      key={j}
-                      className="w-3.5 h-3.5 fill-amber-400 text-amber-400"
-                    />
+                <div className="inline-flex items-center gap-2 bg-white/10 text-purple-200 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-purple-500/30 backdrop-blur-sm">
+                  <Sparkles className="w-4 h-4" />
+                  Trusted by 15,000+ investors across Nigeria
+                </div>
+
+                <h1 className="serif text-5xl md:text-6xl lg:text-7xl text-white leading-[1.05] mb-6">
+                  Grow your wealth
+                  <br />
+                  <em className="not-italic text-purple-300">intelligently.</em>
+                </h1>
+
+                <p className="text-xl text-gray-300 leading-relaxed mb-10 max-w-md">
+                  Earn up to{" "}
+                  <strong className="text-white font-semibold">
+                    50% returns
+                  </strong>{" "}
+                  in 15 working days. Start with as little as ₦10,000 and
+                  withdraw on a predictable schedule.
+                </p>
+
+                <div className="flex flex-wrap gap-3 mb-14">
+                  <button
+                    onClick={() => navigate("/register")}
+                    className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-base font-semibold rounded-xl hover:from-purple-700 hover:to-purple-600 transition shadow-lg shadow-purple-600/30"
+                  >
+                    Start investing <ArrowRight className="w-4 h-4" />
+                  </button>
+                  {/* <button
+                    onClick={() => setShowReferralModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-4 bg-white/10 text-white text-base font-semibold rounded-xl border border-purple-500/30 hover:bg-white/15 transition backdrop-blur-sm"
+                  >
+                    <Gift className="w-4 h-4 text-purple-300" /> Get referral
+                    link
+                  </button> */}
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    {
+                      label: "Users",
+                      value: statsReady
+                        ? stats.totalUsers.toLocaleString()
+                        : "—",
+                    },
+                    { label: "Invested", value: statsReady ? "₦1.25B+" : "—" },
+                    { label: "Withdrawn", value: statsReady ? "₦875M+" : "—" },
+                    {
+                      label: "Active now",
+                      value: statsReady
+                        ? stats.activeInvestments.toLocaleString()
+                        : "—",
+                    },
+                  ].map((s) => (
+                    <div key={s.label} className="glass-card rounded-xl p-3">
+                      <p className="stat-label text-sm text-gray-400 mb-1">
+                        {s.label}
+                      </p>
+                      <p className="stat-value text-base font-bold text-white">
+                        {s.value}
+                      </p>
+                    </div>
                   ))}
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed flex-1 mb-5">
-                  "{t.comment}"
-                </p>
-                <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
-                  <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                    style={{ background: t.bg }}
-                  >
-                    {t.initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {t.name}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {t.location} · {t.date}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-xs text-gray-400">{t.investment}</p>
-                    <p className="text-sm font-bold text-emerald-600">
-                      {t.profit}
-                    </p>
-                  </div>
-                </div>
               </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ── FAQ ── */}
-      <section id="faq" className="py-24 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp()} className="mb-14">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">
-              FAQ
-            </p>
-            <h2 className="serif text-4xl md:text-5xl text-gray-900 leading-tight">
-              Common questions.
-            </h2>
-          </motion.div>
-
-          <div className="space-y-2">
-            {faqs.map((faq, i) => (
+              {/* Right — calculator card */}
               <motion.div
-                key={i}
-                {...fadeUp(i * 0.04)}
-                className="bg-white rounded-xl border border-gray-100 overflow-hidden"
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.7,
+                  delay: 0.15,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="relative"
               >
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left"
-                >
-                  <span className="text-sm font-semibold text-gray-900 pr-4">
-                    {faq.q}
-                  </span>
-                  <ChevronRight
-                    className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-90" : ""}`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: "auto" }}
-                      exit={{ height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-5 pb-4 text-sm text-gray-500 leading-relaxed">
-                        {faq.a}
+                <div
+                  className="absolute -inset-px rounded-3xl opacity-40"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(147,51,234,0.5), rgba(168,85,247,0.3))",
+                  }}
+                />
+                <div className="relative glass-card rounded-3xl p-8">
+                  <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-5">
+                    Investment calculator
+                  </p>
+
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2">Package</p>
+                      <div className="flex gap-2">
+                        {packages.map((pkg) => (
+                          <button
+                            key={pkg.name}
+                            onClick={() => handlePackageSelect(pkg.name)}
+                            className={`flex-1 text-center py-2 rounded-lg text-base font-semibold transition-all ${
+                              selectedPackage === pkg.name
+                                ? pkg.name === "APEX 1"
+                                  ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white"
+                                  : "bg-gradient-to-r from-purple-500 to-purple-400 text-white"
+                                : "bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white"
+                            }`}
+                          >
+                            {pkg.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2">Amount (₦)</p>
+                      <div className="flex items-center gap-2 border border-purple-500/30 rounded-lg px-3 py-3 bg-white/5 focus-within:border-purple-400 transition">
+                        <span className="text-gray-400 text-base">₦</span>
+                        <input
+                          type="text"
+                          value={customAmount}
+                          onChange={handleAmountChange}
+                          className="w-full text-base font-semibold text-white outline-none bg-transparent"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div className="flex gap-2 mt-2 flex-wrap">
+                        {[50000, 100000, 250000, 500000].map((amt) => (
+                          <button
+                            key={amt}
+                            onClick={() => handleQuickAmount(amt)}
+                            className="text-sm bg-white/10 hover:bg-white/20 text-gray-300 px-2 py-1 rounded transition"
+                          >
+                            ₦{amt.toLocaleString()}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Min: ₦{currentPackage.minAmount.toLocaleString()} · Max:
+                        ₦{currentPackage.maxAmount.toLocaleString()}
                       </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+                    </div>
+                  </div>
 
-      {/* ── CTA ── */}
-      <section className="py-24 bg-gray-900">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div {...fadeUp()}>
-            <h2 className="serif text-4xl md:text-6xl text-white leading-tight mb-5">
-              Start earning
-              <br />
-              <em className="not-italic text-emerald-400">today.</em>
-            </h2>
-            <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
-              Join thousands of investors already growing their wealth on Apex
-              Trading Square.
-            </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <button
-                onClick={() => navigate("/register")}
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-gray-900 text-sm font-semibold rounded-xl hover:bg-gray-100 transition shadow-sm"
-              >
-                Create free account <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => navigate("/login")}
-                className="px-7 py-3.5 border border-gray-700 text-gray-300 text-sm font-semibold rounded-xl hover:border-gray-500 hover:text-white transition"
-              >
-                Sign in
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+                  <div className="bg-white/5 border border-purple-500/20 rounded-xl p-4 space-y-2.5">
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-400">Principal</span>
+                      <span className="font-semibold text-white">
+                        {formatCurrency(investmentAmount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-400">
+                        Return ({returnRate}%)
+                      </span>
+                      <span className="font-semibold text-purple-300">
+                        +{formatCurrency(returnAmount)}
+                      </span>
+                    </div>
+                    <div className="h-px bg-purple-500/20" />
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-300 font-medium">
+                        Total payout
+                      </span>
+                      <span className="font-bold text-purple-300 text-lg">
+                        {formatCurrency(totalPayout)}
+                      </span>
+                    </div>
+                  </div>
 
-      {/* ── FOOTER ── */}
-      <footer className="bg-gray-950 text-white py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-10 mb-10">
-            <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">A</span>
+                  <p className="text-sm text-center text-gray-500 mt-4">
+                    {currentPackage.payments} · {currentPackage.duration}
+                  </p>
                 </div>
-                <span className="font-semibold text-white">APEX Trading</span>
-              </div>
-              <p className="text-gray-500 text-sm leading-relaxed mb-5">
-                Empowering Nigerians to achieve financial freedom through
-                structured investments.
-              </p>
-              <div className="flex gap-3">
-                {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                  <a
-                    key={i}
-                    href="#"
-                    className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 transition"
-                  >
-                    <Icon size={14} />
-                  </a>
-                ))}
-              </div>
+              </motion.div>
             </div>
+          </div>
+        </section>
 
-            {[
-              {
-                title: "Platform",
-                links: navLinks.map((l) => ({
-                  label: l.label,
-                  to: `#${l.id}`,
-                })),
-              },
-              {
-                title: "Legal",
-                links: [
-                  { label: "Privacy policy", to: "/privacy" },
-                  { label: "Terms of service", to: "/terms" },
-                  { label: "Help center", to: "/faq" },
-                  { label: "Contact", to: "/contact" },
-                ],
-              },
-            ].map((col) => (
-              <div key={col.title}>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
-                  {col.title}
+        {/* ── PACKAGES ── */}
+        <section id="packages" className="py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-14">
+              <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-3">
+                Investment packages
+              </p>
+              <h2 className="serif text-4xl md:text-5xl text-white leading-tight mb-4">
+                Two plans,
+                <br />
+                one goal.
+              </h2>
+              <p className="text-xl text-gray-400">
+                Choose based on your capital and timeline.
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-6 max-w-3xl">
+              {packages.map((pkg, i) => {
+                const Icon = pkg.icon;
+                return (
+                  <motion.div
+                    key={pkg.id}
+                    {...fadeUp(i * 0.15)}
+                    className={`relative glass-card rounded-2xl overflow-hidden ${pkg.highlight ? "border-purple-500/40 shadow-lg shadow-purple-600/20" : ""}`}
+                  >
+                    {pkg.badge && (
+                      <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                        {pkg.badge}
+                      </div>
+                    )}
+                    <div
+                      className="p-7 border-b border-purple-500/20"
+                      style={{
+                        background: "rgba(147, 51, 234, 0.1)",
+                      }}
+                    >
+                      <div
+                        className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                        style={{ background: pkg.accent }}
+                      >
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="font-bold text-xl text-white mb-1">
+                        {pkg.name}
+                      </h3>
+                      <div className="flex items-baseline gap-1.5">
+                        <span
+                          className="text-5xl font-bold"
+                          style={{ color: pkg.accent }}
+                        >
+                          {pkg.returnRate}%
+                        </span>
+                        <span className="text-gray-400 text-base">return</span>
+                      </div>
+                      <p className="text-base text-gray-400 mt-1">
+                        {pkg.duration} · {pkg.payments}
+                      </p>
+                    </div>
+
+                    <div className="p-7">
+                      <div className="flex justify-between text-base mb-5 pb-5 border-b border-purple-500/20">
+                        <div>
+                          <p className="text-sm text-gray-400 mb-0.5">
+                            Minimum
+                          </p>
+                          <p className="font-semibold text-white">
+                            ₦{pkg.minAmount.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-400 mb-0.5">
+                            Maximum
+                          </p>
+                          <p className="font-semibold text-white">
+                            ₦{pkg.maxAmount.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <ul className="space-y-2.5 mb-7">
+                        {pkg.features.map((f) => (
+                          <li
+                            key={f}
+                            className="flex items-center gap-2.5 text-base text-gray-300"
+                          >
+                            <CheckCircle
+                              className="w-4 h-4 flex-shrink-0"
+                              style={{ color: pkg.accent }}
+                            />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <button
+                        onClick={() => navigate("/register")}
+                        className="w-full py-3 rounded-xl text-base font-semibold transition-all text-white"
+                        style={{ background: pkg.accent }}
+                      >
+                        Invest in {pkg.name}
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── HOW IT WORKS ── */}
+        <section id="how-it-works" className="py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-14">
+              <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-3">
+                Process
+              </p>
+              <h2 className="serif text-4xl md:text-5xl text-white leading-tight mb-4">
+                Up and running
+                <br />
+                in four steps.
+              </h2>
+              <p className="text-xl text-gray-400">
+                Simple onboarding, no complexity.
+              </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {steps.map((step, i) => {
+                const Icon = step.icon;
+                return (
+                  <motion.div
+                    key={step.n}
+                    {...fadeUp(i * 0.1)}
+                    className="relative"
+                  >
+                    {i < steps.length - 1 && (
+                      <div className="hidden lg:block absolute top-10 left-[calc(100%-16px)] w-[calc(100%-48px)] h-px bg-gradient-to-r from-purple-500/30 to-transparent z-10" />
+                    )}
+                    <div className="glass-card rounded-2xl p-6 h-full">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-white/10 rounded-xl backdrop-blur-sm border border-purple-500/30 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-purple-300" />
+                        </div>
+                        <span className="text-2xl font-bold text-purple-500/30">
+                          {step.n}
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-white text-lg mb-2">
+                        {step.title}
+                      </h3>
+                      <p className="text-base text-gray-400 leading-relaxed">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FEATURES ── */}
+        <section id="features" className="py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-14">
+              <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-3">
+                Why us
+              </p>
+              <h2 className="serif text-4xl md:text-5xl text-white leading-tight mb-4">
+                Built for serious
+                <br />
+                investors.
+              </h2>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {features.map((f, i) => {
+                const Icon = f.icon;
+                return (
+                  <motion.div
+                    key={f.title}
+                    {...fadeUp(i * 0.07)}
+                    className="glass-card rounded-2xl p-6"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                      style={{ background: f.bg }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: f.color }} />
+                    </div>
+                    <h3 className="font-semibold text-white text-lg mb-2">
+                      {f.title}
+                    </h3>
+                    <p className="text-base text-gray-400 leading-relaxed">
+                      {f.desc}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── TESTIMONIALS ── */}
+        <section id="testimonials" className="py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-14">
+              <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-3">
+                Testimonials
+              </p>
+              <h2 className="serif text-4xl md:text-5xl text-white leading-tight mb-4">
+                Real returns,
+                <br />
+                real people.
+              </h2>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-5">
+              {testimonials.map((t, i) => (
+                <motion.div
+                  key={t.name}
+                  {...fadeUp(i * 0.1)}
+                  className="glass-card rounded-2xl p-6 flex flex-col"
+                >
+                  <div className="flex mb-3">
+                    {[...Array(t.rating)].map((_, j) => (
+                      <Star
+                        key={j}
+                        className="w-4 h-4 fill-purple-400 text-purple-400"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-base text-gray-300 leading-relaxed flex-1 mb-5">
+                    "{t.comment}"
+                  </p>
+                  <div className="flex items-center gap-3 pt-4 border-t border-purple-500/20">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                      style={{ background: t.bg }}
+                    >
+                      {t.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-semibold text-white truncate">
+                        {t.name}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {t.location} · {t.date}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm text-gray-400">{t.investment}</p>
+                      <p className="text-base font-bold text-purple-300">
+                        {t.profit}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <section id="faq" className="py-24">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="mb-14">
+              <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-3">
+                FAQ
+              </p>
+              <h2 className="serif text-4xl md:text-5xl text-white leading-tight">
+                Common questions.
+              </h2>
+            </motion.div>
+
+            <div className="space-y-2">
+              {faqs.map((faq, i) => (
+                <motion.div
+                  key={i}
+                  {...fadeUp(i * 0.04)}
+                  className="glass-card rounded-xl overflow-hidden"
+                >
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left"
+                  >
+                    <span className="text-base font-semibold text-white pr-4">
+                      {faq.q}
+                    </span>
+                    <ChevronRight
+                      className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-90" : ""}`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {openFaq === i && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: "auto" }}
+                        exit={{ height: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="px-5 pb-4 text-base text-gray-400 leading-relaxed">
+                          {faq.a}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA ── */}
+        <section className="py-24">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <motion.div {...fadeUp()}>
+              <h2 className="serif text-4xl md:text-6xl text-white leading-tight mb-5">
+                Start earning
+                <br />
+                <em className="not-italic text-purple-300">today.</em>
+              </h2>
+              <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">
+                Join thousands of investors already growing their wealth on Apex
+                Trading Square.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <button
+                  onClick={() => navigate("/register")}
+                  className="inline-flex items-center gap-2 px-7 py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-base font-semibold rounded-xl hover:from-purple-700 hover:to-purple-600 transition shadow-lg shadow-purple-600/30"
+                >
+                  Create free account <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="px-7 py-4 glass-card text-gray-300 text-base font-semibold rounded-xl hover:bg-white/15 transition"
+                >
+                  Sign in
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="py-14 border-t border-purple-500/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-4 gap-10 mb-10">
+              <div>
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
+                    <img src={apex} alt="apex logo" />
+                  </div>
+                  <span className="font-semibold text-white">APEX Trading</span>
+                </div>
+                <p className="text-gray-400 text-base leading-relaxed mb-5">
+                  Empowering Nigerians to achieve financial freedom through
+                  structured investments.
                 </p>
-                <ul className="space-y-2.5">
-                  {col.links.map((l) => (
-                    <li key={l.label}>
-                      {l.to.startsWith("#") ? (
-                        <button
-                          onClick={() => scrollToSection(l.to.replace("#", ""))}
-                          className="text-sm text-gray-500 hover:text-white transition"
-                        >
-                          {l.label}
-                        </button>
-                      ) : (
-                        <Link
-                          to={l.to}
-                          className="text-sm text-gray-500 hover:text-white transition"
-                        >
-                          {l.label}
-                        </Link>
-                      )}
+                <div className="flex gap-3">
+                  {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                    <a
+                      key={i}
+                      href="#"
+                      className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 transition backdrop-blur-sm border border-purple-500/20"
+                    >
+                      <Icon size={14} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {[
+                {
+                  title: "Platform",
+                  links: navLinks.map((l) => ({
+                    label: l.label,
+                    to: `#${l.id}`,
+                  })),
+                },
+                {
+                  title: "Legal",
+                  links: [
+                    { label: "Privacy policy", to: "/privacy" },
+                    { label: "Terms of service", to: "/terms" },
+                    { label: "Help center", to: "/faq" },
+                    { label: "Contact", to: "/contact" },
+                  ],
+                },
+              ].map((col) => (
+                <div key={col.title}>
+                  <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-4">
+                    {col.title}
+                  </p>
+                  <ul className="space-y-2.5">
+                    {col.links.map((l) => (
+                      <li key={l.label}>
+                        {l.to.startsWith("#") ? (
+                          <button
+                            onClick={() =>
+                              scrollToSection(l.to.replace("#", ""))
+                            }
+                            className="text-base text-gray-400 hover:text-white transition"
+                          >
+                            {l.label}
+                          </button>
+                        ) : (
+                          <Link
+                            to={l.to}
+                            className="text-base text-gray-400 hover:text-white transition"
+                          >
+                            {l.label}
+                          </Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+
+              <div>
+                <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-4">
+                  Contact
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    { Icon: Phone, text: "+234 800 000 0000" },
+                    { Icon: Mail, text: "support@apextrading.com" },
+                    { Icon: MapPin, text: "Lagos, Nigeria" },
+                  ].map(({ Icon, text }) => (
+                    <li
+                      key={text}
+                      className="flex items-center gap-2.5 text-base text-gray-400"
+                    >
+                      <Icon size={14} className="flex-shrink-0 text-gray-500" />
+                      {text}
                     </li>
                   ))}
                 </ul>
               </div>
-            ))}
+            </div>
 
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
-                Contact
+            <div className="border-t border-purple-500/20 pt-8 text-center">
+              <p className="text-gray-500 text-sm">
+                © {new Date().getFullYear()} Apex Trading Square. All rights
+                reserved.
               </p>
-              <ul className="space-y-3">
-                {[
-                  { Icon: Phone, text: "+234 800 000 0000" },
-                  { Icon: Mail, text: "support@apextrading.com" },
-                  { Icon: MapPin, text: "Lagos, Nigeria" },
-                ].map(({ Icon, text }) => (
-                  <li
-                    key={text}
-                    className="flex items-center gap-2.5 text-sm text-gray-500"
-                  >
-                    <Icon size={14} className="flex-shrink-0 text-gray-600" />
-                    {text}
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
-
-          <div className="border-t border-gray-800 pt-8 text-center">
-            <p className="text-gray-600 text-xs">
-              © {new Date().getFullYear()} Apex Trading Square. All rights
-              reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
 
       {/* ── REFERRAL MODAL ── */}
       <AnimatePresence>
         {showReferralModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6"
+              className="glass-card rounded-2xl w-full max-w-sm shadow-2xl p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-white text-lg">
                   Your referral link
                 </h3>
                 <button
                   onClick={() => setShowReferralModal(false)}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition"
+                  className="p-1.5 hover:bg-white/10 rounded-lg transition"
                 >
-                  <X size={16} />
+                  <X size={16} className="text-gray-400" />
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mb-5">
+              <p className="text-base text-gray-400 mb-5">
                 Share this link and earn 5% when your friends invest.
               </p>
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-3 mb-4">
-                <code className="flex-1 text-xs text-blue-600 truncate font-mono">
+              <div className="flex items-center gap-2 bg-white/5 border border-purple-500/30 rounded-xl p-3 mb-4">
+                <code className="flex-1 text-sm text-purple-300 truncate font-mono">
                   https://apex.com/ref/APEX123456
                 </code>
                 <button
                   onClick={handleCopy}
-                  className="flex-shrink-0 p-1.5 hover:bg-gray-200 rounded-lg transition"
+                  className="flex-shrink-0 p-1.5 hover:bg-white/10 rounded-lg transition"
                 >
                   {copied ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-600" />
+                    <CheckCircle className="w-4 h-4 text-purple-400" />
                   ) : (
-                    <Copy className="w-4 h-4 text-gray-500" />
+                    <Copy className="w-4 h-4 text-gray-400" />
                   )}
                 </button>
               </div>
               {copied && (
-                <p className="text-xs text-emerald-600 mb-3">
+                <p className="text-sm text-purple-400 mb-3">
                   Copied to clipboard!
                 </p>
               )}
-              <p className="text-xs text-gray-400 mb-5">
+              <p className="text-sm text-gray-500 mb-5">
                 You need an account to earn referral bonuses.
               </p>
               <button
@@ -1226,7 +1374,7 @@ const HomePage = () => {
                   setShowReferralModal(false);
                   navigate("/register");
                 }}
-                className="w-full py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition"
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-base font-semibold rounded-xl hover:from-purple-700 hover:to-purple-600 transition"
               >
                 Create account to earn
               </button>

@@ -19,6 +19,7 @@ import {
   Plus,
   ChevronRight,
 } from "lucide-react";
+import apex from "../assets/apex.jpeg";
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -111,10 +112,8 @@ const Layout = () => {
         {/* Logo */}
         <div className="flex items-center justify-between px-5 h-16 shrink-0">
           <Link to="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <span className="text-white font-bold text-sm leading-none">
-                A
-              </span>
+            <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
+              <img src={apex} alt="apex logo" />
             </div>
             <span className="text-white font-bold tracking-tight text-base">
               APEX<span className="text-emerald-400 font-light">Trading</span>

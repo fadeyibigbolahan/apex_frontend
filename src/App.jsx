@@ -2,6 +2,7 @@ import {
   createBrowserRouter,
   RouterProvider,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -10,7 +11,16 @@ import AdminRoute from "./components/AdminRoute";
 import Layout from "./components/Layout";
 import AdminLayout from "./components/AdminLayout";
 
-// Lazy-loaded pages (dynamically imported for better performance)
+// Optional: Add a PublicLayout if needed
+const PublicLayout = () => (
+  <>
+    {/* <Header /> Uncomment if you have a header for public pages */}
+    <Outlet />
+    {/* <Footer /> Uncomment if you have a footer */}
+  </>
+);
+
+// Lazy-loaded pages
 // Public Pages
 const HomePage = lazy(() => import("./pages/HomePage"));
 const Login = lazy(() => import("./pages/SigninPage"));
@@ -39,94 +49,34 @@ function App() {
   const router = createBrowserRouter([
     // Public Routes
     {
-      path: "/",
-      element: <HomePage />,
-    },
-    {
-      path: "/login",
-      element: <Login />,
-    },
-    {
-      path: "/register",
-      element: <Register />,
+      element: <PublicLayout />,
+      children: [
+        { path: "/", element: <HomePage /> },
+        { path: "/login", element: <Login /> },
+        { path: "/register", element: <Register /> },
+      ],
     },
 
-    // User Routes (with Layout)
+    // Protected User Routes (with Layout)
     {
-      path: "/dashboard",
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
-      children: [{ index: true, element: <UserDashboard /> }],
-    },
-    {
-      path: "/investments",
+      path: "/",
       element: (
         <ProtectedRoute>
           <Layout />
         </ProtectedRoute>
       ),
       children: [
-        { index: true, element: <InvestmentsList /> },
-        { path: "create", element: <CreateInvestment /> },
-        { path: ":id", element: <InvestmentDetails /> },
+        { path: "dashboard", element: <UserDashboard /> },
+        { path: "investments", element: <InvestmentsList /> },
+        { path: "investments/create", element: <CreateInvestment /> },
+        { path: "investments/:id", element: <InvestmentDetails /> },
+        { path: "profile", element: <ProfilePage /> },
+        { path: "referrals", element: <ReferralsPage /> },
+        { path: "bonuses", element: <BonusesPage /> },
+        { path: "transactions", element: <TransactionsPage /> },
+        { path: "withdrawals", element: <WithdrawalsPage /> },
+        { path: "support", element: <Support /> },
       ],
-    },
-    {
-      path: "/profile",
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
-      children: [{ index: true, element: <ProfilePage /> }],
-    },
-    {
-      path: "/referrals",
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
-      children: [{ index: true, element: <ReferralsPage /> }],
-    },
-    {
-      path: "/bonuses",
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
-      children: [{ index: true, element: <BonusesPage /> }],
-    },
-    {
-      path: "/transactions",
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
-      children: [{ index: true, element: <TransactionsPage /> }],
-    },
-    {
-      path: "/withdrawals",
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
-      children: [{ index: true, element: <WithdrawalsPage /> }],
-    },
-    {
-      path: "/support",
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
-      children: [{ index: true, element: <Support /> }],
     },
 
     // Admin Routes (with AdminLayout)
