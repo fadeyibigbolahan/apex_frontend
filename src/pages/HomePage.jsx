@@ -43,7 +43,7 @@ const formatCurrency = (n) =>
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 32 },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
+  viewport: { once: true, margin: "-50px" }, // Add margin to reduce calculations
   transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] },
 });
 
@@ -240,6 +240,7 @@ const HomePage = () => {
   const [selectedPackage, setSelectedPackage] = useState("APEX 1");
   const [investmentAmount, setInvestmentAmount] = useState(100000);
   const [customAmount, setCustomAmount] = useState("100,000");
+  const [isMobile, setIsMobile] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalInvested: 0,
@@ -247,6 +248,18 @@ const HomePage = () => {
     activeInvestments: 0,
   });
   const [statsReady, setStatsReady] = useState(false);
+
+  // Check mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     setTimeout(() => {
@@ -278,106 +291,126 @@ const HomePage = () => {
     handleInitialScroll();
   }, []);
 
-  // Animated stars and light effect
+  // Optimized stars effect for mobile
   useEffect(() => {
     const container = document.getElementById("stars-container");
     if (!container) return;
 
-    // Create stars
-    for (let i = 0; i < 150; i++) {
-      const star = document.createElement("div");
-      star.className = "star";
+    // Clear existing content
+    container.innerHTML = "";
 
-      // Random position
-      const left = Math.random() * 100;
-      const top = Math.random() * 100;
+    if (isMobile) {
+      // Mobile: Just a few static stars for visual interest
+      for (let i = 0; i < 20; i++) {
+        const star = document.createElement("div");
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const size = Math.random() * 1.5 + 0.5;
 
-      // Random size (0.5px to 3px)
-      const size = Math.random() * 2.5 + 0.5;
+        star.style.cssText = `
+          position: absolute;
+          left: ${left}%;
+          top: ${top}%;
+          width: ${size}px;
+          height: ${size}px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          pointer-events: none;
+        `;
 
-      // Random animation duration (2s to 6s)
-      const duration = Math.random() * 4 + 2;
+        container.appendChild(star);
+      }
+    } else {
+      // Desktop: Full animated experience
 
-      // Random delay
-      const delay = Math.random() * 5;
+      // Create stars
+      for (let i = 0; i < 150; i++) {
+        const star = document.createElement("div");
+        star.className = "star";
 
-      // Random opacity
-      const opacity = Math.random() * 0.7 + 0.3;
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const size = Math.random() * 2.5 + 0.5;
+        const duration = Math.random() * 4 + 2;
+        const delay = Math.random() * 5;
+        const opacity = Math.random() * 0.7 + 0.3;
 
-      star.style.cssText = `
-        position: absolute;
-        left: ${left}%;
-        top: ${top}%;
-        width: ${size}px;
-        height: ${size}px;
-        background: white;
-        border-radius: 50%;
-        opacity: ${opacity};
-        box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, 0.8);
-        animation: twinkle ${duration}s ease-in-out infinite;
-        animation-delay: ${delay}s;
-      `;
+        star.style.cssText = `
+          position: absolute;
+          left: ${left}%;
+          top: ${top}%;
+          width: ${size}px;
+          height: ${size}px;
+          background: white;
+          border-radius: 50%;
+          opacity: ${opacity};
+          box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, 0.8);
+          animation: twinkle ${duration}s ease-in-out infinite;
+          animation-delay: ${delay}s;
+          pointer-events: none;
+        `;
 
-      container.appendChild(star);
-    }
+        container.appendChild(star);
+      }
 
-    // Create larger glowing orbs
-    for (let i = 0; i < 20; i++) {
-      const orb = document.createElement("div");
-      orb.className = "orb";
+      // Create larger glowing orbs
+      for (let i = 0; i < 20; i++) {
+        const orb = document.createElement("div");
+        orb.className = "orb";
 
-      const left = Math.random() * 100;
-      const top = Math.random() * 100;
-      const size = Math.random() * 150 + 50;
-      const duration = Math.random() * 20 + 20;
-      const delay = Math.random() * 10;
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const size = Math.random() * 150 + 50;
+        const duration = Math.random() * 20 + 20;
+        const delay = Math.random() * 10;
 
-      // Random color from purple palette
-      const colors = ["#481B73", "#5A2A71", "#723A69", "#8A4A61"];
-      const color = colors[Math.floor(Math.random() * colors.length)];
+        const colors = ["#481B73", "#5A2A71", "#723A69", "#8A4A61"];
+        const color = colors[Math.floor(Math.random() * colors.length)];
 
-      orb.style.cssText = `
-        position: absolute;
-        left: ${left}%;
-        top: ${top}%;
-        width: ${size}px;
-        height: ${size}px;
-        background: radial-gradient(circle at 30% 30%, ${color}80, transparent 70%);
-        border-radius: 50%;
-        filter: blur(40px);
-        animation: float ${duration}s ease-in-out infinite;
-        animation-delay: ${delay}s;
-        pointer-events: none;
-      `;
+        orb.style.cssText = `
+          position: absolute;
+          left: ${left}%;
+          top: ${top}%;
+          width: ${size}px;
+          height: ${size}px;
+          background: radial-gradient(circle at 30% 30%, ${color}80, transparent 70%);
+          border-radius: 50%;
+          filter: blur(40px);
+          animation: float ${duration}s ease-in-out infinite;
+          animation-delay: ${delay}s;
+          pointer-events: none;
+        `;
 
-      container.appendChild(orb);
-    }
+        container.appendChild(orb);
+      }
 
-    // Create shooting stars
-    for (let i = 0; i < 10; i++) {
-      const shootingStar = document.createElement("div");
-      shootingStar.className = "shooting-star";
+      // Create shooting stars
+      for (let i = 0; i < 10; i++) {
+        const shootingStar = document.createElement("div");
+        shootingStar.className = "shooting-star";
 
-      const startX = Math.random() * 100;
-      const startY = Math.random() * 100;
-      const delay = Math.random() * 15;
-      const duration = Math.random() * 3 + 2;
+        const startX = Math.random() * 100;
+        const startY = Math.random() * 100;
+        const delay = Math.random() * 15;
+        const duration = Math.random() * 3 + 2;
 
-      shootingStar.style.cssText = `
-        position: absolute;
-        left: ${startX}%;
-        top: ${startY}%;
-        width: 100px;
-        height: 2px;
-        background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3), transparent);
-        transform: rotate(-45deg);
-        filter: blur(1px);
-        animation: shoot ${duration}s linear infinite;
-        animation-delay: ${delay}s;
-        opacity: 0;
-      `;
+        shootingStar.style.cssText = `
+          position: absolute;
+          left: ${startX}%;
+          top: ${startY}%;
+          width: 100px;
+          height: 2px;
+          background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3), transparent);
+          transform: rotate(-45deg);
+          filter: blur(1px);
+          animation: shoot ${duration}s linear infinite;
+          animation-delay: ${delay}s;
+          opacity: 0;
+          pointer-events: none;
+        `;
 
-      container.appendChild(shootingStar);
+        container.appendChild(shootingStar);
+      }
     }
 
     return () => {
@@ -385,7 +418,7 @@ const HomePage = () => {
         container.innerHTML = "";
       }
     };
-  }, []);
+  }, [isMobile]);
 
   // Calculator logic
   const getSelectedPackageData = () => {
@@ -467,33 +500,51 @@ const HomePage = () => {
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
+        
+        * {
+          -webkit-tap-highlight-color: transparent;
+          -webkit-touch-callout: none;
+        }
+        
         .serif { font-family: 'DM Serif Display', Georgia, serif; }
+        
         .card-hover { 
           transition: transform 0.25s ease, box-shadow 0.25s ease; 
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           border: 1px solid rgba(147, 51, 234, 0.2);
+          will-change: transform;
+          transform: translateZ(0);
         }
+        
         .card-hover:hover { 
           transform: translateY(-4px); 
           box-shadow: 0 20px 60px -12px rgba(147, 51, 234, 0.3);
           border-color: rgba(147, 51, 234, 0.4);
         }
+        
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
+        
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
           -webkit-appearance: none; 
           margin: 0; 
         }
+        
         input[type=number] { -moz-appearance: textfield; }
         
         /* Glass morphism effects */
         .glass-card {
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           border: 1px solid rgba(147, 51, 234, 0.2);
+          will-change: transform;
+          transform: translateZ(0);
         }
+        
         .glass-card:hover {
           background: rgba(255, 255, 255, 0.08);
           border-color: rgba(147, 51, 234, 0.4);
@@ -510,21 +561,7 @@ const HomePage = () => {
           color: rgba(255, 255, 255, 0.5);
         }
         
-        /* Increased font sizes for body text */
-        body p, body li, body .text-sm, body .text-base {
-          font-size: 1rem !important;
-        }
-        .text-lg {
-          font-size: 1.125rem !important;
-        }
-        .stat-value {
-          font-size: 1.25rem !important;
-        }
-        .stat-label {
-          font-size: 0.875rem !important;
-        }
-
-        /* Star animations */
+        /* Star animations - only on desktop */
         @keyframes twinkle {
           0%, 100% { opacity: 0.2; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.2); }
@@ -562,8 +599,51 @@ const HomePage = () => {
           overflow: hidden;
         }
 
-        .star, .orb, .shooting-star {
-          will-change: transform, opacity;
+        /* Optimize scrolling */
+        .min-h-screen {
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+          /* Reduce backdrop blur intensity on mobile */
+          .glass-card {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+          }
+          
+          /* Disable hover effects on mobile */
+          .card-hover:hover {
+            transform: none;
+            box-shadow: none;
+          }
+          
+          .glass-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(147, 51, 234, 0.2);
+          }
+          
+          /* Disable animations on mobile for better performance */
+          .star, .orb, .shooting-star {
+            animation: none !important;
+          }
+          
+          /* Respect user motion preferences */
+          @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
+          }
+        }
+
+        /* Optimize scrolling container */
+        #root {
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          height: 100vh;
         }
       `}</style>
 
@@ -574,6 +654,7 @@ const HomePage = () => {
           background:
             "linear-gradient(135deg, #1a0b2e 0%, #2d1b3a 40%, #3d2a3a 70%, #4d353a 100%)",
           zIndex: 0,
+          willChange: "transform", // Optimize
         }}
       />
 
@@ -587,6 +668,7 @@ const HomePage = () => {
           background:
             "radial-gradient(circle at 30% 40%, rgba(114, 58, 105, 0.15) 0%, transparent 60%), radial-gradient(circle at 70% 60%, rgba(72, 27, 115, 0.1) 0%, transparent 60%)",
           zIndex: 2,
+          willChange: "transform", // Optimize
         }}
       />
 
@@ -602,7 +684,7 @@ const HomePage = () => {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
             <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
-              <img src={apex} alt="apex logo" />
+              <img src={apex} alt="apex logo" loading="lazy" />
             </div>
             <span className="font-semibold text-white text-lg tracking-tight">
               APEX <span className="text-purple-300 font-normal">Trading</span>
@@ -639,6 +721,7 @@ const HomePage = () => {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-lg hover:bg-white/10 transition text-white"
+            aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -650,6 +733,7 @@ const HomePage = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }} // Shorter duration for mobile
               className="md:hidden border-t border-purple-500/20 bg-black/60 backdrop-blur-xl overflow-hidden"
             >
               <div className="px-4 py-4 space-y-1">
@@ -693,6 +777,7 @@ const HomePage = () => {
                 initial={{ opacity: 0, x: -24 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true }}
               >
                 <div className="inline-flex items-center gap-2 bg-white/10 text-purple-200 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-purple-500/30 backdrop-blur-sm">
                   <Sparkles className="w-4 h-4" />
@@ -721,13 +806,6 @@ const HomePage = () => {
                   >
                     Start investing <ArrowRight className="w-4 h-4" />
                   </button>
-                  {/* <button
-                    onClick={() => setShowReferralModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-4 bg-white/10 text-white text-base font-semibold rounded-xl border border-purple-500/30 hover:bg-white/15 transition backdrop-blur-sm"
-                  >
-                    <Gift className="w-4 h-4 text-purple-300" /> Get referral
-                    link
-                  </button> */}
                 </div>
 
                 {/* Stats row */}
@@ -769,6 +847,7 @@ const HomePage = () => {
                   delay: 0.15,
                   ease: [0.22, 1, 0.36, 1],
                 }}
+                viewport={{ once: true }}
                 className="relative"
               >
                 <div
@@ -814,6 +893,8 @@ const HomePage = () => {
                           onChange={handleAmountChange}
                           className="w-full text-base font-semibold text-white outline-none bg-transparent"
                           placeholder="Enter amount"
+                          inputMode="numeric"
+                          pattern="[0-9,]*"
                         />
                       </div>
                       <div className="flex gap-2 mt-2 flex-wrap">
@@ -1005,7 +1086,7 @@ const HomePage = () => {
                     {...fadeUp(i * 0.1)}
                     className="relative"
                   >
-                    {i < steps.length - 1 && (
+                    {i < steps.length - 1 && !isMobile && (
                       <div className="hidden lg:block absolute top-10 left-[calc(100%-16px)] w-[calc(100%-48px)] h-px bg-gradient-to-r from-purple-500/30 to-transparent z-10" />
                     )}
                     <div className="glass-card rounded-2xl p-6 h-full">
@@ -1169,6 +1250,7 @@ const HomePage = () => {
                         initial={{ height: 0 }}
                         animate={{ height: "auto" }}
                         exit={{ height: 0 }}
+                        transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
                         <p className="px-5 pb-4 text-base text-gray-400 leading-relaxed">
@@ -1221,7 +1303,7 @@ const HomePage = () => {
               <div>
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
-                    <img src={apex} alt="apex logo" />
+                    <img src={apex} alt="apex logo" loading="lazy" />
                   </div>
                   <span className="font-semibold text-white">APEX Trading</span>
                 </div>
@@ -1235,6 +1317,7 @@ const HomePage = () => {
                       key={i}
                       href="#"
                       className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 transition backdrop-blur-sm border border-purple-500/20"
+                      aria-label={`Social media ${i}`}
                     >
                       <Icon size={14} />
                     </a>
@@ -1330,6 +1413,7 @@ const HomePage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
               className="glass-card rounded-2xl w-full max-w-sm shadow-2xl p-6"
             >
               <div className="flex items-center justify-between mb-4">
@@ -1339,6 +1423,7 @@ const HomePage = () => {
                 <button
                   onClick={() => setShowReferralModal(false)}
                   className="p-1.5 hover:bg-white/10 rounded-lg transition"
+                  aria-label="Close"
                 >
                   <X size={16} className="text-gray-400" />
                 </button>
@@ -1353,6 +1438,7 @@ const HomePage = () => {
                 <button
                   onClick={handleCopy}
                   className="flex-shrink-0 p-1.5 hover:bg-white/10 rounded-lg transition"
+                  aria-label="Copy link"
                 >
                   {copied ? (
                     <CheckCircle className="w-4 h-4 text-purple-400" />

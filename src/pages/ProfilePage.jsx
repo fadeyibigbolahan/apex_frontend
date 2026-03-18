@@ -55,7 +55,7 @@ const Input = ({
   hint,
   right,
 }) => (
-  <div>
+  <div className="w-full">
     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
       {label}
     </label>
@@ -80,11 +80,11 @@ const Input = ({
 
 /* ── info tile ── */
 const InfoTile = ({ label, value }) => (
-  <div className="bg-gray-50 rounded-xl p-3">
-    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">
+  <div className="bg-gray-50 rounded-xl p-3 w-full overflow-hidden">
+    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5 truncate">
       {label}
     </p>
-    <p className="text-sm font-semibold text-gray-800">
+    <p className="text-sm font-semibold text-gray-800 truncate">
       {value || <span className="text-gray-300 font-normal">Not provided</span>}
     </p>
   </div>
@@ -181,6 +181,15 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfileData();
+
+    // Add viewport meta tag if not present
+    if (!document.querySelector('meta[name="viewport"]')) {
+      const meta = document.createElement("meta");
+      meta.name = "viewport";
+      meta.content =
+        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0";
+      document.getElementsByTagName("head")[0].appendChild(meta);
+    }
   }, []);
 
   const handlePersonalUpdate = async (e) => {
@@ -323,8 +332,8 @@ const Profile = () => {
   /* ── loading ── */
   if (loading)
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-4 max-w-full">
           <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/30 border-t-blue-600 animate-spin" />
           <p className="text-sm text-gray-400 tracking-wide">
             Loading profile…
@@ -334,20 +343,75 @@ const Profile = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+      {/* Add global styles to prevent horizontal scroll */}
+      <style jsx>{`
+        /* Ensure nothing overflows */
+        * {
+          max-width: 100vw;
+          box-sizing: border-box;
+        }
+
+        /* Fix for mobile viewport */
+        html,
+        body {
+          overflow-x: hidden;
+          position: relative;
+          width: 100%;
+        }
+
+        /* Ensure all images and flex items respect boundaries */
+        img,
+        svg,
+        video,
+        canvas,
+        audio,
+        iframe,
+        embed,
+        object {
+          max-width: 100%;
+          height: auto;
+        }
+
+        /* Prevent flex items from overflowing */
+        .flex {
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+
+        /* Ensure text doesn't cause overflow */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p {
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        }
+
+        /* Fix for grid layouts */
+        .grid {
+          min-width: 0;
+        }
+      `}</style>
+
       {/* ── HEADER ── */}
       <motion.div
         variants={stagger}
         initial="hidden"
         animate="visible"
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7 w-full"
       >
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
             Account
           </p>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-gray-900 truncate">
+            My Profile
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5 truncate">
             Manage your personal information and account settings
           </p>
         </motion.div>
@@ -382,34 +446,34 @@ const Profile = () => {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 flex items-center gap-2"
+          className="mb-5 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 flex items-center gap-2 w-full"
         >
           <CheckCircle className="w-4 h-4 shrink-0" />
-          {success}
+          <span className="truncate">{success}</span>
         </motion.div>
       )}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-center gap-2"
+          className="mb-5 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-center gap-2 w-full"
         >
           <AlertCircle className="w-4 h-4 shrink-0" />
-          {error}
+          <span className="truncate">{error}</span>
         </motion.div>
       )}
 
       {/* ── MAIN GRID ── */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         {/* ── LEFT COLUMN ── */}
-        <div className="space-y-5">
+        <div className="space-y-5 w-full min-w-0">
           {/* Avatar card */}
           <motion.div
             custom={0}
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-6 text-center"
+            className="bg-white rounded-2xl border border-gray-100 p-6 text-center w-full"
           >
             <div className="relative inline-block mb-4">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md">
@@ -420,7 +484,7 @@ const Profile = () => {
               </button>
             </div>
 
-            <h2 className="text-base font-bold text-gray-900 leading-tight">
+            <h2 className="text-base font-bold text-gray-900 leading-tight truncate">
               {profileData?.firstName || profileData?.lastName
                 ? `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()
                 : "Complete Your Profile"}
@@ -443,19 +507,19 @@ const Profile = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="relative overflow-hidden bg-[#0b0f1a] rounded-2xl p-5"
+            className="relative overflow-hidden bg-[#0b0f1a] rounded-2xl p-5 w-full"
           >
             <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute bottom-0 left-8 w-24 h-24 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
-                <Gift className="w-4 h-4 text-emerald-400" />
-                <p className="text-white text-sm font-bold">
+                <Gift className="w-4 h-4 text-emerald-400 shrink-0" />
+                <p className="text-white text-sm font-bold truncate">
                   Your Referral Link
                 </p>
               </div>
-              <div className="bg-white/8 border border-white/10 rounded-xl px-3 py-2.5 flex items-center gap-2 mb-3">
-                <code className="text-white/60 text-xs font-mono truncate flex-1">
+              <div className="bg-white/8 border border-white/10 rounded-xl px-3 py-2.5 flex items-center gap-2 mb-3 w-full">
+                <code className="text-white/60 text-xs font-mono truncate flex-1 min-w-0">
                   {window.location.origin}/r/{user?.referralCode}
                 </code>
                 <button
@@ -474,7 +538,7 @@ const Profile = () => {
                   )}
                 </button>
               </div>
-              <p className="text-white/40 text-xs">
+              <p className="text-white/40 text-xs truncate">
                 Earn <span className="text-emerald-400 font-semibold">5%</span>{" "}
                 bonus when referrals invest
               </p>
@@ -487,7 +551,7 @@ const Profile = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5"
+            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
           >
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
               Account Statistics
@@ -523,26 +587,35 @@ const Profile = () => {
                   bg: "bg-amber-50",
                 },
               ].map(({ icon: Icon, label, val, color, bg }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
+                <div
+                  key={label}
+                  className="flex items-center justify-between w-full"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <div
-                      className={`w-7 h-7 ${bg} rounded-lg flex items-center justify-center`}
+                      className={`w-7 h-7 ${bg} rounded-lg flex items-center justify-center shrink-0`}
                     >
                       <Icon className={`w-3.5 h-3.5 ${color}`} />
                     </div>
-                    <span className="text-xs text-gray-600">{label}</span>
+                    <span className="text-xs text-gray-600 truncate">
+                      {label}
+                    </span>
                   </div>
-                  <span className={`text-xs font-bold ${color}`}>{val}</span>
+                  <span className={`text-xs font-bold ${color} shrink-0 ml-2`}>
+                    {val}
+                  </span>
                 </div>
               ))}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="flex items-center justify-between pt-3 border-t border-gray-50 w-full">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
                     <Calendar className="w-3.5 h-3.5 text-gray-500" />
                   </div>
-                  <span className="text-xs text-gray-600">Member Since</span>
+                  <span className="text-xs text-gray-600 truncate">
+                    Member Since
+                  </span>
                 </div>
-                <span className="text-xs font-semibold text-gray-700">
+                <span className="text-xs font-semibold text-gray-700 shrink-0 ml-2 truncate">
                   {fmtDate(profileData?.createdAt)}
                 </span>
               </div>
@@ -551,28 +624,28 @@ const Profile = () => {
         </div>
 
         {/* ── RIGHT COLUMN ── */}
-        <div className="lg:col-span-2 space-y-5">
+        <div className="lg:col-span-2 space-y-5 w-full min-w-0">
           {/* Personal Information */}
           <motion.div
             custom={3}
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5"
+            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
           >
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+            <div className="flex items-center justify-between mb-5 w-full">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
                   Personal Information
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 mt-0.5 truncate">
                   Update your name and contact details
                 </p>
               </div>
               {!editingPersonal && (
                 <button
                   onClick={() => setEditingPersonal(true)}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold transition"
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-2"
                 >
                   <Edit2 className="w-3.5 h-3.5" /> Edit
                 </button>
@@ -580,8 +653,8 @@ const Profile = () => {
             </div>
 
             {editingPersonal ? (
-              <form onSubmit={handlePersonalUpdate}>
-                <div className="grid sm:grid-cols-2 gap-4 mb-4">
+              <form onSubmit={handlePersonalUpdate} className="w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 w-full">
                   <Input
                     label="First Name"
                     value={personalForm.firstName}
@@ -605,7 +678,7 @@ const Profile = () => {
                     placeholder="Last name"
                   />
                 </div>
-                <div className="mb-5">
+                <div className="mb-5 w-full">
                   <Input
                     label="Phone Number"
                     type="tel"
@@ -619,7 +692,7 @@ const Profile = () => {
                     placeholder="+234 000 000 0000"
                   />
                 </div>
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-3 flex-wrap">
                   <button
                     type="button"
                     onClick={() => {
@@ -654,7 +727,7 @@ const Profile = () => {
                 </div>
               </form>
             ) : (
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                 <InfoTile label="First Name" value={profileData?.firstName} />
                 <InfoTile label="Last Name" value={profileData?.lastName} />
                 <InfoTile label="Email Address" value={profileData?.email} />
@@ -672,14 +745,14 @@ const Profile = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5"
+            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
           >
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+            <div className="flex items-center justify-between mb-5 w-full">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
                   Bank Details
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 mt-0.5 truncate">
                   Used for processing all withdrawals
                 </p>
               </div>
@@ -688,7 +761,7 @@ const Profile = () => {
                   !profileData?.bankDetails?.isLocked) && (
                   <button
                     onClick={() => setEditingBank(true)}
-                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold transition"
+                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-2"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                     {profileData?.bankDetails?.accountNumber ? "Edit" : "Add"}
@@ -696,15 +769,15 @@ const Profile = () => {
                 )}
               {profileData?.bankDetails?.isLocked &&
                 profileData?.bankDetails?.accountNumber && (
-                  <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                  <span className="flex items-center gap-1 text-[11px] text-gray-400 shrink-0 ml-2">
                     <Lock className="w-3 h-3" /> Locked
                   </span>
                 )}
             </div>
 
             {editingBank ? (
-              <form onSubmit={handleBankUpdate}>
-                <div className="space-y-4 mb-5">
+              <form onSubmit={handleBankUpdate} className="w-full">
+                <div className="space-y-4 mb-5 w-full">
                   <Input
                     label="Account Name"
                     value={bankForm.accountName}
@@ -726,7 +799,7 @@ const Profile = () => {
                     placeholder="10-digit account number"
                     required
                   />
-                  <div>
+                  <div className="w-full">
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Bank Name
                     </label>
@@ -748,7 +821,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-start gap-2">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-start gap-2 w-full">
                   <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-800">
                     Bank details will be locked after saving. Contact admin for
@@ -756,7 +829,7 @@ const Profile = () => {
                   </p>
                 </div>
 
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-3 flex-wrap">
                   <button
                     type="button"
                     onClick={() => {
@@ -793,8 +866,8 @@ const Profile = () => {
                 </div>
               </form>
             ) : profileData?.bankDetails?.accountNumber ? (
-              <div className="space-y-3">
-                <div className="grid sm:grid-cols-2 gap-3">
+              <div className="space-y-3 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                   <InfoTile
                     label="Account Name"
                     value={profileData.bankDetails.accountName}
@@ -816,7 +889,7 @@ const Profile = () => {
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center text-center py-8">
+              <div className="flex flex-col items-center text-center py-8 w-full">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                   <CreditCard className="w-6 h-6 text-gray-300" />
                 </div>
@@ -836,12 +909,12 @@ const Profile = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5"
+            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
           >
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
               Security
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               {[
                 {
                   icon: Lock,
@@ -871,24 +944,24 @@ const Profile = () => {
                 }) => (
                   <div
                     key={title}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl gap-3 w-full"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-white rounded-xl border border-gray-200 flex items-center justify-center shadow-sm">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 bg-white rounded-xl border border-gray-200 flex items-center justify-center shadow-sm shrink-0">
                         <Icon className="w-4 h-4 text-gray-500" />
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
                           {title}
                         </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">
+                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
                           {sub}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={action}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${actionStyle}`}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${actionStyle} shrink-0`}
                     >
                       {actionLabel}
                     </button>
@@ -902,7 +975,7 @@ const Profile = () => {
 
       {/* ── PASSWORD MODAL ── */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-x-hidden">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -910,11 +983,11 @@ const Profile = () => {
             className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-gray-900 truncate">
                   Change Password
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 mt-0.5 truncate">
                   Update your account password
                 </p>
               </div>
@@ -929,7 +1002,7 @@ const Profile = () => {
                     confirmPassword: "",
                   });
                 }}
-                className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 transition"
+                className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 transition shrink-0 ml-2"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -947,14 +1020,14 @@ const Profile = () => {
                   <p className="text-xs text-gray-400">Closing…</p>
                 </div>
               ) : (
-                <form onSubmit={handlePasswordChange}>
+                <form onSubmit={handlePasswordChange} className="w-full">
                   {passwordError && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
                       {passwordError}
                     </div>
                   )}
 
-                  <div className="space-y-4 mb-5">
+                  <div className="space-y-4 mb-5 w-full">
                     {[
                       {
                         key: "currentPassword",

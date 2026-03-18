@@ -1,5 +1,5 @@
 import {
-  createBrowserRouter,
+  createHashRouter,
   RouterProvider,
   Navigate,
   Outlet,
@@ -46,7 +46,7 @@ const AdminWithdrawals = lazy(() => import("./pages/AdminWithdrawalsPage"));
 const AdminSettings = lazy(() => import("./pages/AdminSettingsPage"));
 
 function App() {
-  const router = createBrowserRouter([
+  const router = createHashRouter([
     // Public Routes
     {
       element: <PublicLayout />,
