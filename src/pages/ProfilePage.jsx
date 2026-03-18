@@ -44,7 +44,7 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
-/* ── reusable input ── */
+/* ── FIXED: Input with minimum font size to prevent zoom ── */
 const Input = ({
   label,
   type = "text",
@@ -66,7 +66,8 @@ const Input = ({
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className="w-full pl-3 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+        className="w-full pl-3 pr-10 py-3 text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+        style={{ fontSize: "16px" }} // Force 16px to prevent zoom
       />
       {right && (
         <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -75,6 +76,36 @@ const Input = ({
       )}
     </div>
     {hint && <p className="text-[11px] text-gray-400 mt-1">{hint}</p>}
+  </div>
+);
+
+/* ── FIXED: Select with minimum font size ── */
+const Select = ({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required,
+}) => (
+  <div className="w-full">
+    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+      {label}
+    </label>
+    <select
+      value={value}
+      onChange={onChange}
+      required={required}
+      className="w-full py-3 px-3 text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+      style={{ fontSize: "16px" }} // Force 16px to prevent zoom
+    >
+      <option value="">{placeholder || "Select an option"}</option>
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
   </div>
 );
 
@@ -182,14 +213,64 @@ const Profile = () => {
   useEffect(() => {
     fetchProfileData();
 
-    // Add viewport meta tag if not present
-    if (!document.querySelector('meta[name="viewport"]')) {
-      const meta = document.createElement("meta");
-      meta.name = "viewport";
+    // CRITICAL FIX: Update viewport meta tag with proper settings
+    const updateViewportMeta = () => {
+      let meta = document.querySelector('meta[name="viewport"]');
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = "viewport";
+        document.getElementsByTagName("head")[0].appendChild(meta);
+      }
       meta.content =
-        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0";
-      document.getElementsByTagName("head")[0].appendChild(meta);
-    }
+        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no";
+    };
+
+    updateViewportMeta();
+
+    // Add global styles to prevent zoom on input focus
+    const style = document.createElement("style");
+    style.innerHTML = `
+      /* Prevent zoom on input focus for all devices */
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+      
+      @media screen and (-webkit-min-device-pixel-ratio: 0) { 
+        select:focus,
+        textarea:focus,
+        input:focus {
+          font-size: 16px !important;
+        }
+      }
+      
+      /* Ensure no overflow */
+      html, body {
+        overflow-x: hidden;
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      #root {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+      }
+      
+      /* Fix for iOS zoom */
+      @supports (-webkit-touch-callout: none) {
+        input, select, textarea {
+          font-size: 16px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
   }, []);
 
   const handlePersonalUpdate = async (e) => {
@@ -343,651 +424,591 @@ const Profile = () => {
     );
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-hidden">
-      {/* Add global styles to prevent horizontal scroll */}
-      <style jsx>{`
-        /* Ensure nothing overflows */
-        * {
-          max-width: 100vw;
-          box-sizing: border-box;
-        }
-
-        /* Fix for mobile viewport */
-        html,
-        body {
-          overflow-x: hidden;
-          position: relative;
-          width: 100%;
-        }
-
-        /* Ensure all images and flex items respect boundaries */
-        img,
-        svg,
-        video,
-        canvas,
-        audio,
-        iframe,
-        embed,
-        object {
-          max-width: 100%;
-          height: auto;
-        }
-
-        /* Prevent flex items from overflowing */
-        .flex {
-          min-width: 0;
-          flex-wrap: wrap;
-        }
-
-        /* Ensure text doesn't cause overflow */
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6,
-        p {
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        }
-
-        /* Fix for grid layouts */
-        .grid {
-          min-width: 0;
-        }
-      `}</style>
-
-      {/* ── HEADER ── */}
-      <motion.div
-        variants={stagger}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7 w-full"
-      >
-        <motion.div variants={fadeUp} className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
-            Account
-          </p>
-          <h1 className="text-2xl font-bold text-gray-900 truncate">
-            My Profile
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5 truncate">
-            Manage your personal information and account settings
-          </p>
-        </motion.div>
+    <>
+      {/* CRITICAL FIX: Ensure no overflow at root level */}
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        {/* ── HEADER ── */}
         <motion.div
-          variants={fadeUp}
-          className="flex items-center gap-2 shrink-0"
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 w-full"
         >
-          <button
-            onClick={() => fetchProfileData(true)}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
-          >
-            <RefreshCw
-              className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
-            />
-            <span className="hidden sm:inline">
-              {refreshing ? "Refreshing…" : "Refresh"}
-            </span>
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-500 bg-white rounded-lg border border-red-200 hover:bg-red-50 transition"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
-        </motion.div>
-      </motion.div>
-
-      {/* ── ALERTS ── */}
-      {success && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-5 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 flex items-center gap-2 w-full"
-        >
-          <CheckCircle className="w-4 h-4 shrink-0" />
-          <span className="truncate">{success}</span>
-        </motion.div>
-      )}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-5 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-center gap-2 w-full"
-        >
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span className="truncate">{error}</span>
-        </motion.div>
-      )}
-
-      {/* ── MAIN GRID ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-        {/* ── LEFT COLUMN ── */}
-        <div className="space-y-5 w-full min-w-0">
-          {/* Avatar card */}
-          <motion.div
-            custom={0}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-6 text-center w-full"
-          >
-            <div className="relative inline-block mb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md">
-                {initials()}
-              </div>
-              <button className="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition">
-                <Camera className="w-3.5 h-3.5 text-gray-600" />
-              </button>
-            </div>
-
-            <h2 className="text-base font-bold text-gray-900 leading-tight truncate">
-              {profileData?.firstName || profileData?.lastName
-                ? `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()
-                : "Complete Your Profile"}
-            </h2>
-            <p className="text-xs text-gray-400 mt-1 mb-3 truncate">
-              {profileData?.email}
+          <motion.div variants={fadeUp} className="min-w-0 flex-1">
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">
+              Account
             </p>
-
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[11px] font-semibold ring-1 ring-blue-200">
-              <Shield className="w-3 h-3" />
-              {profileData?.role === "admin"
-                ? "Administrator"
-                : "Verified Investor"}
-            </span>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+              My Profile
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
+              Manage your personal information and account settings
+            </p>
           </motion.div>
-
-          {/* Referral card */}
           <motion.div
-            custom={1}
             variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="relative overflow-hidden bg-[#0b0f1a] rounded-2xl p-5 w-full"
+            className="flex items-center gap-2 shrink-0"
           >
-            <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-8 w-24 h-24 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-4">
-                <Gift className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-white text-sm font-bold truncate">
-                  Your Referral Link
-                </p>
-              </div>
-              <div className="bg-white/8 border border-white/10 rounded-xl px-3 py-2.5 flex items-center gap-2 mb-3 w-full">
-                <code className="text-white/60 text-xs font-mono truncate flex-1 min-w-0">
-                  {window.location.origin}/r/{user?.referralCode}
-                </code>
-                <button
-                  onClick={handleCopyReferral}
-                  className="relative shrink-0 w-7 h-7 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center text-white transition"
-                >
-                  {copied ? (
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                  {copied && (
-                    <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap">
-                      Copied!
-                    </span>
-                  )}
+            <button
+              onClick={() => fetchProfileData(true)}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+            >
+              <RefreshCw
+                className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${refreshing ? "animate-spin" : ""}`}
+              />
+              <span className="hidden sm:inline">
+                {refreshing ? "Refreshing…" : "Refresh"}
+              </span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-500 bg-white rounded-lg border border-red-200 hover:bg-red-50 transition"
+            >
+              <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </motion.div>
+        </motion.div>
+
+        {/* ── ALERTS ── */}
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-2.5 sm:p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs sm:text-sm text-emerald-700 flex items-center gap-2 w-full"
+          >
+            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">{success}</span>
+          </motion.div>
+        )}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-2.5 sm:p-3 bg-red-50 border border-red-100 rounded-xl text-xs sm:text-sm text-red-600 flex items-center gap-2 w-full"
+          >
+            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">{error}</span>
+          </motion.div>
+        )}
+
+        {/* ── MAIN GRID ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 w-full">
+          {/* ── LEFT COLUMN ── */}
+          <div className="space-y-4 sm:space-y-5 w-full min-w-0">
+            {/* Avatar card */}
+            <motion.div
+              custom={0}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 lg:p-6 text-center w-full"
+            >
+              <div className="relative inline-block mb-3 sm:mb-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-md">
+                  {initials()}
+                </div>
+                <button className="absolute bottom-0 right-0 w-6 h-6 sm:w-7 sm:h-7 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition">
+                  <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-600" />
                 </button>
               </div>
-              <p className="text-white/40 text-xs truncate">
-                Earn <span className="text-emerald-400 font-semibold">5%</span>{" "}
-                bonus when referrals invest
+
+              <h2 className="text-sm sm:text-base font-bold text-gray-900 leading-tight truncate">
+                {profileData?.firstName || profileData?.lastName
+                  ? `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()
+                  : "Complete Your Profile"}
+              </h2>
+              <p className="text-[11px] sm:text-xs text-gray-400 mt-1 mb-2 sm:mb-3 truncate">
+                {profileData?.email}
               </p>
-            </div>
-          </motion.div>
 
-          {/* Stats card */}
-          <motion.div
-            custom={2}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
-          >
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
-              Account Statistics
-            </h3>
-            <div className="space-y-3">
-              {[
-                {
-                  icon: Wallet,
-                  label: "Total Invested",
-                  val: fmt(profileData?.totalInvested),
-                  color: "text-blue-600",
-                  bg: "bg-blue-50",
-                },
-                {
-                  icon: TrendingUp,
-                  label: "Total Withdrawn",
-                  val: fmt(profileData?.totalWithdrawn),
-                  color: "text-emerald-600",
-                  bg: "bg-emerald-50",
-                },
-                {
-                  icon: Award,
-                  label: "Referral Bonus",
-                  val: fmt(profileData?.referralBonus),
-                  color: "text-violet-600",
-                  bg: "bg-violet-50",
-                },
-                {
-                  icon: Gift,
-                  label: "Retrading Bonus",
-                  val: fmt(profileData?.retradingBonus),
-                  color: "text-amber-600",
-                  bg: "bg-amber-50",
-                },
-              ].map(({ icon: Icon, label, val, color, bg }) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between w-full"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div
-                      className={`w-7 h-7 ${bg} rounded-lg flex items-center justify-center shrink-0`}
-                    >
-                      <Icon className={`w-3.5 h-3.5 ${color}`} />
-                    </div>
-                    <span className="text-xs text-gray-600 truncate">
-                      {label}
-                    </span>
-                  </div>
-                  <span className={`text-xs font-bold ${color} shrink-0 ml-2`}>
-                    {val}
-                  </span>
-                </div>
-              ))}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-50 w-full">
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                  </div>
-                  <span className="text-xs text-gray-600 truncate">
-                    Member Since
-                  </span>
-                </div>
-                <span className="text-xs font-semibold text-gray-700 shrink-0 ml-2 truncate">
-                  {fmtDate(profileData?.createdAt)}
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] sm:text-[11px] font-semibold ring-1 ring-blue-200">
+                <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                {profileData?.role === "admin"
+                  ? "Administrator"
+                  : "Verified Investor"}
+              </span>
+            </motion.div>
 
-        {/* ── RIGHT COLUMN ── */}
-        <div className="lg:col-span-2 space-y-5 w-full min-w-0">
-          {/* Personal Information */}
-          <motion.div
-            custom={3}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
-          >
-            <div className="flex items-center justify-between mb-5 w-full">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
-                  Personal Information
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5 truncate">
-                  Update your name and contact details
-                </p>
-              </div>
-              {!editingPersonal && (
-                <button
-                  onClick={() => setEditingPersonal(true)}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-2"
-                >
-                  <Edit2 className="w-3.5 h-3.5" /> Edit
-                </button>
-              )}
-            </div>
-
-            {editingPersonal ? (
-              <form onSubmit={handlePersonalUpdate} className="w-full">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 w-full">
-                  <Input
-                    label="First Name"
-                    value={personalForm.firstName}
-                    onChange={(e) =>
-                      setPersonalForm({
-                        ...personalForm,
-                        firstName: e.target.value,
-                      })
-                    }
-                    placeholder="First name"
-                  />
-                  <Input
-                    label="Last Name"
-                    value={personalForm.lastName}
-                    onChange={(e) =>
-                      setPersonalForm({
-                        ...personalForm,
-                        lastName: e.target.value,
-                      })
-                    }
-                    placeholder="Last name"
-                  />
+            {/* Referral card */}
+            <motion.div
+              custom={1}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="relative overflow-hidden bg-[#0b0f1a] rounded-xl sm:rounded-2xl p-4 sm:p-5 w-full"
+            >
+              <div className="absolute -top-6 -right-6 w-24 sm:w-32 h-24 sm:h-32 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 left-4 sm:left-8 w-20 sm:w-24 h-20 sm:h-24 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                  <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
+                  <p className="text-white text-xs sm:text-sm font-bold truncate">
+                    Your Referral Link
+                  </p>
                 </div>
-                <div className="mb-5 w-full">
-                  <Input
-                    label="Phone Number"
-                    type="tel"
-                    value={personalForm.phoneNumber}
-                    onChange={(e) =>
-                      setPersonalForm({
-                        ...personalForm,
-                        phoneNumber: e.target.value,
-                      })
-                    }
-                    placeholder="+234 000 000 0000"
-                  />
-                </div>
-                <div className="flex justify-end gap-3 flex-wrap">
+                <div className="bg-white/8 border border-white/10 rounded-lg sm:rounded-xl px-2 sm:px-3 py-2 flex items-center gap-2 mb-2 sm:mb-3 w-full">
+                  <code className="text-white/60 text-[10px] sm:text-xs font-mono truncate flex-1 min-w-0">
+                    {window.location.origin}/r/{user?.referralCode}
+                  </code>
                   <button
-                    type="button"
-                    onClick={() => {
-                      setEditingPersonal(false);
-                      setPersonalForm({
-                        firstName: profileData?.firstName || "",
-                        lastName: profileData?.lastName || "",
-                        phoneNumber: profileData?.phoneNumber || "",
-                      });
-                    }}
-                    className="px-4 py-2 border border-gray-200 text-sm text-gray-600 rounded-xl hover:bg-gray-50 transition"
+                    onClick={handleCopyReferral}
+                    className="relative shrink-0 w-6 h-6 sm:w-7 sm:h-7 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center text-white transition"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-                  >
-                    {saving ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        Saving…
-                      </>
+                    {copied ? (
+                      <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
                     ) : (
-                      <>
-                        <Save className="w-3.5 h-3.5" />
-                        Save Changes
-                      </>
+                      <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    )}
+                    {copied && (
+                      <span className="absolute -top-6 sm:-top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[8px] sm:text-[10px] py-1 px-1.5 sm:px-2 rounded whitespace-nowrap">
+                        Copied!
+                      </span>
                     )}
                   </button>
                 </div>
-              </form>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                <InfoTile label="First Name" value={profileData?.firstName} />
-                <InfoTile label="Last Name" value={profileData?.lastName} />
-                <InfoTile label="Email Address" value={profileData?.email} />
-                <InfoTile
-                  label="Phone Number"
-                  value={profileData?.phoneNumber}
-                />
-              </div>
-            )}
-          </motion.div>
-
-          {/* Bank Details */}
-          <motion.div
-            custom={4}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
-          >
-            <div className="flex items-center justify-between mb-5 w-full">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
-                  Bank Details
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5 truncate">
-                  Used for processing all withdrawals
+                <p className="text-white/40 text-[10px] sm:text-xs truncate">
+                  Earn <span className="text-emerald-400 font-semibold">5%</span>{" "}
+                  bonus when referrals invest
                 </p>
               </div>
-              {!editingBank &&
-                (!profileData?.bankDetails?.accountNumber ||
-                  !profileData?.bankDetails?.isLocked) && (
-                  <button
-                    onClick={() => setEditingBank(true)}
-                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-2"
+            </motion.div>
+
+            {/* Stats card */}
+            <motion.div
+              custom={2}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+            >
+              <h3 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 sm:mb-4">
+                Account Statistics
+              </h3>
+              <div className="space-y-2 sm:space-y-3">
+                {[
+                  {
+                    icon: Wallet,
+                    label: "Total Invested",
+                    val: fmt(profileData?.totalInvested),
+                    color: "text-blue-600",
+                    bg: "bg-blue-50",
+                  },
+                  {
+                    icon: TrendingUp,
+                    label: "Total Withdrawn",
+                    val: fmt(profileData?.totalWithdrawn),
+                    color: "text-emerald-600",
+                    bg: "bg-emerald-50",
+                  },
+                  {
+                    icon: Award,
+                    label: "Referral Bonus",
+                    val: fmt(profileData?.referralBonus),
+                    color: "text-violet-600",
+                    bg: "bg-violet-50",
+                  },
+                  {
+                    icon: Gift,
+                    label: "Retrading Bonus",
+                    val: fmt(profileData?.retradingBonus),
+                    color: "text-amber-600",
+                    bg: "bg-amber-50",
+                  },
+                ].map(({ icon: Icon, label, val, color, bg }) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between w-full"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    {profileData?.bankDetails?.accountNumber ? "Edit" : "Add"}
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div
+                        className={`w-6 h-6 sm:w-7 sm:h-7 ${bg} rounded-lg flex items-center justify-center shrink-0`}
+                      >
+                        <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${color}`} />
+                      </div>
+                      <span className="text-[11px] sm:text-xs text-gray-600 truncate">
+                        {label}
+                      </span>
+                    </div>
+                    <span className={`text-[11px] sm:text-xs font-bold ${color} shrink-0 ml-1 sm:ml-2`}>
+                      {val}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-50 w-full">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500" />
+                    </div>
+                    <span className="text-[11px] sm:text-xs text-gray-600 truncate">
+                      Member Since
+                    </span>
+                  </div>
+                  <span className="text-[11px] sm:text-xs font-semibold text-gray-700 shrink-0 ml-1 sm:ml-2 truncate">
+                    {fmtDate(profileData?.createdAt)}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ── RIGHT COLUMN ── */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-5 w-full min-w-0">
+            {/* Personal Information */}
+            <motion.div
+              custom={3}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+            >
+              <div className="flex items-center justify-between mb-3 sm:mb-4 w-full">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
+                    Personal Information
+                  </h2>
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
+                    Update your name and contact details
+                  </p>
+                </div>
+                {!editingPersonal && (
+                  <button
+                    onClick={() => setEditingPersonal(true)}
+                    className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-1 sm:ml-2"
+                  >
+                    <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Edit
                   </button>
                 )}
-              {profileData?.bankDetails?.isLocked &&
-                profileData?.bankDetails?.accountNumber && (
-                  <span className="flex items-center gap-1 text-[11px] text-gray-400 shrink-0 ml-2">
-                    <Lock className="w-3 h-3" /> Locked
-                  </span>
-                )}
-            </div>
+              </div>
 
-            {editingBank ? (
-              <form onSubmit={handleBankUpdate} className="w-full">
-                <div className="space-y-4 mb-5 w-full">
-                  <Input
-                    label="Account Name"
-                    value={bankForm.accountName}
-                    onChange={(e) =>
-                      setBankForm({ ...bankForm, accountName: e.target.value })
-                    }
-                    placeholder="Full account name"
-                    required
+              {editingPersonal ? (
+                <form onSubmit={handlePersonalUpdate} className="w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4 w-full">
+                    <Input
+                      label="First Name"
+                      value={personalForm.firstName}
+                      onChange={(e) =>
+                        setPersonalForm({
+                          ...personalForm,
+                          firstName: e.target.value,
+                        })
+                      }
+                      placeholder="First name"
+                    />
+                    <Input
+                      label="Last Name"
+                      value={personalForm.lastName}
+                      onChange={(e) =>
+                        setPersonalForm({
+                          ...personalForm,
+                          lastName: e.target.value,
+                        })
+                      }
+                      placeholder="Last name"
+                    />
+                  </div>
+                  <div className="mb-4 sm:mb-5 w-full">
+                    <Input
+                      label="Phone Number"
+                      type="tel"
+                      value={personalForm.phoneNumber}
+                      onChange={(e) =>
+                        setPersonalForm({
+                          ...personalForm,
+                          phoneNumber: e.target.value,
+                        })
+                      }
+                      placeholder="+234 000 000 0000"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 sm:gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingPersonal(false);
+                        setPersonalForm({
+                          firstName: profileData?.firstName || "",
+                          lastName: profileData?.lastName || "",
+                          phoneNumber: profileData?.phoneNumber || "",
+                        });
+                      }}
+                      className="px-3 sm:px-4 py-2 border border-gray-200 text-xs sm:text-sm text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    >
+                      {saving ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                          Saving…
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 w-full">
+                  <InfoTile label="First Name" value={profileData?.firstName} />
+                  <InfoTile label="Last Name" value={profileData?.lastName} />
+                  <InfoTile label="Email Address" value={profileData?.email} />
+                  <InfoTile
+                    label="Phone Number"
+                    value={profileData?.phoneNumber}
                   />
-                  <Input
-                    label="Account Number"
-                    value={bankForm.accountNumber}
-                    onChange={(e) =>
-                      setBankForm({
-                        ...bankForm,
-                        accountNumber: e.target.value,
-                      })
-                    }
-                    placeholder="10-digit account number"
-                    required
-                  />
-                  <div className="w-full">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                      Bank Name
-                    </label>
-                    <select
+                </div>
+              )}
+            </motion.div>
+
+            {/* Bank Details */}
+            <motion.div
+              custom={4}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+            >
+              <div className="flex items-center justify-between mb-3 sm:mb-4 w-full">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
+                    Bank Details
+                  </h2>
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
+                    Used for processing all withdrawals
+                  </p>
+                </div>
+                {!editingBank &&
+                  (!profileData?.bankDetails?.accountNumber ||
+                    !profileData?.bankDetails?.isLocked) && (
+                    <button
+                      onClick={() => setEditingBank(true)}
+                      className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-1 sm:ml-2"
+                    >
+                      <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      {profileData?.bankDetails?.accountNumber ? "Edit" : "Add"}
+                    </button>
+                  )}
+                {profileData?.bankDetails?.isLocked &&
+                  profileData?.bankDetails?.accountNumber && (
+                    <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-gray-400 shrink-0 ml-1 sm:ml-2">
+                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked
+                    </span>
+                  )}
+              </div>
+
+              {editingBank ? (
+                <form onSubmit={handleBankUpdate} className="w-full">
+                  <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-5 w-full">
+                    <Input
+                      label="Account Name"
+                      value={bankForm.accountName}
+                      onChange={(e) =>
+                        setBankForm({ ...bankForm, accountName: e.target.value })
+                      }
+                      placeholder="Full account name"
+                      required
+                    />
+                    <Input
+                      label="Account Number"
+                      value={bankForm.accountNumber}
+                      onChange={(e) =>
+                        setBankForm({
+                          ...bankForm,
+                          accountNumber: e.target.value,
+                        })
+                      }
+                      placeholder="10-digit account number"
+                      required
+                    />
+                    <Select
+                      label="Bank Name"
                       value={bankForm.bankName}
                       onChange={(e) =>
                         setBankForm({ ...bankForm, bankName: e.target.value })
                       }
+                      options={Nigerian_Banks}
+                      placeholder="Select Bank"
                       required
-                      className="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
-                    >
-                      <option value="">Select Bank</option>
-                      {Nigerian_Banks.map((b) => (
-                        <option key={b} value={b}>
-                          {b}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
-                </div>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-start gap-2 w-full">
-                  <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-800">
-                    Bank details will be locked after saving. Contact admin for
-                    any future changes.
-                  </p>
-                </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg sm:rounded-xl p-2.5 sm:p-3 mb-4 sm:mb-5 flex items-start gap-1.5 sm:gap-2 w-full">
+                    <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <p className="text-[10px] sm:text-xs text-amber-800">
+                      Bank details will be locked after saving. Contact admin for
+                      any future changes.
+                    </p>
+                  </div>
 
-                <div className="flex justify-end gap-3 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingBank(false);
-                      setBankForm({
-                        accountName:
-                          profileData?.bankDetails?.accountName || "",
-                        accountNumber:
-                          profileData?.bankDetails?.accountNumber || "",
-                        bankName: profileData?.bankDetails?.bankName || "",
-                      });
-                    }}
-                    className="px-4 py-2 border border-gray-200 text-sm text-gray-600 rounded-xl hover:bg-gray-50 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-                  >
-                    {saving ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        Saving…
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-3.5 h-3.5" />
-                        Save Bank Details
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            ) : profileData?.bankDetails?.accountNumber ? (
-              <div className="space-y-3 w-full">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                  <InfoTile
-                    label="Account Name"
-                    value={profileData.bankDetails.accountName}
-                  />
-                  <InfoTile
-                    label="Account Number"
-                    value={profileData.bankDetails.accountNumber}
-                  />
-                  <InfoTile
-                    label="Bank Name"
-                    value={profileData.bankDetails.bankName}
-                  />
-                </div>
-                {profileData.bankDetails.isLocked && (
-                  <p className="text-[11px] text-gray-400 flex items-center gap-1 pt-1">
-                    <Lock className="w-3 h-3" /> Locked for security — contact
-                    admin to request changes
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center text-center py-8 w-full">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                  <CreditCard className="w-6 h-6 text-gray-300" />
-                </div>
-                <p className="text-sm font-semibold text-gray-700 mb-1">
-                  No bank details added
-                </p>
-                <p className="text-xs text-gray-400">
-                  Click "Add" above to set up your withdrawal account
-                </p>
-              </div>
-            )}
-          </motion.div>
-
-          {/* Security */}
-          <motion.div
-            custom={5}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-5 w-full"
-          >
-            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
-              Security
-            </h2>
-            <div className="space-y-3 w-full">
-              {[
-                {
-                  icon: Lock,
-                  title: "Password",
-                  sub: `Last changed: ${fmtDate(profileData?.passwordChangedAt)}`,
-                  action: () => setShowPasswordModal(true),
-                  actionLabel: "Change",
-                  actionStyle: "bg-blue-600 hover:bg-blue-700 text-white",
-                },
-                {
-                  icon: Shield,
-                  title: "Two-Factor Authentication",
-                  sub: "Add an extra layer of security",
-                  action: () => {},
-                  actionLabel: "Enable",
-                  actionStyle:
-                    "border border-gray-200 text-gray-600 hover:bg-gray-50",
-                },
-              ].map(
-                ({
-                  icon: Icon,
-                  title,
-                  sub,
-                  action,
-                  actionLabel,
-                  actionStyle,
-                }) => (
-                  <div
-                    key={title}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl gap-3 w-full"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-9 h-9 bg-white rounded-xl border border-gray-200 flex items-center justify-center shadow-sm shrink-0">
-                        <Icon className="w-4 h-4 text-gray-500" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {title}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                          {sub}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="flex justify-end gap-2 sm:gap-3 flex-wrap">
                     <button
-                      onClick={action}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${actionStyle} shrink-0`}
+                      type="button"
+                      onClick={() => {
+                        setEditingBank(false);
+                        setBankForm({
+                          accountName:
+                            profileData?.bankDetails?.accountName || "",
+                          accountNumber:
+                            profileData?.bankDetails?.accountNumber || "",
+                          bankName: profileData?.bankDetails?.bankName || "",
+                        });
+                      }}
+                      className="px-3 sm:px-4 py-2 border border-gray-200 text-xs sm:text-sm text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 transition"
                     >
-                      {actionLabel}
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    >
+                      {saving ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                          Saving…
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          Save Bank Details
+                        </>
+                      )}
                     </button>
                   </div>
-                ),
+                </form>
+              ) : profileData?.bankDetails?.accountNumber ? (
+                <div className="space-y-2 sm:space-y-3 w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 w-full">
+                    <InfoTile
+                      label="Account Name"
+                      value={profileData.bankDetails.accountName}
+                    />
+                    <InfoTile
+                      label="Account Number"
+                      value={profileData.bankDetails.accountNumber}
+                    />
+                    <InfoTile
+                      label="Bank Name"
+                      value={profileData.bankDetails.bankName}
+                    />
+                  </div>
+                  {profileData.bankDetails.isLocked && (
+                    <p className="text-[10px] sm:text-[11px] text-gray-400 flex items-center gap-1 pt-1">
+                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked for security — contact
+                      admin to request changes
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center py-4 sm:py-6 lg:py-8 w-full">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+                    <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300" />
+                  </div>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                    No bank details added
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">
+                    Click "Add" above to set up your withdrawal account
+                  </p>
+                </div>
               )}
-            </div>
-          </motion.div>
+            </motion.div>
+
+            {/* Security */}
+            <motion.div
+              custom={5}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+            >
+              <h2 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide mb-3 sm:mb-4">
+                Security
+              </h2>
+              <div className="space-y-2 sm:space-y-3 w-full">
+                {[
+                  {
+                    icon: Lock,
+                    title: "Password",
+                    sub: `Last changed: ${fmtDate(profileData?.passwordChangedAt)}`,
+                    action: () => setShowPasswordModal(true),
+                    actionLabel: "Change",
+                    actionStyle: "bg-blue-600 hover:bg-blue-700 text-white",
+                  },
+                  {
+                    icon: Shield,
+                    title: "Two-Factor Authentication",
+                    sub: "Add an extra layer of security",
+                    action: () => {},
+                    actionLabel: "Enable",
+                    actionStyle:
+                      "border border-gray-200 text-gray-600 hover:bg-gray-50",
+                  },
+                ].map(
+                  ({
+                    icon: Icon,
+                    title,
+                    sub,
+                    action,
+                    actionLabel,
+                    actionStyle,
+                  }) => (
+                    <div
+                      key={title}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl gap-2 sm:gap-3 w-full"
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-lg sm:rounded-xl border border-gray-200 flex items-center justify-center shadow-sm shrink-0">
+                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
+                            {title}
+                          </p>
+                          <p className="text-[10px] sm:text-[11px] text-gray-400 mt-0.5 truncate">
+                            {sub}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={action}
+                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold rounded-lg transition ${actionStyle} shrink-0`}
+                      >
+                        {actionLabel}
+                      </button>
+                    </div>
+                  ),
+                )}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
 
       {/* ── PASSWORD MODAL ── */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-x-hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 overflow-x-hidden">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
+            className="bg-white rounded-xl sm:rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-bold text-gray-900 truncate">
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 truncate">
                   Change Password
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5 truncate">
+                <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
                   Update your account password
                 </p>
               </div>
@@ -1002,32 +1023,32 @@ const Profile = () => {
                     confirmPassword: "",
                   });
                 }}
-                className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 transition shrink-0 ml-2"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 transition shrink-0 ml-2"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {passwordSuccess ? (
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="w-6 h-6 text-emerald-500" />
+                <div className="text-center py-4 sm:py-6">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                    <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                  <p className="text-sm sm:text-base font-semibold text-gray-900 mb-1">
                     {passwordSuccess}
                   </p>
-                  <p className="text-xs text-gray-400">Closing…</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">Closing…</p>
                 </div>
               ) : (
                 <form onSubmit={handlePasswordChange} className="w-full">
                   {passwordError && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                    <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-red-50 border border-red-100 rounded-lg sm:rounded-xl text-[10px] sm:text-xs text-red-600">
                       {passwordError}
                     </div>
                   )}
 
-                  <div className="space-y-4 mb-5 w-full">
+                  <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-5 w-full">
                     {[
                       {
                         key: "currentPassword",
@@ -1073,9 +1094,9 @@ const Profile = () => {
                             className="text-gray-400 hover:text-gray-600 transition"
                           >
                             {show ? (
-                              <EyeOff className="w-4 h-4" />
+                              <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             ) : (
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             )}
                           </button>
                         }
@@ -1083,7 +1104,7 @@ const Profile = () => {
                     ))}
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     <button
                       type="button"
                       disabled={changingPassword}
@@ -1096,19 +1117,20 @@ const Profile = () => {
                           confirmPassword: "",
                         });
                       }}
-                      className="flex-1 py-2.5 border border-gray-200 text-sm text-gray-600 rounded-xl hover:bg-gray-50 transition"
+                      className="flex-1 py-2 sm:py-2.5 border border-gray-200 text-xs sm:text-sm text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 transition"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={changingPassword}
-                      className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-40"
+                      className="flex-1 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-40"
                     >
                       {changingPassword ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          Changing…
+                        <span className="flex items-center justify-center gap-1 sm:gap-2">
+                          <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                          <span className="hidden sm:inline">Changing…</span>
+                          <span className="sm:hidden">...</span>
                         </span>
                       ) : (
                         "Change Password"
@@ -1121,7 +1143,7 @@ const Profile = () => {
           </motion.div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
