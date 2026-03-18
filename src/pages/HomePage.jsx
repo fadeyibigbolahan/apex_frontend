@@ -40,10 +40,6 @@ const formatCurrency = (n) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-const formatNumber = (n) => {
-  return new Intl.NumberFormat("en-NG").format(n);
-};
-
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 32 },
   whileInView: { opacity: 1, y: 0 },
@@ -323,7 +319,7 @@ const HomePage = () => {
         container.appendChild(star);
       }
     } else {
-      // Desktop stars (keep your existing code)
+      // Create stars
       for (let i = 0; i < 150; i++) {
         const star = document.createElement("div");
         star.className = "star";
@@ -353,6 +349,7 @@ const HomePage = () => {
         container.appendChild(star);
       }
 
+      // Create larger glowing orbs
       for (let i = 0; i < 20; i++) {
         const orb = document.createElement("div");
         orb.className = "orb";
@@ -383,6 +380,7 @@ const HomePage = () => {
         container.appendChild(orb);
       }
 
+      // Create shooting stars
       for (let i = 0; i < 10; i++) {
         const shootingStar = document.createElement("div");
         shootingStar.className = "shooting-star";
@@ -428,18 +426,15 @@ const HomePage = () => {
   const returnAmount = (investmentAmount * returnRate) / 100;
   const totalPayout = investmentAmount + returnAmount;
 
-  // FIXED: Improved input handling
   const handleAmountChange = (e) => {
     const rawValue = e.target.value;
     
-    // Allow empty input
     if (rawValue === "") {
       setInputValue("");
       setInvestmentAmount(0);
       return;
     }
 
-    // Remove any non-digit characters
     const numericValue = rawValue.replace(/[^0-9]/g, "");
     
     if (numericValue === "") {
@@ -450,19 +445,16 @@ const HomePage = () => {
 
     const numValue = parseInt(numericValue, 10);
     
-    // Update input with raw number (no formatting while typing)
     setInputValue(numericValue);
     setInvestmentAmount(numValue);
   };
 
-  // Handle blur to format the number
   const handleAmountBlur = () => {
     if (investmentAmount === 0) {
       setInputValue("");
       return;
     }
 
-    // Clamp the value between min and max
     const clampedValue = Math.min(
       Math.max(investmentAmount, currentPackage.minAmount),
       currentPackage.maxAmount,
@@ -521,7 +513,7 @@ const HomePage = () => {
 
   return (
     <div
-      className="min-h-screen relative"
+      className="min-h-screen relative w-full overflow-x-hidden"
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       <style>{`
@@ -530,6 +522,21 @@ const HomePage = () => {
         * {
           -webkit-tap-highlight-color: transparent;
           -webkit-touch-callout: none;
+          box-sizing: border-box;
+        }
+        
+        html, body {
+          overflow-x: hidden;
+          width: 100%;
+          max-width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+        
+        #root {
+          overflow-x: hidden;
+          width: 100%;
+          max-width: 100%;
         }
         
         .serif { font-family: 'DM Serif Display', Georgia, serif; }
@@ -576,18 +583,7 @@ const HomePage = () => {
           border-color: rgba(147, 51, 234, 0.4);
         }
         
-        /* Text contrast improvements */
-        .text-on-dark {
-          color: rgba(255, 255, 255, 0.95);
-        }
-        .text-on-dark-secondary {
-          color: rgba(255, 255, 255, 0.7);
-        }
-        .text-on-dark-muted {
-          color: rgba(255, 255, 255, 0.5);
-        }
-        
-        /* Star animations - only on desktop */
+        /* Star animations */
         @keyframes twinkle {
           0%, 100% { opacity: 0.2; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.2); }
@@ -661,10 +657,23 @@ const HomePage = () => {
           }
         }
 
-        #root {
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-          height: 100vh;
+        /* Fix for input zoom on iOS */
+        input, select, textarea {
+          font-size: 16px !important;
+        }
+        
+        @media screen and (-webkit-min-device-pixel-ratio: 0) { 
+          select:focus,
+          textarea:focus,
+          input:focus {
+            font-size: 16px !important;
+          }
+        }
+        
+        @supports (-webkit-touch-callout: none) {
+          input, select, textarea {
+            font-size: 16px !important;
+          }
         }
       `}</style>
 
@@ -682,7 +691,7 @@ const HomePage = () => {
       {/* Stars Container */}
       <div id="stars-container" />
 
-      {/* Subtle radial gradient overlay for depth */}
+      {/* Subtle radial gradient overlay */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -698,42 +707,42 @@ const HomePage = () => {
         className="fixed top-0 w-full z-50 bg-black/40 backdrop-blur-xl border-b border-purple-500/20"
         style={{ zIndex: 50 }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-1.5 sm:gap-2.5"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
-              <img src={apex} alt="apex logo" loading="lazy" />
+            <div className="w-9 h-9 sm:w-[45px] sm:h-[45px] md:w-[50px] md:h-[50px] rounded-lg flex items-center justify-center">
+              <img src={apex} alt="apex logo" className="w-full h-full object-contain" loading="lazy" />
             </div>
-            <span className="font-semibold text-white text-lg tracking-tight">
-              APEX <span className="text-purple-300 font-normal">Trading</span>
+            <span className="font-semibold text-white text-sm sm:text-base md:text-lg tracking-tight">
+              APEX <span className="text-purple-300 font-normal hidden xs:inline">Trading</span>
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-7">
+          <div className="hidden md:flex items-center gap-4 lg:gap-7">
             {navLinks.map((l) => (
               <button
                 key={l.id}
                 onClick={() => scrollToSection(l.id)}
-                className="text-base text-gray-300 hover:text-white transition-colors"
+                className="text-sm lg:text-base text-gray-300 hover:text-white transition-colors"
               >
                 {l.label}
               </button>
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3">
             <button
               onClick={() => navigate("/login")}
-              className="text-base text-gray-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition"
+              className="text-sm lg:text-base text-gray-300 hover:text-white px-2 lg:px-3 py-1.5 rounded-lg hover:bg-white/10 transition"
             >
               Sign in
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="text-base font-medium text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 px-4 py-2 rounded-lg transition shadow-lg shadow-purple-600/30"
+              className="text-sm lg:text-base font-medium text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 px-3 lg:px-4 py-1.5 lg:py-2 rounded-lg transition shadow-lg shadow-purple-600/30"
             >
               Get started
             </button>
@@ -741,10 +750,10 @@ const HomePage = () => {
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-white/10 transition text-white"
+            className="md:hidden p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition text-white"
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileMenuOpen ? <X size={18} sm:size={20} /> : <Menu size={18} sm:size={20} />}
           </button>
         </div>
 
@@ -757,26 +766,26 @@ const HomePage = () => {
               transition={{ duration: 0.2 }}
               className="md:hidden border-t border-purple-500/20 bg-black/60 backdrop-blur-xl overflow-hidden"
             >
-              <div className="px-4 py-4 space-y-1">
+              <div className="px-3 sm:px-4 py-3 sm:py-4 space-y-1">
                 {navLinks.map((l) => (
                   <button
                     key={l.id}
                     onClick={() => scrollToSection(l.id)}
-                    className="block w-full text-left py-2.5 px-3 text-base text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition"
+                    className="block w-full text-left py-2 px-3 text-sm sm:text-base text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition"
                   >
                     {l.label}
                   </button>
                 ))}
-                <div className="pt-3 space-y-2 border-t border-purple-500/20 mt-3">
+                <div className="pt-2 sm:pt-3 space-y-2 border-t border-purple-500/20 mt-2 sm:mt-3">
                   <button
                     onClick={() => navigate("/login")}
-                    className="w-full py-2.5 text-base border border-purple-500/30 text-white rounded-lg hover:bg-white/10 transition"
+                    className="w-full py-2 text-sm sm:text-base border border-purple-500/30 text-white rounded-lg hover:bg-white/10 transition"
                   >
                     Sign in
                   </button>
                   <button
                     onClick={() => navigate("/register")}
-                    className="w-full py-2.5 text-base font-medium bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition"
+                    className="w-full py-2 text-sm sm:text-base font-medium bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition"
                   >
                     Get started
                   </button>
@@ -788,30 +797,31 @@ const HomePage = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="relative" style={{ zIndex: 10 }}>
+      <div className="relative w-full" style={{ zIndex: 10 }}>
         {/* ── HERO ── */}
-        <section className="pt-28 pb-20 md:pt-36 md:pb-28 relative overflow-hidden">
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <section className="pt-20 sm:pt-24 md:pt-28 lg:pt-36 pb-16 sm:pb-20 md:pb-28 relative overflow-hidden">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
               {/* Left */}
               <motion.div
                 initial={{ opacity: 0, x: -24 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 viewport={{ once: true }}
+                className="w-full"
               >
-                <div className="inline-flex items-center gap-2 bg-white/10 text-purple-200 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-purple-500/30 backdrop-blur-sm">
-                  <Sparkles className="w-4 h-4" />
-                  Trusted by 15,000+ investors across Nigeria
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-white/10 text-purple-200 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-purple-500/30 backdrop-blur-sm">
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Trusted by 15,000+ investors across Nigeria</span>
                 </div>
 
-                <h1 className="serif text-5xl md:text-6xl lg:text-7xl text-white leading-[1.05] mb-6">
+                <h1 className="serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.1] mb-4 sm:mb-6">
                   Grow your wealth
                   <br />
                   <em className="not-italic text-purple-300">intelligently.</em>
                 </h1>
 
-                <p className="text-xl text-gray-300 leading-relaxed mb-10 max-w-md">
+                <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-6 sm:mb-8 md:mb-10 max-w-md">
                   Earn up to{" "}
                   <strong className="text-white font-semibold">
                     50% returns
@@ -820,17 +830,17 @@ const HomePage = () => {
                   withdraw on a predictable schedule.
                 </p>
 
-                <div className="flex flex-wrap gap-3 mb-14">
+                <div className="flex flex-wrap gap-2 sm:gap-3 mb-10 sm:mb-12 md:mb-14">
                   <button
                     onClick={() => navigate("/register")}
-                    className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-base font-semibold rounded-xl hover:from-purple-700 hover:to-purple-600 transition shadow-lg shadow-purple-600/30"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 md:px-6 py-3 sm:py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl hover:from-purple-700 hover:to-purple-600 transition shadow-lg shadow-purple-600/30"
                   >
-                    Start investing <ArrowRight className="w-4 h-4" />
+                    Start investing <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                   {[
                     {
                       label: "Users",
@@ -847,11 +857,11 @@ const HomePage = () => {
                         : "—",
                     },
                   ].map((s) => (
-                    <div key={s.label} className="glass-card rounded-xl p-3">
-                      <p className="stat-label text-sm text-gray-400 mb-1">
+                    <div key={s.label} className="glass-card rounded-lg sm:rounded-xl p-2 sm:p-3">
+                      <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
                         {s.label}
                       </p>
-                      <p className="stat-value text-base font-bold text-white">
+                      <p className="text-xs sm:text-sm font-bold text-white">
                         {s.value}
                       </p>
                     </div>
@@ -869,29 +879,29 @@ const HomePage = () => {
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 viewport={{ once: true }}
-                className="relative"
+                className="relative w-full"
               >
                 <div
-                  className="absolute -inset-px rounded-3xl opacity-40"
+                  className="absolute -inset-px rounded-2xl sm:rounded-3xl opacity-40"
                   style={{
                     background:
                       "linear-gradient(135deg, rgba(147,51,234,0.5), rgba(168,85,247,0.3))",
                   }}
                 />
-                <div className="relative glass-card rounded-3xl p-8">
-                  <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-5">
+                <div className="relative glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4 sm:mb-5">
                     Investment calculator
                   </p>
 
-                  <div className="space-y-4 mb-6">
+                  <div className="space-y-3 sm:space-y-4 mb-5 sm:mb-6">
                     <div>
-                      <p className="text-sm text-gray-400 mb-2">Package</p>
-                      <div className="flex gap-2">
+                      <p className="text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Package</p>
+                      <div className="flex gap-1.5 sm:gap-2">
                         {packages.map((pkg) => (
                           <button
                             key={pkg.name}
                             onClick={() => handlePackageSelect(pkg.name)}
-                            className={`flex-1 text-center py-2 rounded-lg text-base font-semibold transition-all ${
+                            className={`flex-1 text-center py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
                               selectedPackage === pkg.name
                                 ? pkg.name === "APEX 1"
                                   ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white"
@@ -905,45 +915,46 @@ const HomePage = () => {
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400 mb-2">Amount (₦)</p>
-                      <div className="flex items-center gap-2 border border-purple-500/30 rounded-lg px-3 py-3 bg-white/5 focus-within:border-purple-400 transition">
-                        <span className="text-gray-400 text-base">₦</span>
+                      <p className="text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Amount (₦)</p>
+                      <div className="flex items-center gap-1.5 sm:gap-2 border border-purple-500/30 rounded-lg px-2 sm:px-3 py-2 sm:py-2.5 bg-white/5 focus-within:border-purple-400 transition">
+                        <span className="text-gray-400 text-xs sm:text-sm">₦</span>
                         <input
                           type="text"
                           value={inputValue}
                           onChange={handleAmountChange}
                           onBlur={handleAmountBlur}
-                          className="w-full text-base font-semibold text-white outline-none bg-transparent"
+                          className="w-full text-sm sm:text-base font-semibold text-white outline-none bg-transparent"
                           placeholder="Enter amount"
                           inputMode="numeric"
+                          style={{ fontSize: "16px" }}
                         />
                       </div>
-                      <div className="flex gap-2 mt-2 flex-wrap">
+                      <div className="flex gap-1.5 sm:gap-2 mt-2 flex-wrap">
                         {[50000, 100000, 250000, 500000].map((amt) => (
                           <button
                             key={amt}
                             onClick={() => handleQuickAmount(amt)}
-                            className="text-sm bg-white/10 hover:bg-white/20 text-gray-300 px-2 py-1 rounded transition"
+                            className="text-[10px] sm:text-xs bg-white/10 hover:bg-white/20 text-gray-300 px-1.5 sm:px-2 py-1 rounded transition"
                           >
-                            ₦{amt.toLocaleString()}
+                            ₦{(amt/1000).toFixed(0)}k
                           </button>
                         ))}
                       </div>
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1.5 sm:mt-2">
                         Min: ₦{currentPackage.minAmount.toLocaleString()} · Max:
                         ₦{currentPackage.maxAmount.toLocaleString()}
                       </p>
                     </div>
                   </div>
 
-                  <div className="bg-white/5 border border-purple-500/20 rounded-xl p-4 space-y-2.5">
-                    <div className="flex justify-between text-base">
+                  <div className="bg-white/5 border border-purple-500/20 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-1.5 sm:space-y-2.5">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-gray-400">Principal</span>
                       <span className="font-semibold text-white">
                         {formatCurrency(investmentAmount)}
                       </span>
                     </div>
-                    <div className="flex justify-between text-base">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-gray-400">
                         Return ({returnRate}%)
                       </span>
@@ -952,17 +963,17 @@ const HomePage = () => {
                       </span>
                     </div>
                     <div className="h-px bg-purple-500/20" />
-                    <div className="flex justify-between text-base">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-gray-300 font-medium">
                         Total payout
                       </span>
-                      <span className="font-bold text-purple-300 text-lg">
+                      <span className="font-bold text-purple-300 text-sm sm:text-base">
                         {formatCurrency(totalPayout)}
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-sm text-center text-gray-500 mt-4">
+                  <p className="text-[10px] sm:text-xs text-center text-gray-500 mt-3 sm:mt-4">
                     {currentPackage.payments} · {currentPackage.duration}
                   </p>
                 </div>
@@ -971,91 +982,509 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Rest of your sections remain exactly the same */}
         {/* ── PACKAGES ── */}
-        <section id="packages" className="py-24">
-          {/* ... keep your existing packages section code ... */}
+        <section id="packages" className="py-16 sm:py-20 md:py-24">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-10 sm:mb-12 md:mb-14">
+              <p className="text-xs sm:text-sm font-semibold text-purple-300 uppercase tracking-widest mb-2 sm:mb-3">
+                Investment packages
+              </p>
+              <h2 className="serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white leading-tight mb-3 sm:mb-4">
+                Two plans,
+                <br />
+                one goal.
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-400">
+                Choose based on your capital and timeline.
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 max-w-3xl">
+              {packages.map((pkg, i) => {
+                const Icon = pkg.icon;
+                return (
+                  <motion.div
+                    key={pkg.id}
+                    {...fadeUp(i * 0.15)}
+                    className={`relative glass-card rounded-xl sm:rounded-2xl overflow-hidden ${pkg.highlight ? "border-purple-500/40 shadow-lg shadow-purple-600/20" : ""}`}
+                  >
+                    {pkg.badge && (
+                      <div className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                        {pkg.badge}
+                      </div>
+                    )}
+                    <div
+                      className="p-4 sm:p-5 md:p-7 border-b border-purple-500/20"
+                      style={{
+                        background: "rgba(147, 51, 234, 0.1)",
+                      }}
+                    >
+                      <div
+                        className="w-8 h-8 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4"
+                        style={{ background: pkg.accent }}
+                      >
+                        <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 text-white" />
+                      </div>
+                      <h3 className="font-bold text-base sm:text-lg md:text-xl text-white mb-1">
+                        {pkg.name}
+                      </h3>
+                      <div className="flex items-baseline gap-1 sm:gap-1.5">
+                        <span
+                          className="text-3xl sm:text-4xl md:text-5xl font-bold"
+                          style={{ color: pkg.accent }}
+                        >
+                          {pkg.returnRate}%
+                        </span>
+                        <span className="text-xs sm:text-sm text-gray-400">return</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                        {pkg.duration} · {pkg.payments}
+                      </p>
+                    </div>
+
+                    <div className="p-4 sm:p-5 md:p-7">
+                      <div className="flex justify-between text-xs sm:text-sm mb-4 sm:mb-5 pb-4 sm:pb-5 border-b border-purple-500/20">
+                        <div>
+                          <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5">
+                            Minimum
+                          </p>
+                          <p className="font-semibold text-white text-xs sm:text-sm">
+                            ₦{pkg.minAmount.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5">
+                            Maximum
+                          </p>
+                          <p className="font-semibold text-white text-xs sm:text-sm">
+                            ₦{pkg.maxAmount.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <ul className="space-y-1.5 sm:space-y-2 mb-5 sm:mb-6 md:mb-7">
+                        {pkg.features.map((f) => (
+                          <li
+                            key={f}
+                            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-300"
+                          >
+                            <CheckCircle
+                              className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0"
+                              style={{ color: pkg.accent }}
+                            />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <button
+                        onClick={() => navigate("/register")}
+                        className="w-full py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all text-white"
+                        style={{ background: pkg.accent }}
+                      >
+                        Invest in {pkg.name}
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* ── HOW IT WORKS ── */}
-        <section id="how-it-works" className="py-24">
-          {/* ... keep your existing how it works section code ... */}
+        <section id="how-it-works" className="py-16 sm:py-20 md:py-24">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-10 sm:mb-12 md:mb-14">
+              <p className="text-xs sm:text-sm font-semibold text-purple-300 uppercase tracking-widest mb-2 sm:mb-3">
+                Process
+              </p>
+              <h2 className="serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white leading-tight mb-3 sm:mb-4">
+                Up and running
+                <br />
+                in four steps.
+              </h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-400">
+                Simple onboarding, no complexity.
+              </p>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {steps.map((step, i) => {
+                const Icon = step.icon;
+                return (
+                  <motion.div
+                    key={step.n}
+                    {...fadeUp(i * 0.1)}
+                    className="relative"
+                  >
+                    {i < steps.length - 1 && !isMobile && (
+                      <div className="hidden lg:block absolute top-8 sm:top-10 left-[calc(100%-12px)] w-[calc(100%-32px)] h-px bg-gradient-to-r from-purple-500/30 to-transparent z-10" />
+                    )}
+                    <div className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 h-full">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-white/10 rounded-lg sm:rounded-xl backdrop-blur-sm border border-purple-500/30 flex items-center justify-center">
+                          <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 text-purple-300" />
+                        </div>
+                        <span className="text-lg sm:text-xl md:text-2xl font-bold text-purple-500/30">
+                          {step.n}
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-white text-sm sm:text-base md:text-lg mb-1.5 sm:mb-2">
+                        {step.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                        {step.desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* ── FEATURES ── */}
-        <section id="features" className="py-24">
-          {/* ... keep your existing features section code ... */}
+        <section id="features" className="py-16 sm:py-20 md:py-24">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-10 sm:mb-12 md:mb-14">
+              <p className="text-xs sm:text-sm font-semibold text-purple-300 uppercase tracking-widest mb-2 sm:mb-3">
+                Why us
+              </p>
+              <h2 className="serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white leading-tight mb-3 sm:mb-4">
+                Built for serious
+                <br />
+                investors.
+              </h2>
+            </motion.div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+              {features.map((f, i) => {
+                const Icon = f.icon;
+                return (
+                  <motion.div
+                    key={f.title}
+                    {...fadeUp(i * 0.07)}
+                    className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6"
+                  >
+                    <div
+                      className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4"
+                      style={{ background: f.bg }}
+                    >
+                      <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5" style={{ color: f.color }} />
+                    </div>
+                    <h3 className="font-semibold text-white text-sm sm:text-base md:text-lg mb-1.5 sm:mb-2">
+                      {f.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                      {f.desc}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         {/* ── TESTIMONIALS ── */}
-        <section id="testimonials" className="py-24">
-          {/* ... keep your existing testimonials section code ... */}
+        <section id="testimonials" className="py-16 sm:py-20 md:py-24">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="max-w-2xl mb-10 sm:mb-12 md:mb-14">
+              <p className="text-xs sm:text-sm font-semibold text-purple-300 uppercase tracking-widest mb-2 sm:mb-3">
+                Testimonials
+              </p>
+              <h2 className="serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white leading-tight mb-3 sm:mb-4">
+                Real returns,
+                <br />
+                real people.
+              </h2>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+              {testimonials.map((t, i) => (
+                <motion.div
+                  key={t.name}
+                  {...fadeUp(i * 0.1)}
+                  className="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col"
+                >
+                  <div className="flex mb-2 sm:mb-3">
+                    {[...Array(t.rating)].map((_, j) => (
+                      <Star
+                        key={j}
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-purple-400 text-purple-400"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed flex-1 mb-4 sm:mb-5">
+                    "{t.comment}"
+                  </p>
+                  <div className="flex items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-purple-500/20">
+                    <div
+                      className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold flex-shrink-0"
+                      style={{ background: t.bg }}
+                    >
+                      {t.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-white truncate">
+                        {t.name}
+                      </p>
+                      <p className="text-[10px] sm:text-xs text-gray-400">
+                        {t.location} · {t.date}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-[10px] sm:text-xs text-gray-400">{t.investment}</p>
+                      <p className="text-xs sm:text-sm font-bold text-purple-300">
+                        {t.profit}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* ── FAQ ── */}
-        <section id="faq" className="py-24">
-          {/* ... keep your existing FAQ section code ... */}
+        <section id="faq" className="py-16 sm:py-20 md:py-24">
+          <div className="w-full max-w-3xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <motion.div {...fadeUp()} className="mb-10 sm:mb-12 md:mb-14">
+              <p className="text-xs sm:text-sm font-semibold text-purple-300 uppercase tracking-widest mb-2 sm:mb-3">
+                FAQ
+              </p>
+              <h2 className="serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white leading-tight">
+                Common questions.
+              </h2>
+            </motion.div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              {faqs.map((faq, i) => (
+                <motion.div
+                  key={i}
+                  {...fadeUp(i * 0.04)}
+                  className="glass-card rounded-lg sm:rounded-xl overflow-hidden"
+                >
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between px-3 sm:px-4 md:px-5 py-3 sm:py-3.5 md:py-4 text-left"
+                  >
+                    <span className="text-xs sm:text-sm md:text-base font-semibold text-white pr-3 sm:pr-4">
+                      {faq.q}
+                    </span>
+                    <ChevronRight
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-90" : ""}`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {openFaq === i && (
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: "auto" }}
+                        exit={{ height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="px-3 sm:px-4 md:px-5 pb-3 sm:pb-3.5 md:pb-4 text-xs sm:text-sm text-gray-400 leading-relaxed">
+                          {faq.a}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* ── CTA ── */}
-        <section className="py-24">
-          {/* ... keep your existing CTA section code ... */}
+        <section className="py-16 sm:py-20 md:py-24">
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 text-center">
+            <motion.div {...fadeUp()}>
+              <h2 className="serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight mb-4 sm:mb-5">
+                Start earning
+                <br />
+                <em className="not-italic text-purple-300">today.</em>
+              </h2>
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-400 mb-6 sm:mb-8 md:mb-10 max-w-xl mx-auto">
+                Join thousands of investors already growing their wealth on Apex
+                Trading Square.
+              </p>
+              <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
+                <button
+                  onClick={() => navigate("/register")}
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-5 sm:px-6 md:px-7 py-3 sm:py-3.5 md:py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl hover:from-purple-700 hover:to-purple-600 transition shadow-lg shadow-purple-600/30"
+                >
+                  Create free account <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="px-5 sm:px-6 md:px-7 py-3 sm:py-3.5 md:py-4 glass-card text-gray-300 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl hover:bg-white/15 transition"
+                >
+                  Sign in
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </section>
 
         {/* ── FOOTER ── */}
-        <footer className="py-14 border-t border-purple-500/20">
-          {/* ... keep your existing footer code ... */}
+        <footer className="py-10 sm:py-12 md:py-14 border-t border-purple-500/20">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-10">
+              <div>
+                <div className="flex items-center gap-1.5 sm:gap-2.5 mb-3 sm:mb-4">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-[50px] md:h-[50px] rounded-lg flex items-center justify-center">
+                    <img src={apex} alt="apex logo" className="w-full h-full object-contain" loading="lazy" />
+                  </div>
+                  <span className="font-semibold text-white text-sm sm:text-base">APEX Trading</span>
+                </div>
+                <p className="text-gray-400 text-xs sm:text-sm leading-relaxed mb-4 sm:mb-5">
+                  Empowering Nigerians to achieve financial freedom through
+                  structured investments.
+                </p>
+                <div className="flex gap-2 sm:gap-3">
+                  {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                    <a
+                      key={i}
+                      href="#"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 transition backdrop-blur-sm border border-purple-500/20"
+                      aria-label={`Social media ${i}`}
+                    >
+                      <Icon size={12} sm:size={14} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {[
+                {
+                  title: "Platform",
+                  links: navLinks.map((l) => ({
+                    label: l.label,
+                    to: `#${l.id}`,
+                  })),
+                },
+                {
+                  title: "Legal",
+                  links: [
+                    { label: "Privacy policy", to: "/privacy" },
+                    { label: "Terms of service", to: "/terms" },
+                    { label: "Help center", to: "/faq" },
+                    { label: "Contact", to: "/contact" },
+                  ],
+                },
+              ].map((col) => (
+                <div key={col.title}>
+                  <p className="text-[10px] sm:text-xs font-semibold text-purple-300 uppercase tracking-widest mb-3 sm:mb-4">
+                    {col.title}
+                  </p>
+                  <ul className="space-y-1.5 sm:space-y-2">
+                    {col.links.map((l) => (
+                      <li key={l.label}>
+                        {l.to.startsWith("#") ? (
+                          <button
+                            onClick={() =>
+                              scrollToSection(l.to.replace("#", ""))
+                            }
+                            className="text-xs sm:text-sm text-gray-400 hover:text-white transition"
+                          >
+                            {l.label}
+                          </button>
+                        ) : (
+                          <Link
+                            to={l.to}
+                            className="text-xs sm:text-sm text-gray-400 hover:text-white transition"
+                          >
+                            {l.label}
+                          </Link>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+
+              <div>
+                <p className="text-[10px] sm:text-xs font-semibold text-purple-300 uppercase tracking-widest mb-3 sm:mb-4">
+                  Contact
+                </p>
+                <ul className="space-y-2 sm:space-y-3">
+                  {[
+                    { Icon: Phone, text: "+234 800 000 0000" },
+                    { Icon: Mail, text: "support@apextrading.com" },
+                    { Icon: MapPin, text: "Lagos, Nigeria" },
+                  ].map(({ Icon, text }) => (
+                    <li
+                      key={text}
+                      className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-400"
+                    >
+                      <Icon size={12} sm:size={14} className="flex-shrink-0 text-gray-500" />
+                      <span className="truncate">{text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="border-t border-purple-500/20 pt-6 sm:pt-8 text-center">
+              <p className="text-gray-500 text-[10px] sm:text-xs">
+                © {new Date().getFullYear()} Apex Trading Square. All rights
+                reserved.
+              </p>
+            </div>
+          </div>
         </footer>
       </div>
 
       {/* ── REFERRAL MODAL ── */}
       <AnimatePresence>
         {showReferralModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-4 overflow-x-hidden">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="glass-card rounded-2xl w-full max-w-sm shadow-2xl p-6"
+              className="glass-card rounded-xl sm:rounded-2xl w-full max-w-sm shadow-2xl p-4 sm:p-5 md:p-6"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-white text-lg">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="font-semibold text-white text-sm sm:text-base">
                   Your referral link
                 </h3>
                 <button
                   onClick={() => setShowReferralModal(false)}
-                  className="p-1.5 hover:bg-white/10 rounded-lg transition"
+                  className="p-1 hover:bg-white/10 rounded-lg transition"
                   aria-label="Close"
                 >
-                  <X size={16} className="text-gray-400" />
+                  <X size={14} sm:size={16} className="text-gray-400" />
                 </button>
               </div>
-              <p className="text-base text-gray-400 mb-5">
+              <p className="text-xs sm:text-sm text-gray-400 mb-4 sm:mb-5">
                 Share this link and earn 5% when your friends invest.
               </p>
-              <div className="flex items-center gap-2 bg-white/5 border border-purple-500/30 rounded-xl p-3 mb-4">
-                <code className="flex-1 text-sm text-purple-300 truncate font-mono">
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-purple-500/30 rounded-lg sm:rounded-xl p-2 sm:p-3 mb-3 sm:mb-4">
+                <code className="flex-1 text-[10px] sm:text-xs text-purple-300 truncate font-mono">
                   https://apex.com/ref/APEX123456
                 </code>
                 <button
                   onClick={handleCopy}
-                  className="flex-shrink-0 p-1.5 hover:bg-white/10 rounded-lg transition"
+                  className="flex-shrink-0 p-1 hover:bg-white/10 rounded-lg transition"
                   aria-label="Copy link"
                 >
                   {copied ? (
-                    <CheckCircle className="w-4 h-4 text-purple-400" />
+                    <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-400" />
                   ) : (
-                    <Copy className="w-4 h-4 text-gray-400" />
+                    <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400" />
                   )}
                 </button>
               </div>
               {copied && (
-                <p className="text-sm text-purple-400 mb-3">
+                <p className="text-[10px] sm:text-xs text-purple-400 mb-2 sm:mb-3">
                   Copied to clipboard!
                 </p>
               )}
-              <p className="text-sm text-gray-500 mb-5">
+              <p className="text-[10px] sm:text-xs text-gray-500 mb-4 sm:mb-5">
                 You need an account to earn referral bonuses.
               </p>
               <button
@@ -1063,7 +1492,7 @@ const HomePage = () => {
                   setShowReferralModal(false);
                   navigate("/register");
                 }}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-base font-semibold rounded-xl hover:from-purple-700 hover:to-purple-600 transition"
+                className="w-full py-2 sm:py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:from-purple-700 hover:to-purple-600 transition"
               >
                 Create account to earn
               </button>
