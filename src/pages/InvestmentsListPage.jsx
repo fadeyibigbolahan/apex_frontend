@@ -41,23 +41,32 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
-/* ── Helper functions for Nigeria timezone (UTC+1) ── */
+/* ── Nigeria timezone helpers (UTC+1) ── */
 const getNigeriaDate = (dateString) => {
   if (!dateString) return null;
   const date = new Date(dateString);
-  // Nigeria is UTC+1, so add 1 hour to UTC for display purposes
+  // Nigeria is UTC+1, add 1 hour for display
   return new Date(date.getTime() + 60 * 60 * 1000);
 };
 
 const formatDateNigeria = (dateString) => {
+  console.log("date string", dateString);
   if (!dateString) return "N/A";
-  const nigeriaDate = getNigeriaDate(dateString);
-  return nigeriaDate.toLocaleDateString("en-NG", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "Africa/Lagos",
-  });
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
+
+    const nigeriaDate = new Date(date.getTime() + 60 * 60 * 1000);
+
+    return nigeriaDate.toLocaleDateString("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "Africa/Lagos",
+    });
+  } catch (error) {
+    return "N/A";
+  }
 };
 
 /* ── status config ── */
@@ -250,7 +259,8 @@ const InvestmentsList = () => {
       minimumFractionDigits: 0,
     }).format(n || 0);
 
-  const fmtDate = (d) => formatDateNigeria(d);
+  // Use Nigeria formatted date
+  const fmtDate = formatDateNigeria;
 
   const getProgress = (inv) => {
     if (inv.investmentStatus === "completed") return 100;
@@ -617,7 +627,7 @@ const InvestmentsList = () => {
                     </div>
                   </div>
 
-                  {/* Next withdrawal chip */}
+                  {/* Next withdrawal chip - FIXED with Nigeria timezone */}
                   {inv.nextWithdrawalDate &&
                     inv.investmentStatus === "active" && (
                       <div className="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2 mb-3">

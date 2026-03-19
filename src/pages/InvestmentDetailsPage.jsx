@@ -39,6 +39,56 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
+/* ── Nigeria timezone helpers (UTC+1) ── */
+const getNigeriaDate = (dateString) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  // Nigeria is UTC+1, add 1 hour for display
+  return new Date(date.getTime() + 60 * 60 * 1000);
+};
+
+const formatDateNigeria = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return "N/A";
+
+    // Add 1 hour for Nigeria timezone
+    const nigeriaDate = new Date(date.getTime() + 60 * 60 * 1000);
+
+    return nigeriaDate.toLocaleDateString("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Africa/Lagos",
+    });
+  } catch (error) {
+    return "N/A";
+  }
+};
+
+const formatDateShortNigeria = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
+
+    const nigeriaDate = new Date(date.getTime() + 60 * 60 * 1000);
+
+    return nigeriaDate.toLocaleDateString("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "Africa/Lagos",
+    });
+  } catch (error) {
+    return "N/A";
+  }
+};
+
 /* ── status pill ── */
 const InvStatus = ({ inv }) => {
   if (!inv) return null;
@@ -87,20 +137,6 @@ const InfoTile = ({ label, value, color }) => (
     </p>
   </div>
 );
-
-// Helper function to get Nigeria timezone date (UTC+1)
-const getNigeriaDate = (dateString) => {
-  const date = new Date(dateString);
-  // Nigeria is UTC+1, so add 1 hour to UTC
-  const nigeriaTime = new Date(date.getTime() + 60 * 60 * 1000);
-  return nigeriaTime;
-};
-
-// Check if a day is a working day in Nigeria timezone
-const isWorkingDay = (date) => {
-  const dayOfWeek = date.getDay();
-  return dayOfWeek !== 0 && dayOfWeek !== 6; // 0 = Sunday, 6 = Saturday
-};
 
 /* ═══════════════════════════════════════════════ */
 const InvestmentDetails = () => {
@@ -181,51 +217,27 @@ const InvestmentDetails = () => {
       minimumFractionDigits: 0,
     }).format(n || 0);
 
-  const fmtDate = (d) => {
-    if (!d) return "N/A";
-    // Convert to Nigeria timezone for display
-    const nigeriaDate = getNigeriaDate(d);
-    return nigeriaDate.toLocaleDateString("en-NG", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Africa/Lagos",
-    });
-  };
-
-  const fmtDateShort = (d) => {
-    if (!d) return "N/A";
-    const nigeriaDate = getNigeriaDate(d);
-    return nigeriaDate.toLocaleDateString("en-NG", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: "Africa/Lagos",
-    });
-  };
+  // Use Nigeria formatted dates
+  const fmtDate = formatDateNigeria;
+  const fmtDateShort = formatDateShortNigeria;
 
   // Days left calculation in Nigeria timezone
   const daysLeft = (d) => {
     if (!d) return 0;
 
-    const nigeriaNow = new Date();
-    // Set to Nigeria timezone
-    nigeriaNow.setHours(nigeriaNow.getHours() + 1);
+    const now = new Date();
+    const target = new Date(d);
+
+    // Convert both to Nigeria timezone for comparison
+    const nigeriaNow = new Date(now.getTime() + 60 * 60 * 1000);
+    const nigeriaTarget = new Date(target.getTime() + 60 * 60 * 1000);
+
+    // Set to midnight for accurate day calculation
     nigeriaNow.setHours(0, 0, 0, 0);
+    nigeriaTarget.setHours(0, 0, 0, 0);
 
-    const targetDate = getNigeriaDate(d);
-    targetDate.setHours(0, 0, 0, 0);
-
-    const diffTime = targetDate - nigeriaNow;
+    const diffTime = nigeriaTarget - nigeriaNow;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    console.log("Days left calculation:", {
-      today: nigeriaNow.toDateString(),
-      target: targetDate.toDateString(),
-      diff: diffDays,
-    });
 
     return diffDays > 0 ? diffDays : 0;
   };
@@ -234,22 +246,19 @@ const InvestmentDetails = () => {
   const addWorkingDays = (startDateStr, days) => {
     if (!startDateStr) return "N/A";
 
+    const startDate = new Date(startDateStr);
     // Convert to Nigeria timezone
-    const startDate = getNigeriaDate(startDateStr);
-    // Set to midnight Nigeria time
-    startDate.setHours(0, 0, 0, 0);
+    const nigeriaStart = new Date(startDate.getTime() + 60 * 60 * 1000);
+    nigeriaStart.setHours(0, 0, 0, 0);
 
-    let currentDate = new Date(startDate);
+    let currentDate = new Date(nigeriaStart);
     let workingDaysAdded = 0;
-
-    console.log("Starting calculation:");
-    console.log("Start date (Nigeria):", startDate.toDateString());
 
     while (workingDaysAdded < days) {
       currentDate.setDate(currentDate.getDate() + 1);
-      if (isWorkingDay(currentDate)) {
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         workingDaysAdded++;
-        console.log(`Day ${workingDaysAdded}: ${currentDate.toDateString()}`);
       }
     }
 
@@ -272,15 +281,8 @@ const InvestmentDetails = () => {
 
     if (withdrawalsCount >= expectedWithdrawals) return null;
 
-    // Calculate based on start date
     const startDate = investment.startDate || investment.createdAt;
-    const daysToAdd = (withdrawalsCount + 1) * 5; // 5, 10, or 15 working days
-
-    console.log("Calculating next withdrawal:", {
-      startDate,
-      withdrawalsCount,
-      daysToAdd,
-    });
+    const daysToAdd = (withdrawalsCount + 1) * 5;
 
     return addWorkingDays(startDate, daysToAdd);
   };
@@ -333,7 +335,7 @@ const InvestmentDetails = () => {
   const nextAmount = investment.expectedReturn / totalPayments;
   const hasPending = wd.some((w) => w.status === "pending");
 
-  // Use calculated next withdrawal date if not provided by API
+  // Use nextWithdrawalDate from API or calculate
   const nextWithdrawalDate =
     investment.nextWithdrawalDate || getNextWithdrawalDate();
 
@@ -608,7 +610,9 @@ const InvestmentDetails = () => {
                             {fmt(nextAmount)}
                           </p>
                           <p className="text-white/40 text-xs mt-1">
-                            {nextWithdrawalDate || "Processing"}
+                            {nextWithdrawalDate
+                              ? fmtDateShort(nextWithdrawalDate)
+                              : "Processing"}
                           </p>
                         </div>
                         {nextWithdrawalDate && (
@@ -796,13 +800,13 @@ const InvestmentDetails = () => {
                       {hasPending
                         ? "You have a pending withdrawal request"
                         : nextWithdrawalDate
-                          ? `Available on ${nextWithdrawalDate}`
+                          ? `Available on ${fmtDateShort(nextWithdrawalDate)}`
                           : "Processing withdrawal date"}
                     </p>
                   </div>
                 )}
 
-                {!user?.hasBankDetails && (
+                {!user?.bankDetails?.accountNumber && (
                   <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
                     <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                     <p className="text-[11px] text-amber-800">
