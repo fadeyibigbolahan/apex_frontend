@@ -80,14 +80,7 @@ const Input = ({
 );
 
 /* ── FIXED: Select with minimum font size ── */
-const Select = ({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder,
-  required,
-}) => (
+const Select = ({ label, value, onChange, options, placeholder, required }) => (
   <div className="w-full">
     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
       {label}
@@ -362,7 +355,7 @@ const Profile = () => {
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(
-      `${window.location.origin}/register?ref=${user?.referralCode}`,
+      `${window.location.origin}/apex_frontend/#/register?ref=${user?.referralCode}`,
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -569,7 +562,8 @@ const Profile = () => {
                   </button>
                 </div>
                 <p className="text-white/40 text-[10px] sm:text-xs truncate">
-                  Earn <span className="text-emerald-400 font-semibold">5%</span>{" "}
+                  Earn{" "}
+                  <span className="text-emerald-400 font-semibold">5%</span>{" "}
                   bonus when referrals invest
                 </p>
               </div>
@@ -625,13 +619,17 @@ const Profile = () => {
                       <div
                         className={`w-6 h-6 sm:w-7 sm:h-7 ${bg} rounded-lg flex items-center justify-center shrink-0`}
                       >
-                        <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${color}`} />
+                        <Icon
+                          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${color}`}
+                        />
                       </div>
                       <span className="text-[11px] sm:text-xs text-gray-600 truncate">
                         {label}
                       </span>
                     </div>
-                    <span className={`text-[11px] sm:text-xs font-bold ${color} shrink-0 ml-1 sm:ml-2`}>
+                    <span
+                      className={`text-[11px] sm:text-xs font-bold ${color} shrink-0 ml-1 sm:ml-2`}
+                    >
                       {val}
                     </span>
                   </div>
@@ -812,7 +810,10 @@ const Profile = () => {
                       label="Account Name"
                       value={bankForm.accountName}
                       onChange={(e) =>
-                        setBankForm({ ...bankForm, accountName: e.target.value })
+                        setBankForm({
+                          ...bankForm,
+                          accountName: e.target.value,
+                        })
                       }
                       placeholder="Full account name"
                       required
@@ -844,8 +845,8 @@ const Profile = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-lg sm:rounded-xl p-2.5 sm:p-3 mb-4 sm:mb-5 flex items-start gap-1.5 sm:gap-2 w-full">
                     <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0 mt-0.5" />
                     <p className="text-[10px] sm:text-xs text-amber-800">
-                      Bank details will be locked after saving. Contact admin for
-                      any future changes.
+                      Bank details will be locked after saving. Contact admin
+                      for any future changes.
                     </p>
                   </div>
 
@@ -903,8 +904,8 @@ const Profile = () => {
                   </div>
                   {profileData.bankDetails.isLocked && (
                     <p className="text-[10px] sm:text-[11px] text-gray-400 flex items-center gap-1 pt-1">
-                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked for security — contact
-                      admin to request changes
+                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked for
+                      security — contact admin to request changes
                     </p>
                   )}
                 </div>
@@ -1038,7 +1039,9 @@ const Profile = () => {
                   <p className="text-sm sm:text-base font-semibold text-gray-900 mb-1">
                     {passwordSuccess}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-gray-400">Closing…</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">
+                    Closing…
+                  </p>
                 </div>
               ) : (
                 <form onSubmit={handlePasswordChange} className="w-full">
