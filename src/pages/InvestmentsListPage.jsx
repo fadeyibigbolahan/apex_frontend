@@ -41,6 +41,25 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
+/* ── Helper functions for Nigeria timezone (UTC+1) ── */
+const getNigeriaDate = (dateString) => {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  // Nigeria is UTC+1, so add 1 hour to UTC for display purposes
+  return new Date(date.getTime() + 60 * 60 * 1000);
+};
+
+const formatDateNigeria = (dateString) => {
+  if (!dateString) return "N/A";
+  const nigeriaDate = getNigeriaDate(dateString);
+  return nigeriaDate.toLocaleDateString("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Africa/Lagos",
+  });
+};
+
 /* ── status config ── */
 const statusConfig = {
   pending: {
@@ -231,12 +250,7 @@ const InvestmentsList = () => {
       minimumFractionDigits: 0,
     }).format(n || 0);
 
-  const fmtDate = (d) =>
-    new Date(d).toLocaleDateString("en-NG", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+  const fmtDate = (d) => formatDateNigeria(d);
 
   const getProgress = (inv) => {
     if (inv.investmentStatus === "completed") return 100;

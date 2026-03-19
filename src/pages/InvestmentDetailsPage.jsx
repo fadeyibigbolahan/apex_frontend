@@ -88,6 +88,20 @@ const InfoTile = ({ label, value, color }) => (
   </div>
 );
 
+// Helper function to get Nigeria timezone date (UTC+1)
+const getNigeriaDate = (dateString) => {
+  const date = new Date(dateString);
+  // Nigeria is UTC+1, so add 1 hour to UTC
+  const nigeriaTime = new Date(date.getTime() + 60 * 60 * 1000);
+  return nigeriaTime;
+};
+
+// Check if a day is a working day in Nigeria timezone
+const isWorkingDay = (date) => {
+  const dayOfWeek = date.getDay();
+  return dayOfWeek !== 0 && dayOfWeek !== 6; // 0 = Sunday, 6 = Saturday
+};
+
 /* ═══════════════════════════════════════════════ */
 const InvestmentDetails = () => {
   const { id } = useParams();
@@ -167,54 +181,75 @@ const InvestmentDetails = () => {
       minimumFractionDigits: 0,
     }).format(n || 0);
 
-  const fmtDate = (d) =>
-    d
-      ? new Date(d).toLocaleDateString("en-NG", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "N/A";
-
-  const fmtDateShort = (d) =>
-    d
-      ? new Date(d).toLocaleDateString("en-NG", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : "N/A";
-
-  // FIXED: Days left calculation
-  const daysLeft = (d) => {
-    if (!d) return 0;
-    const today = new Date();
-    const target = new Date(d);
-
-    // Set both to midnight for accurate day calculation
-    today.setHours(0, 0, 0, 0);
-    target.setHours(0, 0, 0, 0);
-
-    const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-    return diff > 0 ? diff : 0;
+  const fmtDate = (d) => {
+    if (!d) return "N/A";
+    // Convert to Nigeria timezone for display
+    const nigeriaDate = getNigeriaDate(d);
+    return nigeriaDate.toLocaleDateString("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Africa/Lagos",
+    });
   };
 
-  // FIXED: Add working days calculation
+  const fmtDateShort = (d) => {
+    if (!d) return "N/A";
+    const nigeriaDate = getNigeriaDate(d);
+    return nigeriaDate.toLocaleDateString("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "Africa/Lagos",
+    });
+  };
+
+  // Days left calculation in Nigeria timezone
+  const daysLeft = (d) => {
+    if (!d) return 0;
+
+    const nigeriaNow = new Date();
+    // Set to Nigeria timezone
+    nigeriaNow.setHours(nigeriaNow.getHours() + 1);
+    nigeriaNow.setHours(0, 0, 0, 0);
+
+    const targetDate = getNigeriaDate(d);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const diffTime = targetDate - nigeriaNow;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    console.log("Days left calculation:", {
+      today: nigeriaNow.toDateString(),
+      target: targetDate.toDateString(),
+      diff: diffDays,
+    });
+
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // Add working days in Nigeria timezone
   const addWorkingDays = (startDateStr, days) => {
     if (!startDateStr) return "N/A";
 
-    const startDate = new Date(startDateStr);
+    // Convert to Nigeria timezone
+    const startDate = getNigeriaDate(startDateStr);
+    // Set to midnight Nigeria time
+    startDate.setHours(0, 0, 0, 0);
+
     let currentDate = new Date(startDate);
     let workingDaysAdded = 0;
 
-    // Add working days (excluding weekends)
+    console.log("Starting calculation:");
+    console.log("Start date (Nigeria):", startDate.toDateString());
+
     while (workingDaysAdded < days) {
       currentDate.setDate(currentDate.getDate() + 1);
-      const dayOfWeek = currentDate.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      if (isWorkingDay(currentDate)) {
         workingDaysAdded++;
+        console.log(`Day ${workingDaysAdded}: ${currentDate.toDateString()}`);
       }
     }
 
@@ -222,10 +257,11 @@ const InvestmentDetails = () => {
       day: "numeric",
       month: "short",
       year: "numeric",
+      timeZone: "Africa/Lagos",
     });
   };
 
-  // FIXED: Calculate next withdrawal date manually if not provided by API
+  // Calculate next withdrawal date manually if not provided by API
   const getNextWithdrawalDate = () => {
     if (!investment) return null;
     if (investment.paymentStatus !== "confirmed") return null;
@@ -239,6 +275,12 @@ const InvestmentDetails = () => {
     // Calculate based on start date
     const startDate = investment.startDate || investment.createdAt;
     const daysToAdd = (withdrawalsCount + 1) * 5; // 5, 10, or 15 working days
+
+    console.log("Calculating next withdrawal:", {
+      startDate,
+      withdrawalsCount,
+      daysToAdd,
+    });
 
     return addWorkingDays(startDate, daysToAdd);
   };
