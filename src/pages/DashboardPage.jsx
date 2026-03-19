@@ -318,14 +318,13 @@ const Dashboard = () => {
       </motion.div>
 
       {/* ── REFERRAL BANNER ── */}
-      <motion.div
+      {/* <motion.div
         custom={4}
         variants={fadeUp}
         initial="hidden"
         animate="visible"
         className="relative overflow-hidden bg-[#0b0f1a] rounded-2xl p-5 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        {/* decorative blobs */}
         <div className="absolute -top-8 -right-8 w-40 h-40 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute -bottom-8 right-20 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
 
@@ -361,7 +360,7 @@ const Dashboard = () => {
             )}
           </button>
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* ── MAIN GRID ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

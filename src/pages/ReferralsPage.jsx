@@ -149,7 +149,7 @@ const Referrals = () => {
     });
   };
 
-  const referralLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
+  const referralLink = `${window.location.origin}/#/register?ref=${user?.referralCode}`;
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(referralLink);
