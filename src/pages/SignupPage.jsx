@@ -15,6 +15,7 @@ import {
   Zap,
   TrendingUp,
   Shield,
+  User,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -84,6 +85,7 @@ const benefits = [
 const Register = () => {
   const [formData, setFormData] = useState({
     email: "",
+    username: "",
     password: "",
     confirmPassword: "",
     referralCode: "",
@@ -277,7 +279,8 @@ const Register = () => {
     };
   }, []);
 
-  React.useEffect(() => {
+  // Get referral code from URL
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const refCode = params.get("ref");
     if (refCode) setFormData((prev) => ({ ...prev, referralCode: refCode }));
@@ -304,22 +307,52 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === "email" ? value.trim().toLowerCase() : value,
-    });
+
+    // For username: only lowercase letters, numbers, and underscores
+    if (name === "username") {
+      const cleanValue = value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+      setFormData({
+        ...formData,
+        [name]: cleanValue,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: name === "email" ? value.trim().toLowerCase() : value,
+      });
+    }
+
     setError("");
     setSuccess("");
     if (name === "password") checkPasswordStrength(value);
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
+    if (
+      !formData.email ||
+      !formData.username ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
       setError("All fields are required");
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       setError("Enter a valid email address");
+      return false;
+    }
+    if (formData.username.length < 3) {
+      setError("Username must be at least 3 characters");
+      return false;
+    }
+    if (formData.username.length > 20) {
+      setError("Username must be less than 20 characters");
+      return false;
+    }
+    if (!/^[a-z0-9_]+$/.test(formData.username)) {
+      setError(
+        "Username can only contain lowercase letters, numbers, and underscores",
+      );
       return false;
     }
     if (formData.password.length < 6) {
@@ -338,22 +371,28 @@ const Register = () => {
     setError("");
     setSuccess("");
     setLoading(true);
+
     if (!validateForm()) {
       setLoading(false);
       return;
     }
+
     try {
       const response = await axios.post(`${url}auth/register`, {
         email: formData.email,
         password: formData.password,
-        referralCode: formData.referralCode || undefined,
+        referralCode: formData.username, // Username becomes referral code
+        referredBy: formData.referralCode || undefined,
       });
+
       const { token, data } = response.data;
       localStorage.setItem("token", token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
       login({
         id: data.user._id,
         email: data.user.email,
+        username: data.user.referralCode,
         firstName: data.user.firstName,
         lastName: data.user.lastName,
         role: data.user.role,
@@ -364,6 +403,7 @@ const Register = () => {
         retradingBonus: data.user.retradingBonus,
         hasBankDetails: false,
       });
+
       setSuccess("Account created! Redirecting…");
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
@@ -389,14 +429,12 @@ const Register = () => {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap'); 
         .serif{font-family:'DM Serif Display',Georgia,serif;}
         
-        /* Glass morphism effects */
         .glass-card {
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(147, 51, 234, 0.2);
         }
         
-        /* Input styles - fixed positioning */
         input, select, textarea {
           font-size: 16px !important;
         }
@@ -409,7 +447,6 @@ const Register = () => {
           transition: all 0.2s;
         }
         
-        /* Desktop input styles */
         .desktop-input {
           background-color: #f9fafb;
           border: 1px solid #e5e7eb;
@@ -425,7 +462,6 @@ const Register = () => {
           ring: 2px solid rgba(147, 51, 234, 0.2);
         }
         
-        /* Mobile input styles */
         .mobile-input {
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(147, 51, 234, 0.3);
@@ -440,14 +476,12 @@ const Register = () => {
           outline: none;
         }
         
-        /* Password strength bar colors */
         .bg-red-400 { background-color: #f87171; }
         .bg-amber-400 { background-color: #fbbf24; }
         .bg-emerald-500 { background-color: #10b981; }
         .bg-gray-100 { background-color: #f3f4f6; }
         .bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
 
-        /* Star animations */
         @keyframes twinkle {
           0%, 100% { opacity: 0.2; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.2); }
@@ -491,7 +525,6 @@ const Register = () => {
 
       {/* Desktop Left Panel with Galaxy Effect */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden flex-col justify-between p-12">
-        {/* Gradient Background */}
         <div
           className="absolute inset-0 w-full h-full"
           style={{
@@ -500,11 +533,7 @@ const Register = () => {
             zIndex: 0,
           }}
         />
-
-        {/* Stars Container for Desktop */}
         <div id="register-stars-container" />
-
-        {/* Subtle radial gradient overlay for depth */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -514,7 +543,6 @@ const Register = () => {
           }}
         />
 
-        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -529,7 +557,6 @@ const Register = () => {
           </span>
         </motion.div>
 
-        {/* Main copy */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -545,12 +572,11 @@ const Register = () => {
             starts <em className="not-italic text-purple-300">here.</em>
           </h2>
           <p className="text-gray-300 text-base leading-relaxed max-w-sm">
-            Create an account in under two minutes and start earning structured
-            returns on your capital.
+            Choose a unique username and create your account in under two
+            minutes.
           </p>
         </motion.div>
 
-        {/* Benefit cards */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -590,7 +616,6 @@ const Register = () => {
       >
         {/* Mobile version with galaxy background */}
         <div className="lg:hidden relative min-h-screen">
-          {/* Gradient Background for Mobile */}
           <div
             className="fixed inset-0 w-full h-full"
             style={{
@@ -599,11 +624,7 @@ const Register = () => {
               zIndex: 0,
             }}
           />
-
-          {/* Stars Container for Mobile */}
           <div id="mobile-stars-container" className="fixed inset-0" />
-
-          {/* Mobile gradient overlay */}
           <div
             className="fixed inset-0 pointer-events-none"
             style={{
@@ -613,7 +634,6 @@ const Register = () => {
             }}
           />
 
-          {/* Mobile top bar */}
           <div className="relative z-10 flex items-center justify-between p-5 border-b border-purple-500/30 glass-card">
             <div className="flex items-center gap-2">
               <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
@@ -639,17 +659,15 @@ const Register = () => {
               transition={{ duration: 0.5 }}
               className="w-full max-w-sm"
             >
-              {/* Header */}
               <div className="mb-7">
                 <h1 className="serif text-3xl text-white mb-1.5">
                   Create account
                 </h1>
                 <p className="text-sm text-gray-300">
-                  Join Apex Trading and start investing today
+                  Choose a unique username to get started
                 </p>
               </div>
 
-              {/* Referral badge */}
               <AnimatePresence>
                 {formData.referralCode && (
                   <motion.div
@@ -671,7 +689,6 @@ const Register = () => {
                 )}
               </AnimatePresence>
 
-              {/* Alerts */}
               <AnimatePresence>
                 {success && (
                   <motion.div
@@ -701,8 +718,34 @@ const Register = () => {
                 )}
               </AnimatePresence>
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Username Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-medium text-gray-300">
+                      Username <span className="text-red-400">*</span>
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 z-10 left-3 flex items-start pt-4 pointer-events-none">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      placeholder="e.g., john_doe"
+                      required
+                      className="input-base mobile-input"
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-gray-400">
+                    Lowercase letters, numbers, and underscores only. 3-20
+                    characters.
+                  </p>
+                </div>
+
                 {/* Email */}
                 <InputField icon={Mail} label="Email address">
                   <input
@@ -742,7 +785,6 @@ const Register = () => {
                       )}
                     </button>
                   </div>
-                  {/* Strength bar */}
                   {formData.password && (
                     <div className="mt-3">
                       <div className="flex gap-1 mb-1">
@@ -808,19 +850,19 @@ const Register = () => {
                   )}
                 </InputField>
 
-                {/* Referral code */}
+                {/* Referral code (optional) */}
                 <InputField
                   icon={Gift}
-                  label="Referral code"
+                  label="Referral code (optional)"
                   optional
-                  hint="Enter a code to earn 5% on your first investment"
+                  hint="Enter a friend's username to earn 5% bonus"
                 >
                   <input
                     type="text"
                     name="referralCode"
                     value={formData.referralCode}
                     onChange={handleChange}
-                    placeholder="e.g. APEX123456"
+                    placeholder="e.g., john_doe"
                     className="input-base mobile-input"
                   />
                 </InputField>
@@ -873,7 +915,6 @@ const Register = () => {
                 </button>
               </form>
 
-              {/* Footer links */}
               <p className="mt-6 text-center text-sm text-gray-300">
                 Already have an account?{" "}
                 <Link
@@ -896,17 +937,15 @@ const Register = () => {
               transition={{ duration: 0.5 }}
               className="w-full max-w-sm"
             >
-              {/* Header */}
               <div className="mb-7">
                 <h1 className="serif text-3xl text-gray-900 mb-1.5">
                   Create account
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Join Apex Trading and start investing today
+                  Choose a unique username to get started
                 </p>
               </div>
 
-              {/* Referral badge */}
               <AnimatePresence>
                 {formData.referralCode && (
                   <motion.div
@@ -928,7 +967,6 @@ const Register = () => {
                 )}
               </AnimatePresence>
 
-              {/* Alerts */}
               <AnimatePresence>
                 {success && (
                   <motion.div
@@ -958,8 +996,35 @@ const Register = () => {
                 )}
               </AnimatePresence>
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Username Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-medium text-gray-700">
+                      Username <span className="text-red-500">*</span>
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      placeholder="e.g., john_doe"
+                      required
+                      className="w-full pl-10 pr-3 py-3 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-gray-50"
+                      style={{ fontSize: "16px" }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    Lowercase letters, numbers, and underscores only. 3-20
+                    characters.
+                  </p>
+                </div>
+
                 {/* Email */}
                 <InputField icon={Mail} label="Email address">
                   <div className="relative">
@@ -1001,7 +1066,6 @@ const Register = () => {
                       )}
                     </button>
                   </div>
-                  {/* Strength bar */}
                   {formData.password && (
                     <div className="mt-3">
                       <div className="flex gap-1 mb-1">
@@ -1067,19 +1131,19 @@ const Register = () => {
                   )}
                 </InputField>
 
-                {/* Referral code */}
+                {/* Referral code (optional) */}
                 <InputField
                   icon={Gift}
-                  label="Referral code"
+                  label="Referral code (optional)"
                   optional
-                  hint="Enter a code to earn 5% on your first investment"
+                  hint="Enter a friend's username to earn 5% bonus"
                 >
                   <input
                     type="text"
                     name="referralCode"
                     value={formData.referralCode}
                     onChange={handleChange}
-                    placeholder="e.g. APEX123456"
+                    placeholder="e.g., john_doe"
                     className="input-base desktop-input"
                   />
                 </InputField>
@@ -1132,7 +1196,6 @@ const Register = () => {
                 </button>
               </form>
 
-              {/* Footer links */}
               <p className="mt-6 text-center text-sm text-gray-500">
                 Already have an account?{" "}
                 <Link

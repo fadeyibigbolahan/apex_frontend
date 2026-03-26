@@ -1,11 +1,12 @@
 import {
-  createHashRouter,
+  createBrowserRouter,
   RouterProvider,
   Navigate,
   Outlet,
 } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/theme-context";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import Layout from "./components/Layout";
@@ -46,7 +47,7 @@ const AdminWithdrawals = lazy(() => import("./pages/AdminWithdrawalsPage"));
 const AdminSettings = lazy(() => import("./pages/AdminSettingsPage"));
 
 function App() {
-  const router = createHashRouter([
+  const router = createBrowserRouter([
     // Public Routes
     {
       element: <PublicLayout />,
@@ -104,20 +105,22 @@ function App() {
   ]);
 
   return (
-    <AuthProvider>
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-emerald-50">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading Apex Trading...</p>
+    <ThemeProvider defaultTheme="system" storageKey="apex-theme">
+      <AuthProvider>
+        <Suspense
+          fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-emerald-50">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading Apex Trading...</p>
+              </div>
             </div>
-          </div>
-        }
-      >
-        <RouterProvider router={router} />
-      </Suspense>
-    </AuthProvider>
+          }
+        >
+          <RouterProvider router={router} />
+        </Suspense>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

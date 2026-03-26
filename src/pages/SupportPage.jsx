@@ -188,28 +188,31 @@ const Support = () => {
       description: "Learn how to start investing",
       icon: TrendingUp,
       link: "/investments/create",
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
     },
     {
       title: "Referral Program",
       description: "Earn 5% on friend's investments",
       icon: Users,
       link: "/referrals",
-      color: "bg-purple-50 text-purple-600",
+      color:
+        "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
     },
     {
       title: "Bonus System",
       description: "How to earn retrading bonuses",
       icon: Gift,
       link: "/bonuses",
-      color: "bg-emerald-50 text-emerald-600",
+      color:
+        "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
     },
     {
       title: "Withdrawal Process",
       description: "How and when to withdraw",
       icon: Wallet,
       link: "/withdrawals",
-      color: "bg-amber-50 text-amber-600",
+      color:
+        "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
     },
   ];
 
@@ -220,7 +223,7 @@ const Support = () => {
       description: "Get a response within 24 hours",
       action: "support@apextrading.com",
       link: "mailto:support@apextrading.com",
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
     },
     {
       icon: MessageCircle,
@@ -228,7 +231,8 @@ const Support = () => {
       description: "Chat with our support team",
       action: "Start Chat",
       link: "#",
-      color: "bg-emerald-50 text-emerald-600",
+      color:
+        "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
     },
     {
       icon: Phone,
@@ -236,7 +240,8 @@ const Support = () => {
       description: "Mon-Fri, 9am-6pm",
       action: "+234 800 000 0000",
       link: "tel:+2348000000000",
-      color: "bg-purple-50 text-purple-600",
+      color:
+        "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
     },
     {
       icon: Headphones,
@@ -244,12 +249,13 @@ const Support = () => {
       description: "Browse documentation",
       action: "Visit Help Center",
       link: "#",
-      color: "bg-amber-50 text-amber-600",
+      color:
+        "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
     },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* ── HEADER ── */}
       <motion.div
         variants={stagger}
@@ -258,13 +264,13 @@ const Support = () => {
         className="mb-8"
       >
         <motion.div variants={fadeUp} className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-emerald-500 dark:from-blue-500 dark:to-emerald-500 rounded-2xl mb-4 shadow-lg">
             <HelpCircle className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             How can we help you?
           </h1>
-          <p className="text-gray-500 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Find answers to common questions or reach out to our support team
           </p>
         </motion.div>
@@ -283,17 +289,19 @@ const Support = () => {
             <motion.div key={i} variants={fadeUp} custom={i}>
               <Link
                 to={item.link}
-                className="group block bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all hover:border-blue-100"
+                className="group block bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300"
               >
                 <div
                   className={`w-10 h-10 ${item.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
                 >
                   <Icon className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 mb-1">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">
                   {item.title}
                 </h3>
-                <p className="text-xs text-gray-400">{item.description}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {item.description}
+                </p>
               </Link>
             </motion.div>
           );
@@ -308,13 +316,13 @@ const Support = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-6 mb-6"
+            className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-sm"
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 Frequently Asked Questions
               </h2>
-              <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
                 {filteredFaqs.length} articles
               </span>
             </div>
@@ -327,8 +335,8 @@ const Support = () => {
                   onClick={() => setActiveTab(cat.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                     activeTab === cat.id
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-blue-600 to-emerald-500 dark:from-blue-500 dark:to-emerald-500 text-white shadow-sm"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   {cat.label} ({cat.count})
@@ -344,25 +352,25 @@ const Support = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="border border-gray-100 rounded-xl overflow-hidden"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
                 >
                   <button
                     onClick={() =>
                       setExpandedFaq(expandedFaq === index ? null : index)
                     }
-                    className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition"
+                    className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                   >
-                    <span className="text-sm font-semibold text-gray-900 pr-4">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white pr-4">
                       {faq.question}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-gray-400 transition-transform ${
+                      className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${
                         expandedFaq === index ? "rotate-180" : ""
                       }`}
                     />
                   </button>
                   {expandedFaq === index && (
-                    <div className="px-4 pb-4 text-xs text-gray-500 leading-relaxed border-t border-gray-100 pt-3">
+                    <div className="px-4 pb-4 text-xs text-gray-600 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-700 pt-3">
                       {faq.answer}
                     </div>
                   )}
@@ -371,8 +379,8 @@ const Support = () => {
 
               {filteredFaqs.length === 0 && (
                 <div className="text-center py-8">
-                  <BookOpen className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">
+                  <BookOpen className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     No questions in this category
                   </p>
                 </div>
@@ -385,7 +393,7 @@ const Support = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-gradient-to-br from-blue-600 to-emerald-600 rounded-2xl p-6 text-white"
+            className="bg-gradient-to-br from-blue-600 to-emerald-500 dark:from-blue-500 dark:to-emerald-500 rounded-2xl p-6 text-white shadow-xl"
           >
             <h3 className="text-lg font-bold mb-4">Still need help?</h3>
             <p className="text-sm text-white/80 mb-6">
@@ -418,9 +426,11 @@ const Support = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-6"
+            className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
           >
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Contact Us</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              Contact Us
+            </h2>
             <div className="space-y-4">
               {contactMethods.map((method, i) => {
                 const Icon = method.icon;
@@ -428,7 +438,7 @@ const Support = () => {
                   <a
                     key={i}
                     href={method.link}
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition group"
+                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition group"
                   >
                     <div
                       className={`w-10 h-10 ${method.color} rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}
@@ -436,13 +446,13 @@ const Support = () => {
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
                         {method.title}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {method.description}
                       </p>
-                      <p className="text-xs font-semibold text-blue-600 mt-1">
+                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">
                         {method.action}{" "}
                         <ExternalLink className="w-3 h-3 inline ml-0.5" />
                       </p>
@@ -458,7 +468,7 @@ const Support = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white"
+            className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-950 dark:to-gray-900 rounded-2xl p-6 text-white shadow-xl"
           >
             <h3 className="text-sm font-bold mb-4">Support Stats</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -481,25 +491,25 @@ const Support = () => {
             </div>
           </motion.div>
 
-          {/* Contact Form */}
+          {/* Contact Form (Commented out in original) */}
           {/* <motion.div
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-white rounded-2xl border border-gray-100 p-6"
+            className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm"
           >
-            <h2 className="text-lg font-bold text-gray-900 mb-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               Send a Message
             </h2>
             {formSubmitted ? (
               <div className="text-center py-6">
-                <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle className="w-6 h-6 text-emerald-500" />
+                <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
                 </div>
-                <p className="text-sm font-semibold text-gray-900 mb-1">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
                   Message Sent!
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   We'll get back to you within 24 hours.
                 </p>
               </div>
@@ -512,7 +522,7 @@ const Support = () => {
                     value={contactForm.name}
                     onChange={handleInputChange}
                     placeholder="Your Name"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     required
                   />
                 </div>
@@ -523,7 +533,7 @@ const Support = () => {
                     value={contactForm.email}
                     onChange={handleInputChange}
                     placeholder="Email Address"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     required
                   />
                 </div>
@@ -534,7 +544,7 @@ const Support = () => {
                     value={contactForm.subject}
                     onChange={handleInputChange}
                     placeholder="Subject"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     required
                   />
                 </div>
@@ -545,13 +555,13 @@ const Support = () => {
                     onChange={handleInputChange}
                     placeholder="Your Message"
                     rows="4"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     required
                   ></textarea>
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4" />
                   Send Message
@@ -565,15 +575,17 @@ const Support = () => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-emerald-100 transition group"
+            className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <MessageSquare className="w-5 h-5 text-emerald-600" />
+              <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-800 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <MessageSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">Live Chat</p>
-                <p className="text-xs text-emerald-600">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Live Chat
+                </p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
                   Typically replies in 5min
                 </p>
               </div>
@@ -588,7 +600,7 @@ const Support = () => {
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="mt-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white"
+        className="mt-8 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 rounded-2xl p-6 text-white shadow-xl"
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">

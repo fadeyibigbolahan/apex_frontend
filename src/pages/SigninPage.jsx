@@ -288,7 +288,7 @@ const Login = () => {
         retradingBonus: data.user.retradingBonus,
         hasBankDetails: data.user.bankDetails?.accountNumber ? true : false,
       });
-      setSuccess("Signed in! Redirecting…");
+      // setSuccess("Signed in! Redirecting…");
       setTimeout(
         () => navigate(data.user.role === "admin" ? "/admin" : "/dashboard"),
         1000,

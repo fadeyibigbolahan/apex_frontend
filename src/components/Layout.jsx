@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/theme-context";
+import ThemeToggle from "./ThemeToggle";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -23,6 +25,7 @@ import apex from "../assets/apex.jpeg";
 
 const Layout = () => {
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,7 +95,7 @@ const Layout = () => {
     "Dashboard";
 
   return (
-    <div className="min-h-screen bg-[#f4f6f9] font-sans">
+    <div className="min-h-screen bg-[#f4f6f9] dark:bg-gray-900 font-sans transition-colors duration-200">
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
@@ -103,7 +106,7 @@ const Layout = () => {
 
       {/* ── SIDEBAR ── */}
       <aside
-        className={`fixed inset-y-0 left-0 w-60 bg-[#0b0f1a] flex flex-col z-30 transform transition-transform duration-300 ease-in-out
+        className={`fixed inset-y-0 left-0 w-60 bg-[#0b0f1a] dark:bg-gray-950 flex flex-col z-30 transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Subtle top accent line */}
@@ -130,11 +133,11 @@ const Layout = () => {
         {/* User card */}
         <div className="mx-3 mb-4 rounded-xl bg-white/5 border border-white/8 px-3 py-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-semibold text-sm shadow-md shrink-0">
-            {user?.firstName?.[0] || user?.email?.[0] || "U"}
+            {user?.referralCode?.[0] || user?.email?.[0] || "U"}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-white text-sm font-medium truncate leading-tight">
-              {user?.firstName || "User"}
+              {user?.referralCode || "User"}
             </p>
             <p className="text-white/40 text-xs truncate leading-tight mt-0.5">
               {user?.email}
@@ -216,22 +219,22 @@ const Layout = () => {
       {/* ── MAIN AREA ── */}
       <div className="lg:pl-60 flex flex-col min-h-screen">
         {/* ── TOPBAR ── */}
-        <header className="fixed top-0 right-0 left-0 lg:left-60 h-14 bg-white/90 backdrop-blur-md border-b border-gray-200/70 z-10 flex items-center px-4 lg:px-6 gap-4">
+        <header className="fixed top-0 right-0 left-0 lg:left-60 h-14 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200/70 dark:border-gray-700/70 z-10 flex items-center px-4 lg:px-6 gap-4 transition-colors">
           {/* Hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           {/* Breadcrumb / page title */}
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-gray-400 text-xs hidden sm:inline">
+            <span className="text-gray-400 dark:text-gray-500 text-xs hidden sm:inline">
               APEX Trading
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-gray-300 hidden sm:inline" />
-            <span className="text-gray-800 text-sm font-semibold truncate">
+            <ChevronRight className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 hidden sm:inline" />
+            <span className="text-gray-800 dark:text-gray-200 text-sm font-semibold truncate">
               {currentPage}
             </span>
           </div>
@@ -241,6 +244,9 @@ const Layout = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* New Investment CTA */}
             <Link
               to="/investments/create"
@@ -259,30 +265,30 @@ const Layout = () => {
             </Link>
 
             {/* Notifications */}
-            <button className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+            <button className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors">
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800" />
             </button>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-gray-200 hidden md:block" />
+            <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 hidden md:block" />
 
             {/* Profile dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center text-white font-semibold text-xs shadow-sm">
-                  {user?.firstName?.[0] || user?.email?.[0] || "U"}
+                  {user?.referralCode?.[0] || user?.email?.[0] || "U"}
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-xs font-semibold text-gray-700 leading-tight">
-                    {user?.firstName || "User"}
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 leading-tight">
+                    {user?.referralCode || "User"}
                   </p>
                 </div>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${showProfileMenu ? "rotate-180" : ""}`}
+                  className={`w-3.5 h-3.5 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${showProfileMenu ? "rotate-180" : ""}`}
                 />
               </button>
 
@@ -292,39 +298,39 @@ const Layout = () => {
                     className="fixed inset-0 z-10"
                     onClick={() => setShowProfileMenu(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20 overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-1.5 z-20 overflow-hidden">
                     {/* Mini user info */}
-                    <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
-                      <p className="text-xs font-semibold text-gray-800">
-                        {user?.firstName || "User"}
+                    <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 mb-1">
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                        {user?.referralCode || "User"}
                       </p>
-                      <p className="text-[11px] text-gray-400 truncate">
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
                         {user?.email}
                       </p>
                     </div>
                     <Link
                       to="/profile"
-                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => setShowProfileMenu(false)}
                     >
-                      <User className="w-3.5 h-3.5 text-gray-400" />
+                      <User className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                       Profile
                     </Link>
                     <Link
                       to="/profile#bank"
-                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => setShowProfileMenu(false)}
                     >
-                      <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+                      <CreditCard className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                       Bank Details
                     </Link>
-                    <div className="border-t border-gray-100 my-1" />
+                    <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
                     <button
                       onClick={() => {
                         setShowProfileMenu(false);
                         handleLogout();
                       }}
-                      className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       Sign Out

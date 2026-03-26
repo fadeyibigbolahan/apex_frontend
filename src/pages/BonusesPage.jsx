@@ -43,31 +43,31 @@ const BonusStatus = ({ status }) => {
   const map = {
     available: {
       label: "Available",
-      bg: "bg-emerald-50",
-      text: "text-emerald-700",
-      ring: "ring-emerald-200",
+      bg: "bg-emerald-50 dark:bg-emerald-900/40",
+      text: "text-emerald-700 dark:text-emerald-300",
+      ring: "ring-emerald-200 dark:ring-emerald-800",
       Icon: CheckCircle,
     },
     pending: {
       label: "Pending",
-      bg: "bg-amber-50",
-      text: "text-amber-700",
-      ring: "ring-amber-200",
+      bg: "bg-amber-50 dark:bg-amber-900/40",
+      text: "text-amber-700 dark:text-amber-300",
+      ring: "ring-amber-200 dark:ring-amber-800",
       Icon: Clock,
     },
     withdrawn: {
       label: "Withdrawn",
-      bg: "bg-gray-100",
-      text: "text-gray-500",
-      ring: "ring-gray-200",
+      bg: "bg-gray-100 dark:bg-gray-800",
+      text: "text-gray-600 dark:text-gray-400",
+      ring: "ring-gray-200 dark:ring-gray-700",
       Icon: History,
     },
   };
   const s = map[status] || {
     label: status,
-    bg: "bg-gray-100",
-    text: "text-gray-500",
-    ring: "ring-gray-200",
+    bg: "bg-gray-100 dark:bg-gray-800",
+    text: "text-gray-600 dark:text-gray-400",
+    ring: "ring-gray-200 dark:ring-gray-700",
     Icon: null,
   };
   const Icon = s.Icon;
@@ -138,6 +138,7 @@ const Bonuses = () => {
   };
 
   useEffect(() => {
+    console.log("auth usr", user);
     fetchBonuses();
   }, []);
 
@@ -247,6 +248,8 @@ const Bonuses = () => {
   const monthlyData = getMonthlyData();
   const canWithdraw = stats.totalAvailable >= stats.minWithdrawal;
 
+  console.log("filtered Bonuse", filteredBonuses);
+
   const tabs = [
     { key: "all", label: "All", count: bonuses.length },
     {
@@ -266,8 +269,8 @@ const Bonuses = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/30 border-t-blue-600 animate-spin" />
-          <p className="text-sm text-gray-400 tracking-wide">
+          <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/30 border-t-blue-600 dark:border-blue-400/30 dark:border-t-blue-400 animate-spin" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 tracking-wide">
             Loading bonuses…
           </p>
         </div>
@@ -275,7 +278,7 @@ const Bonuses = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* ── HEADER ── */}
       <motion.div
         variants={stagger}
@@ -284,11 +287,13 @@ const Bonuses = () => {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7"
       >
         <motion.div variants={fadeUp}>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-500 mb-1">
             Earnings
           </p>
-          <h1 className="text-2xl font-bold text-gray-900">My Bonuses</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            My Bonuses
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
             Track and withdraw your referral and retrading bonuses
           </p>
         </motion.div>
@@ -296,7 +301,7 @@ const Bonuses = () => {
           <button
             onClick={() => fetchBonuses(true)}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -313,7 +318,7 @@ const Bonuses = () => {
         variants={stagger}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
       >
         {[
           {
@@ -322,17 +327,17 @@ const Bonuses = () => {
             sub1: {
               label: "Available",
               val: fmt(stats.availableReferral),
-              color: "text-emerald-600",
+              color: "text-emerald-600 dark:text-emerald-400",
             },
             sub2: {
               label: "Pending",
               val: fmt(stats.pendingReferral),
-              color: "text-amber-600",
+              color: "text-amber-600 dark:text-amber-400",
             },
             icon: Users,
-            iconBg: "bg-blue-50",
-            iconColor: "text-blue-600",
-            valColor: "text-blue-700",
+            iconBg: "bg-blue-50 dark:bg-blue-900/30",
+            iconColor: "text-blue-600 dark:text-blue-400",
+            valColor: "text-blue-700 dark:text-blue-400",
           },
           {
             label: "Retrading Bonus",
@@ -340,26 +345,26 @@ const Bonuses = () => {
             sub1: {
               label: "Available",
               val: fmt(stats.availableRetrading),
-              color: "text-emerald-600",
+              color: "text-emerald-600 dark:text-emerald-400",
             },
             sub2: {
               label: "Pending",
               val: fmt(stats.pendingRetrading),
-              color: "text-amber-600",
+              color: "text-amber-600 dark:text-amber-400",
             },
             icon: TrendingUp,
-            iconBg: "bg-violet-50",
-            iconColor: "text-violet-600",
-            valColor: "text-violet-700",
+            iconBg: "bg-violet-50 dark:bg-violet-900/30",
+            iconColor: "text-violet-600 dark:text-violet-400",
+            valColor: "text-violet-700 dark:text-violet-400",
           },
           {
             label: "Available to Withdraw",
             value: fmt(stats.totalAvailable),
             progress: true,
             icon: Wallet,
-            iconBg: "bg-emerald-50",
-            iconColor: "text-emerald-600",
-            valColor: "text-emerald-700",
+            iconBg: "bg-emerald-50 dark:bg-emerald-900/30",
+            iconColor: "text-emerald-600 dark:text-emerald-400",
+            valColor: "text-emerald-700 dark:text-emerald-400",
           },
           {
             label: "Total Withdrawn",
@@ -370,12 +375,12 @@ const Bonuses = () => {
                   ? `${Math.round((stats.totalWithdrawn / (stats.totalReferral + stats.totalRetrading || 1)) * 100)}% of total`
                   : "No withdrawals yet",
               val: "",
-              color: "text-gray-400",
+              color: "text-gray-500 dark:text-gray-400",
             },
             icon: History,
-            iconBg: "bg-amber-50",
-            iconColor: "text-amber-600",
-            valColor: "text-amber-700",
+            iconBg: "bg-amber-50 dark:bg-amber-900/30",
+            iconColor: "text-amber-600 dark:text-amber-400",
+            valColor: "text-amber-700 dark:text-amber-400",
           },
         ].map((c, i) => {
           const Icon = c.icon;
@@ -384,7 +389,7 @@ const Bonuses = () => {
               key={c.label}
               custom={i}
               variants={fadeUp}
-              className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition"
+              className="bg-white dark:bg-gray-800/90 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
             >
               <div
                 className={`w-9 h-9 ${c.iconBg} rounded-xl flex items-center justify-center mb-3`}
@@ -394,18 +399,18 @@ const Bonuses = () => {
               <p className={`text-xl font-bold tracking-tight ${c.valColor}`}>
                 {c.value}
               </p>
-              <p className="text-[11px] text-gray-400 uppercase tracking-wide mt-0.5 mb-2">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-0.5 mb-2">
                 {c.label}
               </p>
               {c.progress ? (
                 <div>
-                  <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                  <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mb-1">
                     <span>Min. ₦10,000</span>
                     <span>{stats.withdrawalProgress.toFixed(0)}%</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full transition-all duration-700"
+                      className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 dark:from-blue-400 dark:to-emerald-500 rounded-full transition-all duration-700"
                       style={{ width: `${stats.withdrawalProgress}%` }}
                     />
                   </div>
@@ -438,7 +443,7 @@ const Bonuses = () => {
         className="mb-6"
       >
         {canWithdraw ? (
-          <div className="relative overflow-hidden bg-[#0b0f1a] rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xl">
             <div className="absolute -top-8 -right-8 w-40 h-40 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute bottom-0 left-16 w-32 h-32 bg-blue-600/15 rounded-full blur-2xl pointer-events-none" />
             <div className="relative z-10 flex items-center gap-3">
@@ -460,23 +465,23 @@ const Bonuses = () => {
             </div>
             <button
               onClick={() => setShowWithdrawModal(true)}
-              className="relative z-10 shrink-0 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-blue-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all"
+              className="relative z-10 shrink-0 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 dark:from-emerald-500 dark:to-blue-500 dark:hover:from-emerald-600 dark:hover:to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all duration-300"
             >
               Withdraw Now
             </button>
           </div>
         ) : (
-          <div className="bg-gray-100 border border-gray-200 rounded-2xl p-5 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
-              <Lock className="w-5 h-5 text-gray-400" />
+          <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-700">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Minimum withdrawal: {fmt(stats.minWithdrawal)}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 You need{" "}
-                <span className="font-semibold text-gray-600">
+                <span className="font-semibold text-gray-800 dark:text-gray-200">
                   {fmt(stats.minWithdrawal - stats.totalAvailable)}
                 </span>{" "}
                 more to unlock withdrawal
@@ -492,7 +497,7 @@ const Bonuses = () => {
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="bg-white rounded-xl border border-gray-100 px-4 py-3 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        className="bg-white dark:bg-gray-800/90 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0">
           {tabs.map((t) => (
@@ -501,8 +506,8 @@ const Bonuses = () => {
               onClick={() => setActiveTab(t.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                 activeTab === t.key
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  ? "bg-gradient-to-r from-blue-600 to-emerald-500 dark:from-blue-500 dark:to-emerald-500 text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               {t.label}
@@ -510,7 +515,7 @@ const Bonuses = () => {
                 className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                   activeTab === t.key
                     ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-500"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                 }`}
               >
                 {t.count}
@@ -521,7 +526,7 @@ const Bonuses = () => {
         <select
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
-          className="py-1.5 px-2.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-50 text-gray-600"
+          className="py-1.5 px-2.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300"
         >
           <option value="all">All Time</option>
           <option value="month">Last 30 Days</option>
@@ -531,7 +536,7 @@ const Bonuses = () => {
       </motion.div>
 
       {error && (
-        <div className="mb-5 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 text-center">
+        <div className="mb-5 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-600 dark:text-red-400 text-center">
           {error}
         </div>
       )}
@@ -543,9 +548,9 @@ const Bonuses = () => {
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="bg-white rounded-2xl border border-gray-100 p-5 mb-6"
+          className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 mb-6 shadow-sm"
         >
-          <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-5">
+          <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-5">
             Bonus History
           </h2>
           <div className="flex items-end gap-3 h-36">
@@ -559,32 +564,36 @@ const Bonuses = () => {
                   <div className="w-full flex flex-col-reverse gap-0.5">
                     {d.referral > 0 && (
                       <div
-                        className="w-full bg-blue-500 rounded-md"
+                        className="w-full bg-blue-500 dark:bg-blue-400 rounded-md transition-all duration-300"
                         style={{ height: `${(d.referral / maxVal) * 100}px` }}
                       />
                     )}
                     {d.retrading > 0 && (
                       <div
-                        className="w-full bg-violet-400 rounded-md"
+                        className="w-full bg-violet-400 dark:bg-violet-500 rounded-md transition-all duration-300"
                         style={{ height: `${(d.retrading / maxVal) * 100}px` }}
                       />
                     )}
                   </div>
-                  <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {d.month}
                   </span>
                 </div>
               );
             })}
           </div>
-          <div className="flex items-center justify-center gap-5 mt-3 pt-3 border-t border-gray-50">
+          <div className="flex items-center justify-center gap-5 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 bg-blue-500 rounded-sm" />
-              <span className="text-[11px] text-gray-500">Referral</span>
+              <div className="w-2.5 h-2.5 bg-blue-500 dark:bg-blue-400 rounded-sm" />
+              <span className="text-[11px] text-gray-600 dark:text-gray-400">
+                Referral
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 bg-violet-400 rounded-sm" />
-              <span className="text-[11px] text-gray-500">Retrading</span>
+              <div className="w-2.5 h-2.5 bg-violet-400 dark:bg-violet-500 rounded-sm" />
+              <span className="text-[11px] text-gray-600 dark:text-gray-400">
+                Retrading
+              </span>
             </div>
           </div>
         </motion.div>
@@ -605,36 +614,40 @@ const Bonuses = () => {
                 key={bonus._id || i}
                 custom={i}
                 variants={fadeUp}
-                className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-blue-100 hover:shadow-sm transition"
+                className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-lg transition-all duration-300"
               >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isReferral ? "bg-blue-50" : "bg-violet-50"}`}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        isReferral
+                          ? "bg-blue-50 dark:bg-blue-900/30"
+                          : "bg-violet-50 dark:bg-violet-900/30"
+                      }`}
                     >
                       {isReferral ? (
-                        <Users className="w-4 h-4 text-blue-600" />
+                        <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       ) : (
-                        <TrendingUp className="w-4 h-4 text-violet-600" />
+                        <TrendingUp className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                       )}
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="text-sm font-bold text-gray-900">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">
                           {isReferral ? "Referral Bonus" : "Retrading Bonus"}
                         </p>
                         <BonusStatus status={bonus.status} />
                       </div>
-                      <p className="text-[11px] text-gray-400 mb-1">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
                         {fmtDate(bonus.createdAt)}
                       </p>
                       {isReferral && bonus.referredUser && (
-                        <p className="text-xs text-gray-500">
-                          From: {bonus.referredUser.email || "User"}
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          From: {bonus.referredUser.referralCode || "User"}
                         </p>
                       )}
                       {!isReferral && bonus.metadata && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                           Investment:{" "}
                           {fmt(bonus.metadata?.investmentAmount || 0)}
                         </p>
@@ -645,11 +658,15 @@ const Bonuses = () => {
                   <div className="flex items-center gap-4 sm:shrink-0">
                     <div className="sm:text-right">
                       <p
-                        className={`text-xl font-bold tracking-tight ${isReferral ? "text-blue-700" : "text-violet-700"}`}
+                        className={`text-xl font-bold tracking-tight ${
+                          isReferral
+                            ? "text-blue-700 dark:text-blue-400"
+                            : "text-violet-700 dark:text-violet-400"
+                        }`}
                       >
                         {fmt(bonus.amount)}
                       </p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                         {isReferral ? "5% rate" : "3% rate"}
                       </p>
                     </div>
@@ -659,7 +676,7 @@ const Bonuses = () => {
                           setWithdrawType(bonus.type);
                           setShowWithdrawModal(true);
                         }}
-                        className="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition"
+                        className="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
                       >
                         Withdraw
                       </button>
@@ -669,21 +686,25 @@ const Bonuses = () => {
 
                 {/* meta row */}
                 {bonus.metadata && (
-                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-50">
-                    <div className="bg-gray-50 rounded-xl p-2.5">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2.5">
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
                         {isReferral ? "Investment Amount" : "New Investment"}
                       </p>
-                      <p className="text-xs font-semibold text-gray-800">
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
                         {fmt(bonus.metadata.investmentAmount)}
                       </p>
                     </div>
-                    <div className="bg-gray-50 rounded-xl p-2.5">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2.5">
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
                         Bonus Rate
                       </p>
                       <p
-                        className={`text-xs font-semibold ${isReferral ? "text-blue-600" : "text-violet-600"}`}
+                        className={`text-xs font-semibold ${
+                          isReferral
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-violet-600 dark:text-violet-400"
+                        }`}
                       >
                         {bonus.metadata.rate}%
                       </p>
@@ -700,15 +721,15 @@ const Bonuses = () => {
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="bg-white rounded-2xl border border-gray-100 p-16 text-center mb-6"
+          className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-16 text-center mb-6"
         >
-          <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Gift className="w-7 h-7 text-gray-300" />
+          <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Gift className="w-7 h-7 text-gray-400 dark:text-gray-600" />
           </div>
-          <p className="text-base font-bold text-gray-800 mb-1">
+          <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
             No bonuses yet
           </p>
-          <p className="text-sm text-gray-400 mb-6 max-w-xs mx-auto">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs mx-auto">
             {activeTab === "referral"
               ? "Refer friends to earn 5% on their investments"
               : activeTab === "retrading"
@@ -719,7 +740,7 @@ const Bonuses = () => {
             {activeTab !== "retrading" && (
               <Link
                 to="/referrals"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
               >
                 <Users className="w-4 h-4" /> Go to Referrals
               </Link>
@@ -727,7 +748,7 @@ const Bonuses = () => {
             {activeTab !== "referral" && (
               <Link
                 to="/investments/create"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-xl hover:bg-violet-700 transition"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-600 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
               >
                 <TrendingUp className="w-4 h-4" /> Make Investment
               </Link>
@@ -744,8 +765,8 @@ const Bonuses = () => {
         animate="visible"
         className="grid md:grid-cols-2 gap-4"
       >
-        <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
-          <h3 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5 border border-blue-200 dark:border-blue-800">
+          <h3 className="text-sm font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
             <Users className="w-4 h-4" /> Referral Bonus (5%)
           </h3>
           <ul className="space-y-2">
@@ -757,16 +778,16 @@ const Bonuses = () => {
             ].map((t) => (
               <li
                 key={t}
-                className="flex items-start gap-2 text-xs text-blue-800 leading-relaxed"
+                className="flex items-start gap-2 text-xs text-blue-800 dark:text-blue-300 leading-relaxed"
               >
-                <CheckCircle className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
+                <CheckCircle className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
                 {t}
               </li>
             ))}
           </ul>
         </div>
-        <div className="bg-violet-50 rounded-2xl p-5 border border-violet-100">
-          <h3 className="text-sm font-bold text-violet-900 mb-3 flex items-center gap-2">
+        <div className="bg-violet-50 dark:bg-violet-900/20 rounded-2xl p-5 border border-violet-200 dark:border-violet-800">
+          <h3 className="text-sm font-bold text-violet-900 dark:text-violet-300 mb-3 flex items-center gap-2">
             <TrendingUp className="w-4 h-4" /> Retrading Bonus (3%)
           </h3>
           <ul className="space-y-2">
@@ -778,9 +799,9 @@ const Bonuses = () => {
             ].map((t) => (
               <li
                 key={t}
-                className="flex items-start gap-2 text-xs text-violet-800 leading-relaxed"
+                className="flex items-start gap-2 text-xs text-violet-800 dark:text-violet-300 leading-relaxed"
               >
-                <CheckCircle className="w-3.5 h-3.5 text-violet-500 shrink-0 mt-0.5" />
+                <CheckCircle className="w-3.5 h-3.5 text-violet-500 dark:text-violet-400 shrink-0 mt-0.5" />
                 {t}
               </li>
             ))}
@@ -790,19 +811,19 @@ const Bonuses = () => {
 
       {/* ── WITHDRAWAL MODAL ── */}
       {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <div>
-                <h3 className="text-sm font-bold text-gray-900">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                   Withdraw Bonuses
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   Select which bonuses to withdraw
                 </p>
               </div>
@@ -813,7 +834,7 @@ const Bonuses = () => {
                   setWithdrawSuccess("");
                   setWithdrawType("all");
                 }}
-                className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 transition"
+                className="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -822,13 +843,15 @@ const Bonuses = () => {
             <div className="p-6">
               {withdrawSuccess ? (
                 <div className="text-center py-6">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="w-6 h-6 text-emerald-500" />
+                  <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
                     {withdrawSuccess}
                   </p>
-                  <p className="text-xs text-gray-400">Redirecting…</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Redirecting…
+                  </p>
                 </div>
               ) : (
                 <>
@@ -839,24 +862,27 @@ const Bonuses = () => {
                         label: "All Bonuses",
                         sub: "Referral + Retrading",
                         amount: stats.totalAvailable,
-                        color: "text-gray-800",
-                        active: "border-blue-500 bg-blue-50",
+                        color: "text-gray-800 dark:text-gray-200",
+                        active:
+                          "border-blue-500 bg-blue-50 dark:bg-blue-900/30",
                       },
                       {
                         val: "referral",
                         label: "Referral Bonus Only",
                         sub: "From referred friends",
                         amount: stats.availableReferral,
-                        color: "text-blue-600",
-                        active: "border-blue-500 bg-blue-50",
+                        color: "text-blue-600 dark:text-blue-400",
+                        active:
+                          "border-blue-500 bg-blue-50 dark:bg-blue-900/30",
                       },
                       {
                         val: "retrading",
                         label: "Retrading Bonus Only",
                         sub: "From early reinvestments",
                         amount: stats.availableRetrading,
-                        color: "text-violet-600",
-                        active: "border-violet-500 bg-violet-50",
+                        color: "text-violet-600 dark:text-violet-400",
+                        active:
+                          "border-violet-500 bg-violet-50 dark:bg-violet-900/30",
                       },
                     ].map((opt) => (
                       <label
@@ -864,7 +890,7 @@ const Bonuses = () => {
                         className={`flex items-center justify-between p-4 border-2 rounded-xl cursor-pointer transition ${
                           withdrawType === opt.val
                             ? opt.active
-                            : "border-gray-200 hover:border-gray-300"
+                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                         }`}
                       >
                         <input
@@ -876,10 +902,12 @@ const Bonuses = () => {
                           className="sr-only"
                         />
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
                             {opt.label}
                           </p>
-                          <p className="text-xs text-gray-400">{opt.sub}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {opt.sub}
+                          </p>
                         </div>
                         <p className={`text-sm font-bold ${opt.color}`}>
                           {fmt(opt.amount)}
@@ -889,16 +917,16 @@ const Bonuses = () => {
                   </div>
 
                   {!user?.hasBankDetails && (
-                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-800">
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-800 dark:text-amber-300">
                         Add bank details in your profile before withdrawing.
                       </p>
                     </div>
                   )}
 
                   {withdrawError && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-600 dark:text-red-400">
                       {withdrawError}
                     </div>
                   )}
@@ -911,14 +939,14 @@ const Bonuses = () => {
                         setWithdrawType("all");
                       }}
                       disabled={withdrawLoading}
-                      className="flex-1 py-2.5 border border-gray-200 text-sm text-gray-600 rounded-xl hover:bg-gray-50 transition"
+                      className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleWithdraw}
                       disabled={withdrawLoading || !user?.hasBankDetails}
-                      className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {withdrawLoading ? (
                         <span className="flex items-center justify-center gap-2">

@@ -47,20 +47,20 @@ const stagger = {
 const ReferralStatus = ({ referral }) => {
   if (referral.bonusPaid)
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800">
         <CheckCircle className="w-3 h-3" />
         Paid
       </span>
     );
   if (referral.investmentAmount > 0)
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-800">
         <Clock className="w-3 h-3" />
         Pending
       </span>
     );
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-500 ring-1 ring-gray-200">
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-700">
       <AlertCircle className="w-3 h-3" />
       No Investment
     </span>
@@ -149,7 +149,7 @@ const Referrals = () => {
     });
   };
 
-  const referralLink = `${window.location.origin}/apex_frontend/#/register?ref=${user?.referralCode}`;
+  const referralLink = `${window.location.origin}/register?ref=${user?.referralCode}`;
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(referralLink);
@@ -241,8 +241,8 @@ const Referrals = () => {
       value: stats.totalReferrals,
       sub: `${stats.activeReferrals} active`,
       icon: Users,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-50 dark:bg-blue-900/30",
       isNum: true,
     },
     {
@@ -250,8 +250,8 @@ const Referrals = () => {
       value: fmt(stats.totalBonus),
       sub: `${fmt(stats.pendingBonus)} pending`,
       icon: DollarSign,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-50 dark:bg-emerald-900/30",
       isNum: false,
     },
     {
@@ -259,8 +259,8 @@ const Referrals = () => {
       value: `${stats.conversionRate.toFixed(1)}%`,
       sub: `${stats.activeReferrals} of ${stats.totalReferrals} invested`,
       icon: TrendingUp,
-      color: "text-violet-600",
-      bg: "bg-violet-50",
+      color: "text-violet-600 dark:text-violet-400",
+      bg: "bg-violet-50 dark:bg-violet-900/30",
       isNum: false,
     },
     {
@@ -268,8 +268,8 @@ const Referrals = () => {
       value: fmt(stats.averageInvestment),
       sub: "Per active referral",
       icon: Award,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-50 dark:bg-amber-900/30",
       isNum: false,
     },
   ];
@@ -279,8 +279,8 @@ const Referrals = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/30 border-t-blue-600 animate-spin" />
-          <p className="text-sm text-gray-400 tracking-wide">
+          <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/30 border-t-blue-600 dark:border-blue-400/30 dark:border-t-blue-400 animate-spin" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 tracking-wide">
             Loading referrals…
           </p>
         </div>
@@ -288,7 +288,7 @@ const Referrals = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* ── HEADER ── */}
       <motion.div
         variants={stagger}
@@ -297,11 +297,13 @@ const Referrals = () => {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7"
       >
         <motion.div variants={fadeUp}>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-500 mb-1">
             Network
           </p>
-          <h1 className="text-2xl font-bold text-gray-900">My Referrals</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            My Referrals
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
             Track your network and earn 5% on every investment
           </p>
         </motion.div>
@@ -313,7 +315,7 @@ const Referrals = () => {
           <button
             onClick={() => fetchReferrals(true)}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -324,14 +326,14 @@ const Referrals = () => {
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Export</span>
           </button>
           <button
             onClick={() => setShowShareModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-lg shadow-sm shadow-blue-500/20 hover:shadow-md hover:shadow-blue-500/30 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-sm font-semibold rounded-lg shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300"
           >
             <Share2 className="w-4 h-4" /> Share Link
           </button>
@@ -344,7 +346,7 @@ const Referrals = () => {
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="relative overflow-hidden bg-[#0b0f1a] rounded-2xl p-5 mb-6"
+        className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 rounded-2xl p-5 mb-6 shadow-xl"
       >
         <div className="absolute -top-8 -right-8 w-48 h-48 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 left-20 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
@@ -381,7 +383,7 @@ const Referrals = () => {
                 <Copy className="w-4 h-4" />
               )}
               {copied && (
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap">
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap">
                   Copied!
                 </span>
               )}
@@ -417,7 +419,7 @@ const Referrals = () => {
         variants={stagger}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
       >
         {statCards.map((s, i) => {
           const Icon = s.icon;
@@ -426,7 +428,7 @@ const Referrals = () => {
               key={s.label}
               custom={i}
               variants={fadeUp}
-              className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition"
+              className="bg-white dark:bg-gray-800/90 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
             >
               <div
                 className={`w-9 h-9 ${s.bg} rounded-xl flex items-center justify-center mb-3`}
@@ -436,10 +438,12 @@ const Referrals = () => {
               <p className={`text-xl font-bold tracking-tight ${s.color}`}>
                 {s.value}
               </p>
-              <p className="text-[11px] text-gray-400 uppercase tracking-wide mt-0.5">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-0.5">
                 {s.label}
               </p>
-              <p className="text-xs text-gray-400 mt-1">{s.sub}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {s.sub}
+              </p>
             </motion.div>
           );
         })}
@@ -452,7 +456,7 @@ const Referrals = () => {
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-5 mb-6 text-white"
+          className="relative overflow-hidden bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 dark:from-amber-500 dark:via-orange-600 dark:to-amber-600 rounded-2xl p-5 mb-6 text-white shadow-lg"
         >
           <div className="absolute right-0 top-0 h-full w-40 opacity-10">
             <Crown className="w-full h-full" />
@@ -488,7 +492,7 @@ const Referrals = () => {
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="bg-white rounded-xl border border-gray-100 px-4 py-3 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        className="bg-white dark:bg-gray-800/90 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         {/* Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 shrink-0">
@@ -506,8 +510,8 @@ const Referrals = () => {
               onClick={() => setFilterStatus(t.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                 filterStatus === t.key
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                  ? "bg-gradient-to-r from-blue-600 to-emerald-500 dark:from-blue-500 dark:to-emerald-500 text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               {t.label}
@@ -515,7 +519,7 @@ const Referrals = () => {
                 className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                   filterStatus === t.key
                     ? "bg-white/20 text-white"
-                    : "bg-gray-100 text-gray-500"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                 }`}
               >
                 {t.count}
@@ -526,19 +530,19 @@ const Referrals = () => {
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
             <input
               type="text"
               placeholder="Search…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-44 pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
+              className="w-full sm:w-44 pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="py-1.5 px-2.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-50 text-gray-600"
+            className="py-1.5 px-2.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300"
           >
             <option value="date">By Date</option>
             <option value="amount">By Amount</option>
@@ -548,7 +552,7 @@ const Referrals = () => {
       </motion.div>
 
       {error && (
-        <div className="mb-5 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 text-center">
+        <div className="mb-5 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-600 dark:text-red-400 text-center">
           {error}
         </div>
       )}
@@ -560,12 +564,12 @@ const Referrals = () => {
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6"
+          className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6 shadow-sm"
         >
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/60">
+                <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/50">
                   {[
                     "Referral",
                     "Joined",
@@ -576,14 +580,14 @@ const Referrals = () => {
                   ].map((h) => (
                     <th
                       key={h}
-                      className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest last:text-right"
+                      className="px-5 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest last:text-right"
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {filteredReferrals.map((ref, i) => {
                   const bonus = ref.investmentAmount
                     ? ref.investmentAmount * 0.05
@@ -595,42 +599,46 @@ const Referrals = () => {
                       key={i}
                       custom={i}
                       variants={fadeUp}
-                      className="hover:bg-gray-50/60 transition group"
+                      className="hover:bg-gray-50/60 dark:hover:bg-gray-700/50 transition group"
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-emerald-400 dark:from-blue-400 dark:to-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
                             {initials.toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                               {ref.user?.firstName && ref.user?.lastName
                                 ? `${ref.user.firstName} ${ref.user.lastName}`
                                 : ref.user?.email || "Pending Registration"}
                             </p>
                             {ref.user?.email && (
-                              <p className="text-[11px] text-gray-400 truncate">
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                                 {ref.user.email}
                               </p>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-gray-500 whitespace-nowrap">
+                      <td className="px-5 py-3.5 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         {fmtDate(ref.date)}
                       </td>
-                      <td className="px-5 py-3.5 text-sm font-semibold text-gray-800">
+                      <td className="px-5 py-3.5 text-sm font-semibold text-gray-800 dark:text-gray-200">
                         {ref.investmentAmount > 0 ? (
                           fmt(ref.investmentAmount)
                         ) : (
-                          <span className="text-gray-300 font-normal">—</span>
+                          <span className="text-gray-400 dark:text-gray-500 font-normal">
+                            —
+                          </span>
                         )}
                       </td>
-                      <td className="px-5 py-3.5 text-sm font-semibold text-emerald-600">
+                      <td className="px-5 py-3.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                         {bonus > 0 ? (
                           fmt(bonus)
                         ) : (
-                          <span className="text-gray-300 font-normal">—</span>
+                          <span className="text-gray-400 dark:text-gray-500 font-normal">
+                            —
+                          </span>
                         )}
                       </td>
                       <td className="px-5 py-3.5">
@@ -640,7 +648,7 @@ const Referrals = () => {
                         {ref.user && (
                           <button
                             onClick={() => navigate(`/profile/${ref.user._id}`)}
-                            className="text-xs text-blue-600 font-semibold inline-flex items-center gap-0.5 hover:gap-1.5 transition-all opacity-0 group-hover:opacity-100"
+                            className="text-xs text-blue-600 dark:text-blue-400 font-semibold inline-flex items-center gap-0.5 hover:gap-1.5 transition-all opacity-0 group-hover:opacity-100"
                           >
                             View <ChevronRight className="w-3.5 h-3.5" />
                           </button>
@@ -659,20 +667,20 @@ const Referrals = () => {
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="bg-white rounded-2xl border border-gray-100 p-16 text-center mb-6"
+          className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-16 text-center mb-6"
         >
-          <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="w-7 h-7 text-gray-300" />
+          <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-7 h-7 text-gray-400 dark:text-gray-600" />
           </div>
-          <p className="text-base font-bold text-gray-800 mb-1">
+          <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
             No referrals yet
           </p>
-          <p className="text-sm text-gray-400 mb-6 max-w-xs mx-auto">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs mx-auto">
             Share your referral link and earn 5% when friends invest.
           </p>
           <button
             onClick={() => setShowShareModal(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl transition-all duration-300"
           >
             <Share2 className="w-4 h-4" /> Share Your Referral Link
           </button>
@@ -687,8 +695,8 @@ const Referrals = () => {
         animate="visible"
         className="grid md:grid-cols-2 gap-4"
       >
-        <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
-          <h3 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5 border border-blue-200 dark:border-blue-800">
+          <h3 className="text-sm font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
             <Gift className="w-4 h-4" /> How Referral Bonus Works
           </h3>
           <ul className="space-y-2">
@@ -700,17 +708,17 @@ const Referrals = () => {
             ].map((t) => (
               <li
                 key={t}
-                className="flex items-start gap-2 text-xs text-blue-800 leading-relaxed"
+                className="flex items-start gap-2 text-xs text-blue-800 dark:text-blue-300 leading-relaxed"
               >
-                <CheckCircle className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />{" "}
+                <CheckCircle className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />{" "}
                 {t}
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
-          <h3 className="text-sm font-bold text-emerald-900 mb-3 flex items-center gap-2">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-5 border border-emerald-200 dark:border-emerald-800">
+          <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-300 mb-3 flex items-center gap-2">
             <TrendingUp className="w-4 h-4" /> Tips to Maximize Referrals
           </h3>
           <ul className="space-y-2">
@@ -722,9 +730,9 @@ const Referrals = () => {
             ].map((t) => (
               <li
                 key={t}
-                className="flex items-start gap-2 text-xs text-emerald-800 leading-relaxed"
+                className="flex items-start gap-2 text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed"
               >
-                <Star className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />{" "}
+                <Star className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />{" "}
                 {t}
               </li>
             ))}
@@ -734,25 +742,25 @@ const Referrals = () => {
 
       {/* ── SHARE MODAL ── */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <div>
-                <h3 className="text-sm font-bold text-gray-900">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                   Share Referral Link
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   Earn 5% on every investment they make
                 </p>
               </div>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 transition"
+                className="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -760,18 +768,18 @@ const Referrals = () => {
 
             <div className="p-6">
               {/* link display */}
-              <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3 mb-5">
-                <code className="text-xs font-mono text-blue-600 truncate flex-1">
+              <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex items-center justify-between gap-3 mb-5">
+                <code className="text-xs font-mono text-blue-600 dark:text-blue-400 truncate flex-1">
                   {referralLink}
                 </code>
                 <button
                   onClick={handleCopyReferral}
-                  className="shrink-0 w-8 h-8 rounded-lg hover:bg-gray-200 flex items-center justify-center transition"
+                  className="shrink-0 w-8 h-8 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition"
                 >
                   {copied ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                   ) : (
-                    <Copy className="w-4 h-4 text-gray-500" />
+                    <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   )}
                 </button>
               </div>
@@ -801,7 +809,7 @@ const Referrals = () => {
                     icon: FaEnvelope,
                     label: "Email",
                     fn: "email",
-                    bg: "bg-gray-700 hover:bg-gray-800",
+                    bg: "bg-gray-700 hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-700",
                   },
                 ].map(({ icon: Icon, label, fn, bg }) => (
                   <button
@@ -815,12 +823,14 @@ const Referrals = () => {
               </div>
 
               {/* QR placeholder */}
-              <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-2">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center border border-gray-200 dark:border-gray-700">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Scan QR Code
                 </p>
-                <div className="w-28 h-28 bg-gray-200 mx-auto rounded-xl flex items-center justify-center">
-                  <span className="text-xs text-gray-400">QR Code</span>
+                <div className="w-28 h-28 bg-gray-200 dark:bg-gray-700 mx-auto rounded-xl flex items-center justify-center">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    QR Code
+                  </span>
                 </div>
               </div>
             </div>
@@ -828,7 +838,7 @@ const Referrals = () => {
             <div className="px-6 pb-6">
               <button
                 onClick={() => setShowShareModal(false)}
-                className="w-full py-2.5 border border-gray-200 text-sm text-gray-600 rounded-xl hover:bg-gray-50 transition"
+                className="w-full py-2.5 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition"
               >
                 Close
               </button>

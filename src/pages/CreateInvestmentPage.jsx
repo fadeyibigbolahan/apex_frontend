@@ -20,6 +20,8 @@ import {
   Gift,
   FileText,
   RefreshCw,
+  Building,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -53,7 +55,6 @@ const CreateInvestment = () => {
     plan: "",
     amount: "",
     paymentProof: null,
-    agreeTerms: false,
   });
 
   const [settings, setSettings] = useState({
@@ -64,6 +65,7 @@ const CreateInvestment = () => {
     apex1_rate: 30,
     apex2_rate: 50,
     investments_enabled: true,
+    bankAccounts: [], // Will hold array of bank accounts
   });
 
   const [calc, setCalc] = useState({
@@ -78,11 +80,19 @@ const CreateInvestment = () => {
         const res = await axios.get(`${url}settings/public`);
         const s = {};
         res.data.data.settings.forEach((x) => {
-          s[x.key] = x.value;
+          // Handle bankAccounts specially - it's an array
+          if (x.key === "bankAccounts") {
+            s.bankAccounts = x.value;
+          } else {
+            s[x.key] = x.value;
+          }
         });
-        setSettings(s);
-      } catch {
-        /* use defaults */
+        setSettings((prev) => ({
+          ...prev,
+          ...s,
+        }));
+      } catch (err) {
+        console.error("Error fetching settings:", err);
       }
     })();
   }, []);
@@ -114,7 +124,7 @@ const CreateInvestment = () => {
     }).format(n || 0);
 
   const handleChange = (e) => {
-    const { name, type, value, checked, files } = e.target;
+    const { name, type, value, files } = e.target;
     setError("");
     if (type === "file") {
       const file = files[0];
@@ -157,7 +167,7 @@ const CreateInvestment = () => {
     } else {
       setFormData((f) => ({
         ...f,
-        [name]: type === "checkbox" ? checked : value,
+        [name]: value,
       }));
     }
   };
@@ -188,10 +198,6 @@ const CreateInvestment = () => {
     }
     if (step === 3 && !formData.paymentProof) {
       setError("Please upload payment proof");
-      return false;
-    }
-    if (step === 4 && !formData.agreeTerms) {
-      setError("You must agree to the terms and conditions");
       return false;
     }
     return true;
@@ -247,6 +253,17 @@ const CreateInvestment = () => {
     formData.plan === "apex1" ? settings.apex1_min : settings.apex2_min;
   const max =
     formData.plan === "apex1" ? settings.apex1_max : settings.apex2_max;
+
+  // Get the default bank account (first one or marked as default)
+  const defaultBankAccount =
+    settings.bankAccounts?.find((acc) => acc.isDefault) ||
+    settings.bankAccounts?.[0];
+
+  const bankDetails = {
+    bankName: defaultBankAccount?.bankName || "First Bank Nigeria",
+    accountName: defaultBankAccount?.accountName || "Apex Trading Square",
+    accountNumber: defaultBankAccount?.accountNumber || "1234567890",
+  };
 
   /* ── investments disabled ── */
   if (!settings.investments_enabled)
@@ -341,18 +358,6 @@ const CreateInvestment = () => {
               Add Now →
             </Link>
           </div>
-        </div>
-      )}
-      {error && (
-        <div className="mb-5 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mb-5 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 shrink-0" />
-          {success}
         </div>
       )}
 
@@ -598,16 +603,31 @@ const CreateInvestment = () => {
                 Upload Payment Proof
               </h2>
 
-              {/* Payment instructions */}
+              {/* Payment instructions - WITH DYNAMIC BANK ACCOUNTS */}
               <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-5">
-                <p className="text-sm font-bold text-blue-900 mb-3">
-                  Transfer to this account
-                </p>
+                <div className="flex items-center gap-2 mb-3">
+                  <Building className="w-4 h-4 text-blue-600" />
+                  <p className="text-sm font-bold text-blue-900">
+                    Transfer to this account
+                  </p>
+                </div>
                 <div className="bg-white rounded-xl p-4 space-y-2.5">
                   {[
-                    { label: "Bank Name", val: "First Bank Nigeria" },
-                    { label: "Account Name", val: "Apex Trading Square" },
-                    { label: "Account Number", val: "1234567890" },
+                    {
+                      label: "Bank Name",
+                      val: bankDetails.bankName,
+                      icon: Building,
+                    },
+                    {
+                      label: "Account Name",
+                      val: bankDetails.accountName,
+                      icon: CreditCard,
+                    },
+                    {
+                      label: "Account Number",
+                      val: bankDetails.accountNumber,
+                      icon: CreditCard,
+                    },
                     {
                       label: "Amount",
                       val: fmt(parseFloat(formData.amount)),
@@ -624,6 +644,12 @@ const CreateInvestment = () => {
                     </div>
                   ))}
                 </div>
+                {settings.bankAccounts?.length > 1 && (
+                  <p className="text-[11px] text-blue-600 mt-3 text-center">
+                    {settings.bankAccounts.length} bank accounts available.
+                    Contact support for other payment options.
+                  </p>
+                )}
               </div>
 
               {/* File upload drop zone */}
@@ -809,24 +835,6 @@ const CreateInvestment = () => {
                 </div>
               )}
 
-              {/* Terms */}
-              <label className="flex items-start gap-3 mb-5 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  name="agreeTerms"
-                  checked={formData.agreeTerms}
-                  onChange={handleChange}
-                  className="mt-0.5 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 shrink-0"
-                />
-                <span className="text-xs text-gray-600 leading-relaxed">
-                  I confirm the information is correct and agree to the{" "}
-                  <Link to="/terms" className="text-blue-600 hover:underline">
-                    terms and conditions
-                  </Link>
-                  . I understand investments cannot be cancelled once confirmed.
-                </span>
-              </label>
-
               {/* Warning */}
               <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
                 <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -843,6 +851,19 @@ const CreateInvestment = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {error && (
+          <div className="mb-5 mt-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-5 mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            {success}
+          </div>
+        )}
 
         {/* ── NAV BUTTONS ── */}
         <div className="flex justify-between mt-8 pt-6 border-t border-gray-50">
@@ -870,7 +891,7 @@ const CreateInvestment = () => {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={loading || !formData.agreeTerms}
+              disabled={loading}
               className="flex items-center gap-1.5 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? (
@@ -881,7 +902,7 @@ const CreateInvestment = () => {
               ) : (
                 <>
                   <CheckCircle className="w-3.5 h-3.5" />
-                  Confirm Investment
+                  Submit
                 </>
               )}
             </button>

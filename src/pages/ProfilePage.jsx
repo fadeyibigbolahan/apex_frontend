@@ -1,3 +1,4 @@
+// Refresh
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -56,7 +57,7 @@ const Input = ({
   right,
 }) => (
   <div className="w-full">
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
       {label}
     </label>
     <div className="relative">
@@ -66,8 +67,8 @@ const Input = ({
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className="w-full pl-3 pr-10 py-3 text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
-        style={{ fontSize: "16px" }} // Force 16px to prevent zoom
+        className="w-full pl-3 pr-10 py-3 text-base border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+        style={{ fontSize: "16px" }}
       />
       {right && (
         <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -75,22 +76,26 @@ const Input = ({
         </div>
       )}
     </div>
-    {hint && <p className="text-[11px] text-gray-400 mt-1">{hint}</p>}
+    {hint && (
+      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+        {hint}
+      </p>
+    )}
   </div>
 );
 
 /* ── FIXED: Select with minimum font size ── */
 const Select = ({ label, value, onChange, options, placeholder, required }) => (
   <div className="w-full">
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
       {label}
     </label>
     <select
       value={value}
       onChange={onChange}
       required={required}
-      className="w-full py-3 px-3 text-base border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-gray-50"
-      style={{ fontSize: "16px" }} // Force 16px to prevent zoom
+      className="w-full py-3 px-3 text-base border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white"
+      style={{ fontSize: "16px" }}
     >
       <option value="">{placeholder || "Select an option"}</option>
       {options.map((opt) => (
@@ -104,12 +109,16 @@ const Select = ({ label, value, onChange, options, placeholder, required }) => (
 
 /* ── info tile ── */
 const InfoTile = ({ label, value }) => (
-  <div className="bg-gray-50 rounded-xl p-3 w-full overflow-hidden">
-    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5 truncate">
+  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 w-full overflow-hidden">
+    <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5 truncate">
       {label}
     </p>
-    <p className="text-sm font-semibold text-gray-800 truncate">
-      {value || <span className="text-gray-300 font-normal">Not provided</span>}
+    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+      {value || (
+        <span className="text-gray-400 dark:text-gray-500 font-normal">
+          Not provided
+        </span>
+      )}
     </p>
   </div>
 );
@@ -276,7 +285,16 @@ const Profile = () => {
       const res = await axios.put(`${url}users/profile`, personalForm, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setProfileData(res.data.data.user);
+
+      // Update auth context with any changed personal info
+      updateUser({
+        firstName: res.data.data.user.firstName,
+        lastName: res.data.data.user.lastName,
+        phoneNumber: res.data.data.user.phoneNumber,
+      });
+
       setSuccess("Personal information updated successfully!");
       setEditingPersonal(false);
     } catch (err) {
@@ -296,8 +314,17 @@ const Profile = () => {
       const res = await axios.post(`${url}users/bank-details`, bankForm, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Update local profile data
       setProfileData(res.data.data.user);
+
+      // UPDATE AUTH CONTEXT - Only need hasBankDetails flag
+      updateUser({
+        hasBankDetails: true,
+      });
+
       setSuccess("Bank details saved successfully!");
+      fetchProfileData();
       setEditingBank(false);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update bank details");
@@ -355,7 +382,7 @@ const Profile = () => {
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(
-      `${window.location.origin}/apex_frontend/#/register?ref=${user?.referralCode}`,
+      `${window.location.origin}/register?ref=${user?.referralCode}`,
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -383,33 +410,13 @@ const Profile = () => {
     return user?.email?.[0].toUpperCase() || "U";
   };
 
-  const Nigerian_Banks = [
-    "Access Bank",
-    "Citibank",
-    "Ecobank",
-    "Fidelity Bank",
-    "First Bank",
-    "FCMB",
-    "GTBank",
-    "Heritage Bank",
-    "Keystone Bank",
-    "Polaris Bank",
-    "Stanbic IBTC",
-    "Standard Chartered",
-    "Sterling Bank",
-    "Union Bank",
-    "UBA",
-    "Wema Bank",
-    "Zenith Bank",
-  ];
-
   /* ── loading ── */
   if (loading)
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
         <div className="flex flex-col items-center gap-4 max-w-full">
-          <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/30 border-t-blue-600 animate-spin" />
-          <p className="text-sm text-gray-400 tracking-wide">
+          <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/30 border-t-blue-600 dark:border-blue-400/30 dark:border-t-blue-400 animate-spin" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 tracking-wide">
             Loading profile…
           </p>
         </div>
@@ -428,13 +435,13 @@ const Profile = () => {
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 w-full"
         >
           <motion.div variants={fadeUp} className="min-w-0 flex-1">
-            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-500 mb-0.5">
               Account
             </p>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
               My Profile
             </h1>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 truncate">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5 truncate">
               Manage your personal information and account settings
             </p>
           </motion.div>
@@ -445,7 +452,7 @@ const Profile = () => {
             <button
               onClick={() => fetchProfileData(true)}
               disabled={refreshing}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
                 className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -456,7 +463,7 @@ const Profile = () => {
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-500 bg-white rounded-lg border border-red-200 hover:bg-red-50 transition"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
             >
               <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span className="hidden sm:inline">Logout</span>
@@ -469,7 +476,7 @@ const Profile = () => {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-2.5 sm:p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs sm:text-sm text-emerald-700 flex items-center gap-2 w-full"
+            className="mb-4 p-2.5 sm:p-3 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs sm:text-sm text-emerald-700 dark:text-emerald-300 flex items-center gap-2 w-full"
           >
             <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span className="truncate">{success}</span>
@@ -479,7 +486,7 @@ const Profile = () => {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-2.5 sm:p-3 bg-red-50 border border-red-100 rounded-xl text-xs sm:text-sm text-red-600 flex items-center gap-2 w-full"
+            className="mb-4 p-2.5 sm:p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center gap-2 w-full"
           >
             <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span className="truncate">{error}</span>
@@ -496,27 +503,27 @@ const Profile = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 lg:p-6 text-center w-full"
+              className="bg-white dark:bg-gray-800/90 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5 lg:p-6 text-center w-full shadow-sm hover:shadow-lg transition-all duration-300"
             >
               <div className="relative inline-block mb-3 sm:mb-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-emerald-400 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-md">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-emerald-400 dark:from-blue-400 dark:to-emerald-500 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-md">
                   {initials()}
                 </div>
-                <button className="absolute bottom-0 right-0 w-6 h-6 sm:w-7 sm:h-7 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition">
-                  <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-600" />
+                <button className="absolute bottom-0 right-0 w-6 h-6 sm:w-7 sm:h-7 bg-white dark:bg-gray-700 rounded-full shadow-md border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                  <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
 
-              <h2 className="text-sm sm:text-base font-bold text-gray-900 leading-tight truncate">
+              <h2 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-tight truncate">
                 {profileData?.firstName || profileData?.lastName
                   ? `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()
                   : "Complete Your Profile"}
               </h2>
-              <p className="text-[11px] sm:text-xs text-gray-400 mt-1 mb-2 sm:mb-3 truncate">
+              <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2 sm:mb-3 truncate">
                 {profileData?.email}
               </p>
 
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] sm:text-[11px] font-semibold ring-1 ring-blue-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-[10px] sm:text-[11px] font-semibold ring-1 ring-blue-200 dark:ring-blue-800">
                 <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 {profileData?.role === "admin"
                   ? "Administrator"
@@ -530,7 +537,7 @@ const Profile = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="relative overflow-hidden bg-[#0b0f1a] rounded-xl sm:rounded-2xl p-4 sm:p-5 w-full"
+              className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 rounded-xl sm:rounded-2xl p-4 sm:p-5 w-full shadow-xl"
             >
               <div className="absolute -top-6 -right-6 w-24 sm:w-32 h-24 sm:h-32 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute bottom-0 left-4 sm:left-8 w-20 sm:w-24 h-20 sm:h-24 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
@@ -543,7 +550,7 @@ const Profile = () => {
                 </div>
                 <div className="bg-white/8 border border-white/10 rounded-lg sm:rounded-xl px-2 sm:px-3 py-2 flex items-center gap-2 mb-2 sm:mb-3 w-full">
                   <code className="text-white/60 text-[10px] sm:text-xs font-mono truncate flex-1 min-w-0">
-                    {window.location.origin}/r/{user?.referralCode}
+                    {window.location.origin}/register/{user?.referralCode}
                   </code>
                   <button
                     onClick={handleCopyReferral}
@@ -555,7 +562,7 @@ const Profile = () => {
                       <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     )}
                     {copied && (
-                      <span className="absolute -top-6 sm:-top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[8px] sm:text-[10px] py-1 px-1.5 sm:px-2 rounded whitespace-nowrap">
+                      <span className="absolute -top-6 sm:-top-7 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-gray-800 text-white text-[8px] sm:text-[10px] py-1 px-1.5 sm:px-2 rounded whitespace-nowrap">
                         Copied!
                       </span>
                     )}
@@ -575,9 +582,9 @@ const Profile = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+              className="bg-white dark:bg-gray-800/90 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5 w-full shadow-sm"
             >
-              <h3 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 sm:mb-4">
+              <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 sm:mb-4">
                 Account Statistics
               </h3>
               <div className="space-y-2 sm:space-y-3">
@@ -586,29 +593,29 @@ const Profile = () => {
                     icon: Wallet,
                     label: "Total Invested",
                     val: fmt(profileData?.totalInvested),
-                    color: "text-blue-600",
-                    bg: "bg-blue-50",
+                    color: "text-blue-600 dark:text-blue-400",
+                    bg: "bg-blue-50 dark:bg-blue-900/30",
                   },
                   {
                     icon: TrendingUp,
                     label: "Total Withdrawn",
                     val: fmt(profileData?.totalWithdrawn),
-                    color: "text-emerald-600",
-                    bg: "bg-emerald-50",
+                    color: "text-emerald-600 dark:text-emerald-400",
+                    bg: "bg-emerald-50 dark:bg-emerald-900/30",
                   },
                   {
                     icon: Award,
                     label: "Referral Bonus",
                     val: fmt(profileData?.referralBonus),
-                    color: "text-violet-600",
-                    bg: "bg-violet-50",
+                    color: "text-violet-600 dark:text-violet-400",
+                    bg: "bg-violet-50 dark:bg-violet-900/30",
                   },
                   {
                     icon: Gift,
                     label: "Retrading Bonus",
                     val: fmt(profileData?.retradingBonus),
-                    color: "text-amber-600",
-                    bg: "bg-amber-50",
+                    color: "text-amber-600 dark:text-amber-400",
+                    bg: "bg-amber-50 dark:bg-amber-900/30",
                   },
                 ].map(({ icon: Icon, label, val, color, bg }) => (
                   <div
@@ -623,7 +630,7 @@ const Profile = () => {
                           className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${color}`}
                         />
                       </div>
-                      <span className="text-[11px] sm:text-xs text-gray-600 truncate">
+                      <span className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 truncate">
                         {label}
                       </span>
                     </div>
@@ -634,16 +641,16 @@ const Profile = () => {
                     </span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-50 w-full">
+                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700 w-full">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500" />
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center shrink-0">
+                      <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 dark:text-gray-400" />
                     </div>
-                    <span className="text-[11px] sm:text-xs text-gray-600 truncate">
+                    <span className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 truncate">
                       Member Since
                     </span>
                   </div>
-                  <span className="text-[11px] sm:text-xs font-semibold text-gray-700 shrink-0 ml-1 sm:ml-2 truncate">
+                  <span className="text-[11px] sm:text-xs font-semibold text-gray-700 dark:text-gray-300 shrink-0 ml-1 sm:ml-2 truncate">
                     {fmtDate(profileData?.createdAt)}
                   </span>
                 </div>
@@ -659,21 +666,21 @@ const Profile = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+              className="bg-white dark:bg-gray-800/90 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5 w-full shadow-sm"
             >
               <div className="flex items-center justify-between mb-3 sm:mb-4 w-full">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
+                  <h2 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide truncate">
                     Personal Information
                   </h2>
-                  <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                     Update your name and contact details
                   </p>
                 </div>
                 {!editingPersonal && (
                   <button
                     onClick={() => setEditingPersonal(true)}
-                    className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-1 sm:ml-2"
+                    className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition shrink-0 ml-1 sm:ml-2"
                   >
                     <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Edit
                   </button>
@@ -731,14 +738,14 @@ const Profile = () => {
                           phoneNumber: profileData?.phoneNumber || "",
                         });
                       }}
-                      className="px-3 sm:px-4 py-2 border border-gray-200 text-xs sm:text-sm text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 transition"
+                      className="px-3 sm:px-4 py-2 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-gray-700 dark:text-gray-300 rounded-lg sm:rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={saving}
-                      className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                     >
                       {saving ? (
                         <>
@@ -773,14 +780,14 @@ const Profile = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+              className="bg-white dark:bg-gray-800/90 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5 w-full shadow-sm"
             >
               <div className="flex items-center justify-between mb-3 sm:mb-4 w-full">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
+                  <h2 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide truncate">
                     Bank Details
                   </h2>
-                  <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                     Used for processing all withdrawals
                   </p>
                 </div>
@@ -789,7 +796,7 @@ const Profile = () => {
                     !profileData?.bankDetails?.isLocked) && (
                     <button
                       onClick={() => setEditingBank(true)}
-                      className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 hover:text-blue-700 font-semibold transition shrink-0 ml-1 sm:ml-2"
+                      className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition shrink-0 ml-1 sm:ml-2"
                     >
                       <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       {profileData?.bankDetails?.accountNumber ? "Edit" : "Add"}
@@ -797,7 +804,7 @@ const Profile = () => {
                   )}
                 {profileData?.bankDetails?.isLocked &&
                   profileData?.bankDetails?.accountNumber && (
-                    <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-gray-400 shrink-0 ml-1 sm:ml-2">
+                    <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 shrink-0 ml-1 sm:ml-2">
                       <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked
                     </span>
                   )}
@@ -830,24 +837,16 @@ const Profile = () => {
                       placeholder="10-digit account number"
                       required
                     />
-                    <Select
+                    <Input
                       label="Bank Name"
                       value={bankForm.bankName}
                       onChange={(e) =>
                         setBankForm({ ...bankForm, bankName: e.target.value })
                       }
-                      options={Nigerian_Banks}
-                      placeholder="Select Bank"
+                      placeholder="Enter your bank's full name"
                       required
+                      hint="Please enter your bank's full name (e.g., Access Bank, GTBank, etc.)"
                     />
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg sm:rounded-xl p-2.5 sm:p-3 mb-4 sm:mb-5 flex items-start gap-1.5 sm:gap-2 w-full">
-                    <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-[10px] sm:text-xs text-amber-800">
-                      Bank details will be locked after saving. Contact admin
-                      for any future changes.
-                    </p>
                   </div>
 
                   <div className="flex justify-end gap-2 sm:gap-3 flex-wrap">
@@ -863,14 +862,14 @@ const Profile = () => {
                           bankName: profileData?.bankDetails?.bankName || "",
                         });
                       }}
-                      className="px-3 sm:px-4 py-2 border border-gray-200 text-xs sm:text-sm text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 transition"
+                      className="px-3 sm:px-4 py-2 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-gray-700 dark:text-gray-300 rounded-lg sm:rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={saving}
-                      className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl transition-all duration-300 disabled:opacity-50"
                     >
                       {saving ? (
                         <>
@@ -903,7 +902,7 @@ const Profile = () => {
                     />
                   </div>
                   {profileData.bankDetails.isLocked && (
-                    <p className="text-[10px] sm:text-[11px] text-gray-400 flex items-center gap-1 pt-1">
+                    <p className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 pt-1">
                       <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked for
                       security — contact admin to request changes
                     </p>
@@ -911,13 +910,13 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className="flex flex-col items-center text-center py-4 sm:py-6 lg:py-8 w-full">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-                    <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-2 sm:mb-3">
+                    <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 dark:text-gray-500" />
                   </div>
-                  <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     No bank details added
                   </p>
-                  <p className="text-[10px] sm:text-xs text-gray-400">
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                     Click "Add" above to set up your withdrawal account
                   </p>
                 </div>
@@ -930,9 +929,9 @@ const Profile = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 w-full"
+              className="bg-white dark:bg-gray-800/90 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5 w-full shadow-sm"
             >
-              <h2 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide mb-3 sm:mb-4">
+              <h2 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-3 sm:mb-4">
                 Security
               </h2>
               <div className="space-y-2 sm:space-y-3 w-full">
@@ -943,7 +942,8 @@ const Profile = () => {
                     sub: `Last changed: ${fmtDate(profileData?.passwordChangedAt)}`,
                     action: () => setShowPasswordModal(true),
                     actionLabel: "Change",
-                    actionStyle: "bg-blue-600 hover:bg-blue-700 text-white",
+                    actionStyle:
+                      "bg-gradient-to-r from-blue-600 to-emerald-500 dark:from-blue-500 dark:to-emerald-500 text-white hover:shadow-lg",
                   },
                   {
                     icon: Shield,
@@ -952,7 +952,7 @@ const Profile = () => {
                     action: () => {},
                     actionLabel: "Enable",
                     actionStyle:
-                      "border border-gray-200 text-gray-600 hover:bg-gray-50",
+                      "border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700",
                   },
                 ].map(
                   ({
@@ -965,17 +965,17 @@ const Profile = () => {
                   }) => (
                     <div
                       key={title}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl gap-2 sm:gap-3 w-full"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg sm:rounded-xl gap-2 sm:gap-3 w-full"
                     >
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-lg sm:rounded-xl border border-gray-200 flex items-center justify-center shadow-sm shrink-0">
-                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" />
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm shrink-0">
+                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-400" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">
+                          <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white truncate">
                             {title}
                           </p>
-                          <p className="text-[10px] sm:text-[11px] text-gray-400 mt-0.5 truncate">
+                          <p className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                             {sub}
                           </p>
                         </div>
@@ -997,19 +997,19 @@ const Profile = () => {
 
       {/* ── PASSWORD MODAL ── */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 overflow-x-hidden">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 overflow-x-hidden">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-xl sm:rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
           >
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700">
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm sm:text-base font-bold text-gray-900 truncate">
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate">
                   Change Password
                 </h3>
-                <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                   Update your account password
                 </p>
               </div>
@@ -1024,7 +1024,7 @@ const Profile = () => {
                     confirmPassword: "",
                   });
                 }}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 transition shrink-0 ml-2"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 transition shrink-0 ml-2"
               >
                 <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
@@ -1033,20 +1033,20 @@ const Profile = () => {
             <div className="p-4 sm:p-6">
               {passwordSuccess ? (
                 <div className="text-center py-4 sm:py-6">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                    <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                    <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500 dark:text-emerald-400" />
                   </div>
-                  <p className="text-sm sm:text-base font-semibold text-gray-900 mb-1">
+                  <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1">
                     {passwordSuccess}
                   </p>
-                  <p className="text-[10px] sm:text-xs text-gray-400">
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                     Closing…
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handlePasswordChange} className="w-full">
                   {passwordError && (
-                    <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-red-50 border border-red-100 rounded-lg sm:rounded-xl text-[10px] sm:text-xs text-red-600">
+                    <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg sm:rounded-xl text-[10px] sm:text-xs text-red-600 dark:text-red-400">
                       {passwordError}
                     </div>
                   )}
@@ -1094,7 +1094,7 @@ const Profile = () => {
                           <button
                             type="button"
                             onClick={toggle}
-                            className="text-gray-400 hover:text-gray-600 transition"
+                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition"
                           >
                             {show ? (
                               <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -1120,14 +1120,14 @@ const Profile = () => {
                           confirmPassword: "",
                         });
                       }}
-                      className="flex-1 py-2 sm:py-2.5 border border-gray-200 text-xs sm:text-sm text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 transition"
+                      className="flex-1 py-2 sm:py-2.5 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-gray-700 dark:text-gray-300 rounded-lg sm:rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={changingPassword}
-                      className="flex-1 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-40"
+                      className="flex-1 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl transition-all duration-300 disabled:opacity-40"
                     >
                       {changingPassword ? (
                         <span className="flex items-center justify-center gap-1 sm:gap-2">

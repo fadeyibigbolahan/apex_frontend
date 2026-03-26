@@ -5,6 +5,12 @@
 
 @layer base {
   body {
+    @apply bg-[#f4f6f9] dark:bg-gray-900;
+  }
+}
+
+@layer base {
+  body {
     @apply font-sans [scrollbar-color:#cbd5e1_transparent] dark:[scrollbar-color:#334155_transparent];
   }
 }

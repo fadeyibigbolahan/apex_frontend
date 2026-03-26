@@ -1,3 +1,4 @@
+// Add bank details
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -47,14 +48,13 @@ const getNigeriaDate = (dateString) => {
   return new Date(date.getTime() + 60 * 60 * 1000);
 };
 
-const formatDateNigeria = (dateString) => {
+// Full date with time
+const formatDateFullNigeria = (dateString) => {
   if (!dateString) return "N/A";
   try {
     const date = new Date(dateString);
-    // Check if date is valid
     if (isNaN(date.getTime())) return "N/A";
 
-    // Add 1 hour for Nigeria timezone
     const nigeriaDate = new Date(date.getTime() + 60 * 60 * 1000);
 
     return nigeriaDate.toLocaleDateString("en-NG", {
@@ -70,6 +70,7 @@ const formatDateNigeria = (dateString) => {
   }
 };
 
+// Date only (no time)
 const formatDateShortNigeria = (dateString) => {
   if (!dateString) return "N/A";
   try {
@@ -166,6 +167,14 @@ const InvestmentDetails = () => {
       const res = await axios.get(`${url}investments/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("Fetched investment data:", {
+        withdrawals: res.data.data.investment.withdrawals,
+        totalWithdrawn: res.data.data.investment.totalWithdrawn,
+        investmentStatus: res.data.data.investment.investmentStatus,
+        nextWithdrawalDate: res.data.data.investment.nextWithdrawalDate,
+      });
+
       setInvestment(res.data.data.investment);
       setError("");
     } catch (err) {
@@ -182,19 +191,38 @@ const InvestmentDetails = () => {
   };
 
   useEffect(() => {
+    console.log("User auth", user);
     fetchInvestmentDetails();
   }, [id]);
+
+  // Add this useEffect to log when investment updates
+  useEffect(() => {
+    if (investment) {
+      console.log("Investment updated:", {
+        withdrawals: investment.withdrawals,
+        totalWithdrawn: investment.totalWithdrawn,
+        investmentStatus: investment.investmentStatus,
+        nextWithdrawalDate: investment.nextWithdrawalDate,
+      });
+    }
+  }, [investment]);
 
   const handleWithdrawal = async () => {
     setWithdrawLoading(true);
     setWithdrawError("");
     try {
       const token = localStorage.getItem("token");
+
+      // Use the correct unified endpoint (same as WithdrawalsPage)
       await axios.post(
-        `${url}investments/${id}/withdraw`,
-        {},
+        `${url}withdrawals/request`,
+        {
+          type: "investment",
+          investmentId: id,
+        },
         { headers: { Authorization: `Bearer ${token}` } },
       );
+
       setWithdrawSuccess("Withdrawal request submitted successfully!");
       setShowWithdrawModal(false);
       setTimeout(() => {
@@ -202,6 +230,7 @@ const InvestmentDetails = () => {
         setWithdrawSuccess("");
       }, 2000);
     } catch (err) {
+      console.log("withdrawing err", err);
       setWithdrawError(
         err.response?.data?.message || "Failed to process withdrawal",
       );
@@ -218,7 +247,7 @@ const InvestmentDetails = () => {
     }).format(n || 0);
 
   // Use Nigeria formatted dates
-  const fmtDate = formatDateNigeria;
+  const fmtDate = formatDateFullNigeria; // Now includes time
   const fmtDateShort = formatDateShortNigeria;
 
   // Days left calculation in Nigeria timezone
@@ -279,12 +308,23 @@ const InvestmentDetails = () => {
     const withdrawalsCount = investment.withdrawals?.length || 0;
     const expectedWithdrawals = investment.plan === "apex1" ? 2 : 3;
 
+    console.log("getNextWithdrawalDate - withdrawalsCount:", withdrawalsCount);
+    console.log(
+      "getNextWithdrawalDate - withdrawals array:",
+      investment.withdrawals,
+    );
+
     if (withdrawalsCount >= expectedWithdrawals) return null;
 
     const startDate = investment.startDate || investment.createdAt;
     const daysToAdd = (withdrawalsCount + 1) * 5;
 
-    return addWorkingDays(startDate, daysToAdd);
+    console.log("Calculating - daysToAdd:", daysToAdd, "startDate:", startDate);
+
+    const result = addWorkingDays(startDate, daysToAdd);
+    console.log("Calculated next withdrawal date:", result);
+
+    return result;
   };
 
   if (loading)
@@ -339,13 +379,34 @@ const InvestmentDetails = () => {
   const nextWithdrawalDate =
     investment.nextWithdrawalDate || getNextWithdrawalDate();
 
-  const canWithdraw =
-    investment.paymentStatus === "confirmed" &&
-    investment.investmentStatus === "active" &&
-    wd.length < totalPayments &&
-    !hasPending &&
-    nextWithdrawalDate &&
-    new Date() >= new Date(nextWithdrawalDate);
+  const canWithdraw = () => {
+    if (investment.paymentStatus !== "confirmed") return false;
+    if (investment.investmentStatus !== "active") return false;
+    if (wd.length >= totalPayments) return false;
+    if (hasPending) return false;
+
+    // Check if next withdrawal date has arrived (compare dates only)
+    if (nextWithdrawalDate) {
+      const now = new Date();
+      const withdrawalDate = new Date(nextWithdrawalDate);
+
+      // Set both to midnight to compare just the date
+      const todayMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      );
+      const withdrawalMidnight = new Date(
+        withdrawalDate.getFullYear(),
+        withdrawalDate.getMonth(),
+        withdrawalDate.getDate(),
+      );
+
+      return todayMidnight >= withdrawalMidnight;
+    }
+
+    return false;
+  };
 
   const tabs = ["overview", "withdrawals", "timeline"];
 
@@ -781,7 +842,7 @@ const InvestmentDetails = () => {
                   </p>
                 </div>
 
-                {canWithdraw ? (
+                {canWithdraw() ? (
                   <button
                     onClick={() => setShowWithdrawModal(true)}
                     className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all"
@@ -806,7 +867,7 @@ const InvestmentDetails = () => {
                   </div>
                 )}
 
-                {!user?.bankDetails?.accountNumber && (
+                {!user?.hasBankDetails && (
                   <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
                     <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                     <p className="text-[11px] text-amber-800">
