@@ -27,6 +27,9 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const Login = lazy(() => import("./pages/SigninPage"));
 const Register = lazy(() => import("./pages/SignupPage"));
 const Support = lazy(() => import("./pages/SupportPage"));
+const AdminLogin = lazy(() => import("./pages/AdminLoginPage"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPassword = lazy(() => import("./pages/ResetPasswordPage"));
 
 // User Pages
 const UserDashboard = lazy(() => import("./pages/DashboardPage"));
@@ -54,7 +57,10 @@ function App() {
       children: [
         { path: "/", element: <HomePage /> },
         { path: "/login", element: <Login /> },
+        { path: "/admin-login", element: <AdminLogin /> },
         { path: "/register", element: <Register /> },
+        { path: "/forgot-password", element: <ForgotPassword /> },
+        { path: "/reset-password/:token", element: <ResetPassword /> },
       ],
     },
 

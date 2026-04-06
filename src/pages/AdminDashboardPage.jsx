@@ -22,6 +22,7 @@ import {
   Zap,
   ArrowUpRight,
   ArrowDownLeft,
+  XCircle,
 } from "lucide-react";
 import {
   BarChart,
@@ -307,7 +308,7 @@ const AdminDashboard = () => {
         variants={stagger}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+        className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6"
       >
         {[
           {
@@ -338,6 +339,21 @@ const AdminDashboard = () => {
             sub2: {
               label: `${fmtNum(stats?.investments?.pending)} pending`,
               color: "text-amber-600",
+            },
+          },
+          {
+            label: "Declined Investments",
+            icon: XCircle,
+            bg: "bg-red-50",
+            color: "text-red-600",
+            value: fmt(stats?.investments?.declinedAmount || 0),
+            sub1: {
+              label: `${fmtNum(stats?.investments?.declinedCount || 0)} declined`,
+              color: "text-red-500",
+            },
+            sub2: {
+              label: `${(((stats?.investments?.declinedAmount || 0) / (stats?.investments?.amount || 1)) * 100).toFixed(1)}% of total`,
+              color: "text-gray-500",
             },
           },
           {
@@ -380,7 +396,12 @@ const AdminDashboard = () => {
               key={c.label}
               custom={i}
               variants={fadeUp}
-              className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition"
+              className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition group relative cursor-help"
+              title={
+                c.label === "Declined Investments"
+                  ? "Total amount of investments that were declined by admin"
+                  : ""
+              }
             >
               <div
                 className={`w-9 h-9 ${c.bg} rounded-xl flex items-center justify-center mb-3`}
@@ -397,6 +418,11 @@ const AdminDashboard = () => {
                 <span className={c.sub1.color}>{c.sub1.label}</span>
                 <span className={c.sub2.color}>{c.sub2.label}</span>
               </div>
+              {c.label === "Declined Investments" && (
+                <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                  <span className="text-[10px] text-gray-500">ⓘ</span>
+                </span>
+              )}
             </motion.div>
           );
         })}
@@ -419,6 +445,14 @@ const AdminDashboard = () => {
             icon: Clock,
           },
           {
+            to: "/admin/investments?filter=declined",
+            label: "Declined Investments",
+            count: stats?.investments?.declinedCount || 0,
+            from: "from-red-500",
+            to2: "to-rose-500",
+            icon: XCircle,
+          },
+          {
             to: "/admin/withdrawals?filter=pending",
             label: "Pending Withdrawals",
             count: stats?.withdrawals?.pending || 0,
@@ -434,14 +468,6 @@ const AdminDashboard = () => {
             to2: "to-rose-500",
             icon: UserMinus,
           },
-          {
-            to: "/admin/settings",
-            label: "System Settings",
-            count: null,
-            from: "from-gray-700",
-            to2: "to-gray-900",
-            icon: Settings,
-          },
         ].map((c, i) => {
           const Icon = c.icon;
           return (
@@ -453,13 +479,9 @@ const AdminDashboard = () => {
                 <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full" />
                 <div className="relative z-10">
                   <Icon className="w-6 h-6 mb-3 opacity-80" />
-                  {c.count !== null ? (
-                    <p className="text-3xl font-bold leading-none mb-1">
-                      {c.count}
-                    </p>
-                  ) : (
-                    <p className="text-lg font-bold leading-none mb-1">Open</p>
-                  )}
+                  <p className="text-3xl font-bold leading-none mb-1">
+                    {c.count}
+                  </p>
                   <p className="text-xs text-white/70 font-medium">{c.label}</p>
                 </div>
               </Link>
@@ -572,12 +594,6 @@ const AdminDashboard = () => {
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
                 Recent Activities
               </h2>
-              <Link
-                to="/admin/activities"
-                className="text-xs text-red-500 font-semibold flex items-center gap-1 hover:text-red-600"
-              >
-                View All <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
 
             {recentActivities.length > 0 ? (
@@ -621,47 +637,6 @@ const AdminDashboard = () => {
                 No recent activities
               </p>
             )}
-          </motion.div>
-
-          {/* Quick stats row */}
-          <motion.div
-            custom={10}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-          >
-            {[
-              {
-                label: "Today's Investments",
-                val: fmt(1250000),
-                trend: "↑ 12%",
-                up: true,
-              },
-              {
-                label: "Today's Withdrawals",
-                val: fmt(850000),
-                trend: "↓ 5%",
-                up: false,
-              },
-              { label: "New Users (24h)", val: "+24", trend: "↑ 8%", up: true },
-              { label: "Active Now", val: "156", trend: "online", up: true },
-            ].map(({ label, val, trend, up }) => (
-              <div
-                key={label}
-                className="bg-white rounded-xl border border-gray-100 p-4"
-              >
-                <p className="text-[11px] text-gray-400 uppercase tracking-wider mb-2">
-                  {label}
-                </p>
-                <p className="text-lg font-bold text-gray-900">{val}</p>
-                <p
-                  className={`text-[11px] mt-1 font-semibold ${up ? "text-emerald-600" : "text-red-500"}`}
-                >
-                  {trend}
-                </p>
-              </div>
-            ))}
           </motion.div>
         </div>
 
@@ -731,6 +706,12 @@ const AdminDashboard = () => {
                   label: "Pending Investments",
                   count: stats?.investments?.pending || 0,
                   countColor: "bg-amber-100 text-amber-700",
+                },
+                {
+                  to: "/admin/investments?filter=declined",
+                  label: "Declined Investments",
+                  count: stats?.investments?.declinedCount || 0,
+                  countColor: "bg-red-100 text-red-600",
                 },
                 {
                   to: "/admin/withdrawals?filter=pending",

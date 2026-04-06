@@ -23,6 +23,7 @@ import {
   Lock,
   Plus,
   Sparkles,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -53,6 +54,7 @@ const StatusPill = ({ status }) => {
       "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     cancelled: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
     failed: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    declined: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
   };
   return (
     <span
@@ -69,6 +71,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const [dashboardData, setDashboardData] = useState(null);
+  const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -83,10 +86,20 @@ const Dashboard = () => {
         navigate("/login");
         return;
       }
-      const res = await axios.get(`${url}users/dashboard`, {
+
+      // Fetch dashboard data
+      const dashboardRes = await axios.get(`${url}users/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setDashboardData(res.data.data);
+      setDashboardData(dashboardRes.data.data);
+
+      // Fetch investments to calculate declined amounts
+      const investmentsRes = await axios.get(`${url}investments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const allInvestments = investmentsRes.data.data.investments;
+      setInvestments(allInvestments);
+
       setError("");
     } catch (err) {
       if (err.response?.status === 401) {
@@ -139,6 +152,137 @@ const Dashboard = () => {
     dashboardData?.bonuses?.find((b) => b._id === "retrading")?.available || 0;
   const totalBonus = bonusReferral + bonusRetrading;
 
+  // Calculate investment totals from the investments array
+  const calculateInvestmentTotals = () => {
+    if (!investments || investments.length === 0) {
+      return {
+        totalConfirmed: 0,
+        totalWithdrawn: 0,
+        activeCount: 0,
+        declinedAmount: 0,
+        declinedCount: 0,
+      };
+    }
+
+    let totalConfirmed = 0;
+    let totalWithdrawn = 0;
+    let activeCount = 0;
+    let declinedAmount = 0;
+    let declinedCount = 0;
+
+    investments.forEach((inv) => {
+      // Only include non-declined investments in confirmed total
+      if (inv.paymentStatus !== "declined") {
+        totalConfirmed += inv.amount;
+        totalWithdrawn += inv.totalWithdrawn || 0;
+
+        // Count active investments
+        if (
+          inv.paymentStatus === "confirmed" &&
+          inv.investmentStatus === "active"
+        ) {
+          activeCount++;
+        }
+      } else {
+        // Track declined investments
+        declinedAmount += inv.amount;
+        declinedCount++;
+      }
+    });
+
+    return {
+      totalConfirmed,
+      totalWithdrawn,
+      activeCount,
+      declinedAmount,
+      declinedCount,
+    };
+  };
+
+  const investmentTotals = calculateInvestmentTotals();
+
+  const summaryCards = [
+    {
+      title: "Total Confirmed Investment",
+      value: fmt(investmentTotals.totalConfirmed),
+      icon: Wallet,
+      accent: "blue",
+      link: "/investments",
+      tooltip:
+        "Total amount invested in active and completed investments (excluding declined)",
+    },
+    {
+      title: "Total Withdrawn",
+      value: fmt(investmentTotals.totalWithdrawn),
+      icon: DollarSign,
+      accent: "emerald",
+      link: "/withdrawals",
+      tooltip: "Total amount you've withdrawn from investments",
+    },
+    {
+      title: "Active Investments",
+      value: investmentTotals.activeCount,
+      icon: TrendingUp,
+      accent: "violet",
+      link: "/investments",
+      tooltip: "Number of currently active investments",
+    },
+    {
+      title: "Available Bonuses",
+      value: fmt(totalBonus),
+      icon: Gift,
+      accent: "amber",
+      link: "/bonuses",
+      tooltip: "Total bonuses available to claim",
+    },
+  ];
+
+  // Add declined card if there are declined investments
+  if (investmentTotals.declinedCount > 0) {
+    summaryCards.push({
+      title: "Declined Investments",
+      value: fmt(investmentTotals.declinedAmount),
+      icon: XCircle,
+      accent: "red",
+      link: "/investments",
+      tooltip: `Total amount of ${investmentTotals.declinedCount} declined investment(s)`,
+    });
+  }
+
+  const accentMap = {
+    blue: {
+      ring: "ring-blue-100 dark:ring-blue-900/30",
+      icon: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+      val: "text-blue-700 dark:text-blue-400",
+    },
+    emerald: {
+      ring: "ring-emerald-100 dark:ring-emerald-900/30",
+      icon: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+      val: "text-emerald-700 dark:text-emerald-400",
+    },
+    violet: {
+      ring: "ring-violet-100 dark:ring-violet-900/30",
+      icon: "bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
+      val: "text-violet-700 dark:text-violet-400",
+    },
+    amber: {
+      ring: "ring-amber-100 dark:ring-amber-900/30",
+      icon: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+      val: "text-amber-700 dark:text-amber-400",
+    },
+    red: {
+      ring: "ring-red-100 dark:ring-red-900/30",
+      icon: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+      val: "text-red-700 dark:text-red-400",
+    },
+  };
+
+  // Get active investments from the investments array
+  const activeInvestments = investments.filter(
+    (inv) =>
+      inv.paymentStatus === "confirmed" && inv.investmentStatus === "active",
+  );
+
   /* ── loading ── */
   if (loading)
     return (
@@ -175,60 +319,6 @@ const Dashboard = () => {
         </div>
       </div>
     );
-
-  const summaryCards = [
-    {
-      title: "Total Confirmed Investment",
-      value: fmt(dashboardData?.user?.totalInvested),
-      icon: Wallet,
-      accent: "blue",
-      link: "/investments",
-    },
-    {
-      title: "Total Withdrawn",
-      value: fmt(dashboardData?.user?.totalWithdrawn),
-      icon: DollarSign,
-      accent: "emerald",
-      link: "/withdrawals",
-    },
-    {
-      title: "Active Investments",
-      value: dashboardData?.investments?.counts?.active || 0,
-      icon: TrendingUp,
-      accent: "violet",
-      link: "/investments",
-    },
-    {
-      title: "Available Bonuses",
-      value: fmt(totalBonus),
-      icon: Gift,
-      accent: "amber",
-      link: "/bonuses",
-    },
-  ];
-
-  const accentMap = {
-    blue: {
-      ring: "ring-blue-100 dark:ring-blue-900/30",
-      icon: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
-      val: "text-blue-700 dark:text-blue-400",
-    },
-    emerald: {
-      ring: "ring-emerald-100 dark:ring-emerald-900/30",
-      icon: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
-      val: "text-emerald-700 dark:text-emerald-400",
-    },
-    violet: {
-      ring: "ring-violet-100 dark:ring-violet-900/30",
-      icon: "bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
-      val: "text-violet-700 dark:text-violet-400",
-    },
-    amber: {
-      ring: "ring-amber-100 dark:ring-amber-900/30",
-      icon: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
-      val: "text-amber-700 dark:text-amber-400",
-    },
-  };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -281,12 +371,48 @@ const Dashboard = () => {
         </motion.div>
       </motion.div>
 
+      {/* ── BANK DETAILS WARNING ── */}
+      {!user?.hasBankDetails && (
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="mb-6"
+        >
+          <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+            <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center shrink-0">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Bank Details Required
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                Please update your bank account details to receive withdrawals.
+              </p>
+              <Link
+                to="/profile"
+                className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:underline"
+              >
+                Update Bank Details <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <button
+              onClick={() => navigate("/profile")}
+              className="shrink-0 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg transition"
+            >
+              Update Now
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* ── SUMMARY CARDS ── */}
       <motion.div
         variants={stagger}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+        className={`grid grid-cols-2 ${summaryCards.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-4 mb-6`}
       >
         {summaryCards.map((card, i) => {
           const Icon = card.icon;
@@ -296,7 +422,8 @@ const Dashboard = () => {
               key={i}
               custom={i}
               variants={fadeUp}
-              className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 ring-1 ${a.ring} p-5 hover:shadow-md transition group`}
+              className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 ring-1 ${a.ring} p-5 hover:shadow-md transition group relative cursor-help`}
+              title={card.tooltip}
             >
               <div className="flex items-start justify-between mb-4">
                 <div
@@ -317,6 +444,13 @@ const Dashboard = () => {
               <p className={`text-xl font-bold tracking-tight ${a.val}`}>
                 {card.value}
               </p>
+
+              {/* Tooltip indicator */}
+              <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                  ⓘ
+                </span>
+              </span>
             </motion.div>
           );
         })}
@@ -342,9 +476,9 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        {dashboardData?.investments?.active?.length > 0 ? (
+        {activeInvestments.length > 0 ? (
           <div className="space-y-3">
-            {dashboardData.investments.active.map((inv, i) => {
+            {activeInvestments.map((inv, i) => {
               const isApex1 = inv.plan === "apex1";
               const totalPayments = isApex1 ? 2 : 3;
               const pct = (inv.withdrawals.length / totalPayments) * 100;
@@ -353,7 +487,8 @@ const Dashboard = () => {
                   key={inv._id}
                   custom={i}
                   variants={fadeUp}
-                  className="rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/50 p-4 hover:border-blue-100 dark:hover:border-blue-800 hover:bg-blue-50/20 dark:hover:bg-blue-900/20 transition"
+                  className="rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/50 p-4 hover:border-blue-100 dark:hover:border-blue-800 hover:bg-blue-50/20 dark:hover:bg-blue-900/20 transition cursor-pointer"
+                  onClick={() => navigate(`/investments/${inv._id}`)}
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3">

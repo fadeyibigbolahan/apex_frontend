@@ -22,6 +22,7 @@ import {
   Gift,
   Award,
   X,
+  Timer,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -44,7 +45,6 @@ const stagger = {
 const getNigeriaDate = (dateString) => {
   if (!dateString) return null;
   const date = new Date(dateString);
-  // Nigeria is UTC+1, add 1 hour for display
   return new Date(date.getTime() + 60 * 60 * 1000);
 };
 
@@ -55,15 +55,15 @@ const formatDateFullNigeria = (dateString) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "N/A";
 
-    const nigeriaDate = new Date(date.getTime() + 60 * 60 * 1000);
-
-    return nigeriaDate.toLocaleDateString("en-NG", {
+    // Use built-in timezone support instead of manual offset
+    return date.toLocaleString("en-NG", {
+      timeZone: "Africa/Lagos",
       day: "numeric",
       month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "Africa/Lagos",
+      hour12: true,
     });
   } catch (error) {
     return "N/A";
@@ -77,17 +77,41 @@ const formatDateShortNigeria = (dateString) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "N/A";
 
-    const nigeriaDate = new Date(date.getTime() + 60 * 60 * 1000);
-
-    return nigeriaDate.toLocaleDateString("en-NG", {
+    return date.toLocaleDateString("en-NG", {
+      timeZone: "Africa/Lagos",
       day: "numeric",
       month: "short",
       year: "numeric",
-      timeZone: "Africa/Lagos",
     });
   } catch (error) {
     return "N/A";
   }
+};
+
+// Format time only
+const formatTimeOnly = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
+
+    return date.toLocaleTimeString("en-NG", {
+      timeZone: "Africa/Lagos",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch (error) {
+    return "N/A";
+  }
+};
+
+// Helper to safely get Date object
+const safeParseDate = (dateValue) => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  const parsed = new Date(dateValue);
+  return isNaN(parsed.getTime()) ? null : parsed;
 };
 
 /* ── status pill ── */
@@ -173,6 +197,7 @@ const InvestmentDetails = () => {
         totalWithdrawn: res.data.data.investment.totalWithdrawn,
         investmentStatus: res.data.data.investment.investmentStatus,
         nextWithdrawalDate: res.data.data.investment.nextWithdrawalDate,
+        startDate: res.data.data.investment.startDate,
       });
 
       setInvestment(res.data.data.investment);
@@ -191,11 +216,9 @@ const InvestmentDetails = () => {
   };
 
   useEffect(() => {
-    console.log("User auth", user);
     fetchInvestmentDetails();
   }, [id]);
 
-  // Add this useEffect to log when investment updates
   useEffect(() => {
     if (investment) {
       console.log("Investment updated:", {
@@ -213,7 +236,6 @@ const InvestmentDetails = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Use the correct unified endpoint (same as WithdrawalsPage)
       await axios.post(
         `${url}withdrawals/request`,
         {
@@ -246,61 +268,126 @@ const InvestmentDetails = () => {
       minimumFractionDigits: 0,
     }).format(n || 0);
 
-  // Use Nigeria formatted dates
-  const fmtDate = formatDateFullNigeria; // Now includes time
+  const fmtDate = formatDateFullNigeria;
   const fmtDateShort = formatDateShortNigeria;
+  const fmtTime = formatTimeOnly;
 
-  // Days left calculation in Nigeria timezone
-  const daysLeft = (d) => {
-    if (!d) return 0;
-
-    const now = new Date();
-    const target = new Date(d);
-
-    // Convert both to Nigeria timezone for comparison
-    const nigeriaNow = new Date(now.getTime() + 60 * 60 * 1000);
-    const nigeriaTarget = new Date(target.getTime() + 60 * 60 * 1000);
-
-    // Set to midnight for accurate day calculation
-    nigeriaNow.setHours(0, 0, 0, 0);
-    nigeriaTarget.setHours(0, 0, 0, 0);
-
-    const diffTime = nigeriaTarget - nigeriaNow;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays > 0 ? diffDays : 0;
+  // ========== SAFE DATE HELPER ==========
+  const getSafeDate = (dateValue) => {
+    if (!dateValue) return null;
+    if (dateValue instanceof Date) return dateValue;
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? null : parsed;
   };
 
-  // Add working days in Nigeria timezone
-  const addWorkingDays = (startDateStr, days) => {
-    if (!startDateStr) return "N/A";
+  // ========== TIME-AWARE WORKING DAYS CALCULATION ==========
+  const calculateWorkingDaysWithTime = (startDate, endDate) => {
+    const start = getSafeDate(startDate);
+    const end = getSafeDate(endDate);
 
-    const startDate = new Date(startDateStr);
-    // Convert to Nigeria timezone
-    const nigeriaStart = new Date(startDate.getTime() + 60 * 60 * 1000);
-    nigeriaStart.setHours(0, 0, 0, 0);
+    if (!start || !end) return 0;
 
-    let currentDate = new Date(nigeriaStart);
-    let workingDaysAdded = 0;
+    let count = 0;
 
-    while (workingDaysAdded < days) {
-      currentDate.setDate(currentDate.getDate() + 1);
-      const dayOfWeek = currentDate.getDay();
+    // Reset start to beginning of the day for day counting
+    let startDay = new Date(start);
+    startDay.setHours(0, 0, 0, 0);
+
+    let endDay = new Date(end);
+    endDay.setHours(0, 0, 0, 0);
+
+    // Count working days (excluding weekends)
+    let currentDay = new Date(startDay);
+    while (currentDay <= endDay) {
+      const dayOfWeek = currentDay.getDay();
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        workingDaysAdded++;
+        count++;
+      }
+      currentDay.setDate(currentDay.getDate() + 1);
+    }
+
+    // Subtract the start day if the current time hasn't passed the start time
+    if (count > 0 && end < start) {
+      count--;
+    }
+
+    return count;
+  };
+
+  // ========== CALCULATE EXACT AVAILABLE DATE AND TIME ==========
+  const calculateAvailableDateTime = (startDate, workingDaysRequired) => {
+    const start = getSafeDate(startDate);
+    if (!start) return null;
+
+    let availableDate = new Date(start);
+    let workingDaysCounted = 0;
+
+    // Add days until we reach the required working days
+    while (workingDaysCounted < workingDaysRequired) {
+      availableDate.setDate(availableDate.getDate() + 1);
+      const dayOfWeek = availableDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        workingDaysCounted++;
       }
     }
 
-    return currentDate.toLocaleDateString("en-NG", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: "Africa/Lagos",
-    });
+    // Set the time to the same as the start time
+    availableDate.setHours(start.getHours());
+    availableDate.setMinutes(start.getMinutes());
+    availableDate.setSeconds(start.getSeconds());
+
+    return availableDate;
   };
 
-  // Calculate next withdrawal date manually if not provided by API
-  const getNextWithdrawalDate = () => {
+  // ========== CHECK IF WITHDRAWAL IS AVAILABLE WITH TIME ==========
+  const isWithdrawalAvailable = () => {
+    if (!investment) return false;
+    if (investment.paymentStatus !== "confirmed") return false;
+    if (investment.investmentStatus !== "active") return false;
+
+    const withdrawalsCount = investment.withdrawals?.length || 0;
+    const expectedWithdrawals = investment.plan === "apex1" ? 2 : 3;
+
+    if (withdrawalsCount >= expectedWithdrawals) return false;
+
+    const hasPending = investment.withdrawals?.some(
+      (w) => w.status === "pending",
+    );
+    if (hasPending) return false;
+
+    const startDate = getSafeDate(investment.startDate);
+    if (!startDate) return false;
+
+    const currentTime = new Date();
+    const phaseNumber = withdrawalsCount + 1;
+    const daysRequired = phaseNumber * 5;
+
+    const workingDaysPassed = calculateWorkingDaysWithTime(
+      startDate,
+      currentTime,
+    );
+    const availableDateTime = calculateAvailableDateTime(
+      startDate,
+      daysRequired,
+    );
+
+    console.log(`Phase ${phaseNumber} availability check:`, {
+      startDate: startDate.toISOString(),
+      currentTime: currentTime.toISOString(),
+      daysRequired,
+      workingDaysPassed,
+      availableDateTime: availableDateTime?.toISOString(),
+      isAvailable:
+        workingDaysPassed >= daysRequired && currentTime >= availableDateTime,
+    });
+
+    return (
+      workingDaysPassed >= daysRequired && currentTime >= availableDateTime
+    );
+  };
+
+  // ========== GET NEXT WITHDRAWAL DATE WITH TIME ==========
+  const getNextWithdrawalDateTime = () => {
     if (!investment) return null;
     if (investment.paymentStatus !== "confirmed") return null;
     if (investment.investmentStatus !== "active") return null;
@@ -308,24 +395,46 @@ const InvestmentDetails = () => {
     const withdrawalsCount = investment.withdrawals?.length || 0;
     const expectedWithdrawals = investment.plan === "apex1" ? 2 : 3;
 
-    console.log("getNextWithdrawalDate - withdrawalsCount:", withdrawalsCount);
-    console.log(
-      "getNextWithdrawalDate - withdrawals array:",
-      investment.withdrawals,
-    );
-
     if (withdrawalsCount >= expectedWithdrawals) return null;
 
-    const startDate = investment.startDate || investment.createdAt;
-    const daysToAdd = (withdrawalsCount + 1) * 5;
+    const startDate = getSafeDate(investment.startDate);
+    if (!startDate) return null;
 
-    console.log("Calculating - daysToAdd:", daysToAdd, "startDate:", startDate);
+    const phaseNumber = withdrawalsCount + 1;
+    const daysRequired = phaseNumber * 5;
 
-    const result = addWorkingDays(startDate, daysToAdd);
-    console.log("Calculated next withdrawal date:", result);
-
-    return result;
+    return calculateAvailableDateTime(startDate, daysRequired);
   };
+
+  // ========== GET TIME REMAINING UNTIL NEXT WITHDRAWAL ==========
+  const getTimeRemaining = () => {
+    const nextDate = getNextWithdrawalDateTime();
+    if (!nextDate) return null;
+
+    const now = new Date();
+    const diffMs = nextDate - now;
+
+    if (diffMs <= 0) return null;
+
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    const remainingHours = diffHours % 24;
+    const remainingMinutes = Math.floor(
+      (diffMs % (1000 * 60 * 60)) / (1000 * 60),
+    );
+
+    if (diffDays > 0) {
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} and ${remainingHours} hour${remainingHours > 1 ? "s" : ""}`;
+    } else if (diffHours > 0) {
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} and ${remainingMinutes} minute${remainingMinutes > 1 ? "s" : ""}`;
+    } else {
+      return `${remainingMinutes} minute${remainingMinutes > 1 ? "s" : ""}`;
+    }
+  };
+
+  const canWithdraw = isWithdrawalAvailable();
+  const nextWithdrawalDateTime = getNextWithdrawalDateTime();
+  const timeRemaining = getTimeRemaining();
 
   if (loading)
     return (
@@ -374,39 +483,6 @@ const InvestmentDetails = () => {
         : (wd.length / totalPayments) * 100;
   const nextAmount = investment.expectedReturn / totalPayments;
   const hasPending = wd.some((w) => w.status === "pending");
-
-  // Use nextWithdrawalDate from API or calculate
-  const nextWithdrawalDate =
-    investment.nextWithdrawalDate || getNextWithdrawalDate();
-
-  const canWithdraw = () => {
-    if (investment.paymentStatus !== "confirmed") return false;
-    if (investment.investmentStatus !== "active") return false;
-    if (wd.length >= totalPayments) return false;
-    if (hasPending) return false;
-
-    // Check if next withdrawal date has arrived (compare dates only)
-    if (nextWithdrawalDate) {
-      const now = new Date();
-      const withdrawalDate = new Date(nextWithdrawalDate);
-
-      // Set both to midnight to compare just the date
-      const todayMidnight = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-      );
-      const withdrawalMidnight = new Date(
-        withdrawalDate.getFullYear(),
-        withdrawalDate.getMonth(),
-        withdrawalDate.getDate(),
-      );
-
-      return todayMidnight >= withdrawalMidnight;
-    }
-
-    return false;
-  };
 
   const tabs = ["overview", "withdrawals", "timeline"];
 
@@ -635,7 +711,7 @@ const InvestmentDetails = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <InfoTile
-                    label="Start Date"
+                    label="Start Date & Time"
                     value={fmtDate(
                       investment.startDate || investment.createdAt,
                     )}
@@ -660,28 +736,35 @@ const InvestmentDetails = () => {
 
                 {investment.paymentStatus === "confirmed" &&
                   investment.investmentStatus === "active" && (
-                    <div className="relative overflow-hidden bg-[#0b0f1a] rounded-2xl p-5">
-                      <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
-                      <div className="relative z-10 flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-white/50 text-xs mb-1">
-                            Next Withdrawal
-                          </p>
-                          <p className="text-white text-2xl font-bold">
-                            {fmt(nextAmount)}
-                          </p>
-                          <p className="text-white/40 text-xs mt-1">
-                            {nextWithdrawalDate
-                              ? fmtDateShort(nextWithdrawalDate)
-                              : "Processing"}
-                          </p>
-                        </div>
-                        {nextWithdrawalDate && (
-                          <div className="text-right shrink-0">
-                            <p className="text-emerald-400 text-2xl font-bold">
-                              {daysLeft(nextWithdrawalDate)}
+                    <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-5">
+                      <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between gap-4 mb-3">
+                          <div>
+                            <p className="text-white/70 text-xs mb-1">
+                              Next Withdrawal
                             </p>
-                            <p className="text-white/40 text-xs">days left</p>
+                            <p className="text-white text-2xl font-bold">
+                              {fmt(nextAmount)}
+                            </p>
+                          </div>
+                          {nextWithdrawalDateTime && (
+                            <div className="text-right shrink-0">
+                              <p className="text-emerald-300 text-sm font-bold">
+                                {timeRemaining
+                                  ? `${timeRemaining} left`
+                                  : "Available Now"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {nextWithdrawalDateTime && (
+                          <div className="flex items-center gap-2 text-white/80 text-xs">
+                            <Timer className="w-3.5 h-3.5" />
+                            <span>
+                              Available on: {fmtDate(nextWithdrawalDateTime)}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -783,20 +866,30 @@ const InvestmentDetails = () => {
                     />
                   ))}
 
-                  {/* Future estimated */}
+                  {/* Future estimated with exact time */}
                   {investment.investmentStatus === "active" &&
                     wdRemaining > 0 &&
                     Array.from({ length: wdRemaining }).map((_, i) => {
                       const phase = wd.length + i + 1;
+                      const estimatedDate = calculateAvailableDateTime(
+                        investment.startDate,
+                        phase * 5,
+                      );
                       return (
                         <TimelineItem
                           key={`f-${i}`}
                           color="bg-gray-200"
                           title={`Phase ${phase} Withdrawal (Estimated)`}
-                          date={addWorkingDays(
-                            investment.startDate || investment.createdAt,
-                            phase * 5,
-                          )}
+                          date={
+                            estimatedDate
+                              ? fmtDate(estimatedDate)
+                              : "Calculating..."
+                          }
+                          sub={
+                            estimatedDate
+                              ? `Available at ${fmtTime(estimatedDate)}`
+                              : ""
+                          }
                           faded
                         />
                       );
@@ -842,7 +935,7 @@ const InvestmentDetails = () => {
                   </p>
                 </div>
 
-                {canWithdraw() ? (
+                {canWithdraw ? (
                   <button
                     onClick={() => setShowWithdrawModal(true)}
                     className="w-full py-3 bg-gradient-to-r from-blue-600 to-emerald-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all"
@@ -860,10 +953,15 @@ const InvestmentDetails = () => {
                     <p className="text-[11px] text-gray-400 text-center">
                       {hasPending
                         ? "You have a pending withdrawal request"
-                        : nextWithdrawalDate
-                          ? `Available on ${fmtDateShort(nextWithdrawalDate)}`
+                        : nextWithdrawalDateTime
+                          ? `Available on ${fmtDate(nextWithdrawalDateTime)} at ${fmtTime(nextWithdrawalDateTime)}`
                           : "Processing withdrawal date"}
                     </p>
+                    {nextWithdrawalDateTime && timeRemaining && (
+                      <p className="text-[11px] text-amber-600 text-center mt-1">
+                        ⏰ {timeRemaining} remaining
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -928,6 +1026,11 @@ const InvestmentDetails = () => {
                 },
                 { label: "Payments", val: isApex1 ? "2 phases" : "3 phases" },
                 { label: "Payment Frequency", val: "Every 5 working days" },
+                {
+                  label: "Withdrawal Time",
+                  val: "Same as start time",
+                  valColor: "text-amber-600",
+                },
               ].map(({ label, val, valColor }) => (
                 <div
                   key={label}
@@ -1136,7 +1239,7 @@ const TimelineItem = ({ color, title, date, sub, faded }) => (
     <div>
       <p className="text-sm font-semibold text-gray-900">{title}</p>
       <p className="text-[11px] text-gray-400 mt-0.5">{date}</p>
-      {sub && <p className="text-[11px] text-gray-400 capitalize">{sub}</p>}
+      {sub && <p className="text-[11px] text-gray-400">{sub}</p>}
     </div>
   </div>
 );

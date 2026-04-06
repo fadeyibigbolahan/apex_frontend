@@ -11,6 +11,7 @@ import {
   ArrowRight,
   ArrowLeft,
   X,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -46,7 +47,7 @@ const InputField = ({
 );
 
 // ═════════════════════════════════════════════════════════════════════════════
-const Login = () => {
+const AdminLoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -63,7 +64,7 @@ const Login = () => {
 
   // Animated stars and light effect for desktop left panel
   useEffect(() => {
-    const container = document.getElementById("login-stars-container");
+    const container = document.getElementById("admin-login-stars-container");
     if (!container) return;
 
     // Create stars
@@ -71,20 +72,11 @@ const Login = () => {
       const star = document.createElement("div");
       star.className = "star";
 
-      // Random position
       const left = Math.random() * 100;
       const top = Math.random() * 100;
-
-      // Random size (0.5px to 3px)
       const size = Math.random() * 2.5 + 0.5;
-
-      // Random animation duration (2s to 6s)
       const duration = Math.random() * 4 + 2;
-
-      // Random delay
       const delay = Math.random() * 5;
-
-      // Random opacity
       const opacity = Math.random() * 0.7 + 0.3;
 
       star.style.cssText = `
@@ -105,7 +97,7 @@ const Login = () => {
       container.appendChild(star);
     }
 
-    // Create larger glowing orbs using your color palette
+    // Create larger glowing orbs with admin theme (red/orange)
     for (let i = 0; i < 15; i++) {
       const orb = document.createElement("div");
       orb.className = "orb";
@@ -116,8 +108,8 @@ const Login = () => {
       const duration = Math.random() * 20 + 20;
       const delay = Math.random() * 10;
 
-      // Your color palette
-      const colors = ["#481B73", "#5A2A71", "#723A69", "#8A4A61"];
+      // Admin color palette - red/orange theme
+      const colors = ["#991b1b", "#dc2626", "#f97316", "#ea580c"];
       const color = colors[Math.floor(Math.random() * colors.length)];
 
       orb.style.cssText = `
@@ -175,7 +167,7 @@ const Login = () => {
 
   // Animated stars and light effect for mobile
   useEffect(() => {
-    const container = document.getElementById("mobile-stars-container");
+    const container = document.getElementById("admin-mobile-stars-container");
     if (!container) return;
 
     // Simpler stars for mobile (better performance)
@@ -219,7 +211,7 @@ const Login = () => {
       const duration = Math.random() * 15 + 15;
       const delay = Math.random() * 10;
 
-      const colors = ["#481B73", "#5A2A71", "#723A69"];
+      const colors = ["#991b1b", "#dc2626", "#f97316"];
       const color = colors[Math.floor(Math.random() * colors.length)];
 
       orb.style.cssText = `
@@ -268,7 +260,7 @@ const Login = () => {
       return;
     }
     try {
-      const response = await axios.post(`${url}auth/user-login`, {
+      const response = await axios.post(`${url}auth/admin-login`, {
         email: formData.email,
         password: formData.password,
       });
@@ -288,12 +280,9 @@ const Login = () => {
         retradingBonus: data.user.retradingBonus,
         hasBankDetails: data.user.bankDetails?.accountNumber ? true : false,
       });
-      setTimeout(
-        () => navigate(data.user.role === "admin" ? "/admin" : "/dashboard"),
-        1000,
-      );
+      setTimeout(() => navigate("/admin"), 1000);
     } catch (err) {
-      console.log("error signin", err);
+      console.log("admin login error", err);
       setError(
         err.response?.data?.message || "Invalid credentials. Please try again.",
       );
@@ -340,14 +329,12 @@ const Login = () => {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap'); 
         .serif{font-family:'DM Serif Display',Georgia,serif;}
         
-        /* Glass morphism effects */
         .glass-card {
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(147, 51, 234, 0.2);
+          border: 1px solid rgba(220, 38, 38, 0.2);
         }
         
-        /* Input styles - fixed positioning */
         input, select, textarea {
           font-size: 16px !important;
         }
@@ -360,7 +347,6 @@ const Login = () => {
           transition: all 0.2s;
         }
         
-        /* Desktop input styles */
         .desktop-input {
           background-color: #f9fafb;
           border: 1px solid #e5e7eb;
@@ -371,15 +357,14 @@ const Login = () => {
         }
         .desktop-input:focus {
           background-color: white;
-          border-color: #9333EA;
+          border-color: #dc2626;
           outline: none;
-          ring: 2px solid rgba(147, 51, 234, 0.2);
+          ring: 2px solid rgba(220, 38, 38, 0.2);
         }
         
-        /* Mobile input styles */
         .mobile-input {
           background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(147, 51, 234, 0.3);
+          border: 1px solid rgba(220, 38, 38, 0.3);
           color: white;
         }
         .mobile-input::placeholder {
@@ -387,18 +372,16 @@ const Login = () => {
         }
         .mobile-input:focus {
           background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(147, 51, 234, 0.6);
+          border-color: rgba(220, 38, 38, 0.6);
           outline: none;
         }
         
-        /* Password strength bar colors */
         .bg-red-400 { background-color: #f87171; }
         .bg-amber-400 { background-color: #fbbf24; }
         .bg-emerald-500 { background-color: #10b981; }
         .bg-gray-100 { background-color: #f3f4f6; }
-        .bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
+        .bg-white\\/10 { background-color: rgba(255, 255, 255, 0.1); }
 
-        /* Star animations */
         @keyframes twinkle {
           0%, 100% { opacity: 0.2; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.2); }
@@ -425,7 +408,7 @@ const Login = () => {
           }
         }
 
-        #login-stars-container, #mobile-stars-container {
+        #admin-login-stars-container, #admin-mobile-stars-container {
           position: absolute;
           top: 0;
           left: 0;
@@ -440,27 +423,27 @@ const Login = () => {
         }
       `}</style>
 
-      {/* Desktop Left Panel with Galaxy Effect */}
+      {/* Desktop Left Panel with Galaxy Effect - Admin Theme */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden flex-col justify-between p-12">
-        {/* Gradient Background */}
+        {/* Gradient Background - Admin Red/Orange Theme */}
         <div
           className="absolute inset-0 w-full h-full"
           style={{
             background:
-              "linear-gradient(135deg, #1a0b2e 0%, #2d1b3a 40%, #3d2a3a 70%, #4d353a 100%)",
+              "linear-gradient(135deg, #2c0f0f 0%, #4a1a1a 40%, #6b2e2e 70%, #8b4545 100%)",
             zIndex: 0,
           }}
         />
 
         {/* Stars Container for Desktop */}
-        <div id="login-stars-container" />
+        <div id="admin-login-stars-container" />
 
         {/* Subtle radial gradient overlay for depth */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle at 30% 40%, rgba(114, 58, 105, 0.15) 0%, transparent 60%), radial-gradient(circle at 70% 60%, rgba(72, 27, 115, 0.1) 0%, transparent 60%)",
+              "radial-gradient(circle at 30% 40%, rgba(220, 38, 38, 0.15) 0%, transparent 60%), radial-gradient(circle at 70% 60%, rgba(185, 28, 28, 0.1) 0%, transparent 60%)",
             zIndex: 2,
           }}
         />
@@ -476,7 +459,7 @@ const Login = () => {
             <img src={apex} alt="apex logo" />
           </div>
           <span className="font-semibold text-white text-lg tracking-tight">
-            APEX <span className="text-purple-300 font-normal">Trading</span>
+            APEX <span className="text-red-300 font-normal">Admin</span>
           </span>
         </motion.div>
 
@@ -487,17 +470,17 @@ const Login = () => {
           transition={{ duration: 0.65, delay: 0.1 }}
           className="relative z-10"
         >
-          <p className="text-xs font-semibold text-purple-300 uppercase tracking-widest mb-4">
-            Welcome back
+          <p className="text-xs font-semibold text-red-300 uppercase tracking-widest mb-4">
+            Administrator Portal
           </p>
           <h2 className="serif text-5xl text-white leading-[1.1] mb-5">
-            Good to see
+            Manage
             <br />
-            you <em className="not-italic text-purple-300">again.</em>
+            <em className="not-italic text-red-300">with confidence.</em>
           </h2>
           <p className="text-gray-300 text-base leading-relaxed max-w-sm">
-            Your investments are working while you're away. Sign in to check
-            your returns and manage your portfolio.
+            Secure access to the administrative dashboard. Monitor users,
+            investments, and platform activity.
           </p>
         </motion.div>
 
@@ -509,10 +492,10 @@ const Login = () => {
           className="relative z-10 grid grid-cols-2 gap-3"
         >
           {[
-            { value: "15,000+", label: "Active investors", color: "#C084FC" },
-            { value: "₦1.25B+", label: "Total invested", color: "#A855F7" },
-            { value: "₦875M+", label: "Paid out to date", color: "#9333EA" },
-            { value: "99.8%", label: "On-time payments", color: "#D8B4FE" },
+            { value: "24/7", label: "Platform uptime", color: "#f87171" },
+            { value: "100%", label: "Data encrypted", color: "#f97316" },
+            { value: "Real-time", label: "Monitoring", color: "#fb923c" },
+            { value: "Secure", label: "Admin access", color: "#fdba74" },
           ].map((s, i) => (
             <motion.div
               key={s.label}
@@ -540,38 +523,37 @@ const Login = () => {
       >
         {/* Mobile version with galaxy background */}
         <div className="lg:hidden relative min-h-screen">
-          {/* Gradient Background for Mobile */}
+          {/* Gradient Background for Mobile - Admin Theme */}
           <div
             className="fixed inset-0 w-full h-full"
             style={{
               background:
-                "linear-gradient(135deg, #1a0b2e 0%, #2d1b3a 40%, #3d2a3a 70%, #4d353a 100%)",
+                "linear-gradient(135deg, #2c0f0f 0%, #4a1a1a 40%, #6b2e2e 70%, #8b4545 100%)",
               zIndex: 0,
             }}
           />
 
           {/* Stars Container for Mobile */}
-          <div id="mobile-stars-container" className="fixed inset-0" />
+          <div id="admin-mobile-stars-container" className="fixed inset-0" />
 
           {/* Mobile gradient overlay */}
           <div
             className="fixed inset-0 pointer-events-none"
             style={{
               background:
-                "radial-gradient(circle at 50% 50%, rgba(114, 58, 105, 0.15) 0%, transparent 70%)",
+                "radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 70%)",
               zIndex: 2,
             }}
           />
 
           {/* Mobile top bar with semi-transparent background */}
-          <div className="relative z-10 flex items-center justify-between p-5 border-b border-purple-500/30 glass-card">
+          <div className="relative z-10 flex items-center justify-between p-5 border-b border-red-500/30 glass-card">
             <div className="flex items-center gap-2">
               <div className="w-[50px] h-[50px] rounded-lg flex items-center justify-center">
                 <img src={apex} alt="apex logo" />
               </div>
               <span className="font-semibold text-white">
-                APEX{" "}
-                <span className="text-purple-300 font-normal">Trading</span>
+                APEX <span className="text-red-300 font-normal">Admin</span>
               </span>
             </div>
             <Link
@@ -591,9 +573,12 @@ const Login = () => {
             >
               {/* Header */}
               <div className="mb-7">
-                <h1 className="serif text-3xl text-white mb-1.5">Sign in</h1>
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="w-6 h-6 text-red-400" />
+                  <h1 className="serif text-3xl text-white">Admin Sign in</h1>
+                </div>
                 <p className="text-sm text-gray-300">
-                  Access your investment dashboard
+                  Access the administrative dashboard
                 </p>
               </div>
 
@@ -630,13 +615,13 @@ const Login = () => {
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Email */}
-                <InputField icon={Mail} label="Email address">
+                <InputField icon={Mail} label="Admin Email">
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="you@example.com"
+                    placeholder="admin@apextrading.com"
                     required
                     autoComplete="email"
                     className="input-base mobile-input"
@@ -675,7 +660,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="text-xs text-purple-300 hover:text-purple-200 transition font-medium"
+                    className="text-xs text-red-300 hover:text-red-200 transition font-medium"
                   >
                     Forgot password?
                   </button>
@@ -685,7 +670,7 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-purple-600/30 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-red-600/30 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
                 >
                   {loading ? (
                     <>
@@ -694,7 +679,9 @@ const Login = () => {
                     </>
                   ) : (
                     <>
-                      Sign in <ArrowRight className="w-4 h-4" />
+                      <Shield className="w-4 h-4" />
+                      Access Admin Panel
+                      <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
@@ -702,12 +689,12 @@ const Login = () => {
 
               {/* Footer links */}
               <p className="mt-6 text-center text-sm text-gray-300">
-                Don't have an account?{" "}
+                Not an admin?{" "}
                 <Link
-                  to="/register"
-                  className="text-purple-300 hover:text-purple-200 font-semibold"
+                  to="/login"
+                  className="text-red-300 hover:text-red-200 font-semibold"
                 >
-                  Create account
+                  User sign in
                 </Link>
               </p>
             </motion.div>
@@ -725,9 +712,14 @@ const Login = () => {
             >
               {/* Header */}
               <div className="mb-7">
-                <h1 className="serif text-3xl text-gray-900 mb-1.5">Sign in</h1>
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="w-6 h-6 text-red-500" />
+                  <h1 className="serif text-3xl text-gray-900">
+                    Admin Sign in
+                  </h1>
+                </div>
                 <p className="text-sm text-gray-500">
-                  Access your investment dashboard
+                  Access the administrative dashboard
                 </p>
               </div>
 
@@ -764,14 +756,14 @@ const Login = () => {
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Email */}
-                <InputField icon={Mail} label="Email address">
+                <InputField icon={Mail} label="Admin Email">
                   <div className="relative">
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="you@example.com"
+                      placeholder="admin@apextrading.com"
                       required
                       autoComplete="email"
                       className="input-base desktop-input"
@@ -811,7 +803,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="text-xs text-purple-600 hover:text-purple-700 transition font-medium"
+                    className="text-xs text-red-600 hover:text-red-700 transition font-medium"
                   >
                     Forgot password?
                   </button>
@@ -821,7 +813,7 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-purple-600/30 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white text-base font-semibold rounded-xl transition-all shadow-lg shadow-red-600/30 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
                 >
                   {loading ? (
                     <>
@@ -830,7 +822,9 @@ const Login = () => {
                     </>
                   ) : (
                     <>
-                      Sign in <ArrowRight className="w-4 h-4" />
+                      <Shield className="w-4 h-4" />
+                      Access Admin Panel
+                      <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
@@ -838,12 +832,12 @@ const Login = () => {
 
               {/* Footer links */}
               <p className="mt-6 text-center text-sm text-gray-500">
-                Don't have an account?{" "}
+                Not an admin?{" "}
                 <Link
-                  to="/register"
-                  className="text-purple-600 hover:text-purple-700 font-semibold"
+                  to="/login"
+                  className="text-red-600 hover:text-red-700 font-semibold"
                 >
-                  Create account
+                  User sign in
                 </Link>
               </p>
               <div className="mt-3 text-center">
@@ -926,17 +920,17 @@ const Login = () => {
                               setResetEmail(e.target.value);
                               setResetError("");
                             }}
-                            placeholder="you@example.com"
+                            placeholder="admin@apextrading.com"
                             required
                             autoComplete="email"
-                            className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 focus:bg-white transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 focus:bg-white transition-all"
                           />
                         </div>
                       </div>
                       <button
                         type="submit"
                         disabled={resetLoading}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white text-sm font-semibold rounded-xl transition shadow-sm disabled:opacity-60"
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white text-sm font-semibold rounded-xl transition shadow-sm disabled:opacity-60"
                       >
                         {resetLoading ? (
                           <>
@@ -970,7 +964,7 @@ const Login = () => {
                     </p>
                     <button
                       onClick={closeForgot}
-                      className="text-sm text-purple-600 hover:text-purple-700 font-semibold transition"
+                      className="text-sm text-red-600 hover:text-red-700 font-semibold transition"
                     >
                       Back to sign in
                     </button>
@@ -985,4 +979,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AdminLoginPage;

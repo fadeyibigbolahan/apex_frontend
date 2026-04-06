@@ -20,6 +20,7 @@ import {
   Lock,
   Sparkles,
   Zap,
+  Info,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -48,8 +49,8 @@ const BonusStatus = ({ status }) => {
       ring: "ring-emerald-200 dark:ring-emerald-800",
       Icon: CheckCircle,
     },
-    pending: {
-      label: "Pending",
+    pending_withdrawal: {
+      label: "Pending Withdrawal",
       bg: "bg-amber-50 dark:bg-amber-900/40",
       text: "text-amber-700 dark:text-amber-300",
       ring: "ring-amber-200 dark:ring-amber-800",
@@ -97,6 +98,8 @@ const Bonuses = () => {
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
+  const [minBonusWithdrawal, setMinBonusWithdrawal] = useState(10000);
+  const [hasActiveInvestment, setHasActiveInvestment] = useState(false);
   const [stats, setStats] = useState({
     totalReferral: 0,
     totalRetrading: 0,
@@ -126,6 +129,19 @@ const Bonuses = () => {
       });
       const data = res.data.data;
       setBonuses(data.bonuses || []);
+
+      // 👇 Get min bonus withdrawal from the response
+      const minAmount = data.minBonusWithdrawal || 10000;
+      setMinBonusWithdrawal(minAmount);
+
+      // 👇 Update active investment and bank details from response
+      setHasActiveInvestment(data.hasActiveInvestment || false);
+
+      setStats((prev) => ({
+        ...prev,
+        minWithdrawal: minAmount,
+      }));
+
       calculateStats(data.bonuses || [], data.totals);
       setError("");
     } catch (err) {
@@ -138,7 +154,6 @@ const Bonuses = () => {
   };
 
   useEffect(() => {
-    console.log("auth usr", user);
     fetchBonuses();
   }, []);
 
@@ -147,13 +162,15 @@ const Bonuses = () => {
       data
         .filter((b) => b.type === type && b.status === status)
         .reduce((s, b) => s + b.amount, 0);
-    const aR = byType("referral", "available"),
-      aT = byType("retrading", "available");
-    const pR = byType("referral", "pending"),
-      pT = byType("retrading", "pending");
-    const wR = byType("referral", "withdrawn"),
-      wT = byType("retrading", "withdrawn");
-    const total = aR + aT;
+
+    const aR = byType("referral", "available");
+    const aT = byType("retrading", "available");
+    const pR = byType("referral", "pending_withdrawal");
+    const pT = byType("retrading", "pending_withdrawal");
+    const wR = byType("referral", "withdrawn");
+    const wT = byType("retrading", "withdrawn");
+    const totalAvailable = aR + aT;
+
     setStats({
       totalReferral: totals?.referral?.total || 0,
       totalRetrading: totals?.retrading?.total || 0,
@@ -163,26 +180,57 @@ const Bonuses = () => {
       pendingRetrading: pT,
       withdrawnReferral: wR,
       withdrawnRetrading: wT,
-      totalAvailable: total,
+      totalAvailable: totalAvailable,
       totalPending: pR + pT,
       totalWithdrawn: wR + wT,
-      minWithdrawal: 10000,
-      withdrawalProgress: Math.min((total / 10000) * 100, 100),
+      minWithdrawal: minBonusWithdrawal,
+      withdrawalProgress: Math.min(
+        (totalAvailable / minBonusWithdrawal) * 100,
+        100,
+      ),
     });
   };
 
   const handleWithdraw = async () => {
     setWithdrawLoading(true);
     setWithdrawError("");
+
+    // Check if user has bank details
+    if (!user?.hasBankDetails) {
+      setWithdrawError("Please add bank details before withdrawing");
+      setWithdrawLoading(false);
+      return;
+    }
+
+    // Check if user has active investment
+    if (!hasActiveInvestment) {
+      setWithdrawError("You need an active investment to withdraw bonuses");
+      setWithdrawLoading(false);
+      return;
+    }
+
+    // Check minimum amount
+    if (stats.totalAvailable < minBonusWithdrawal) {
+      setWithdrawError(
+        `Minimum bonus withdrawal amount is ${fmt(minBonusWithdrawal)}. You have ${fmt(stats.totalAvailable)} available.`,
+      );
+      setWithdrawLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        `${url}bonuses/withdraw`,
-        { type: withdrawType },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+
+      // Use the new withdrawal endpoint
+      const payload = {
+        type: "bonus",
+        withdrawalType: withdrawType === "all" ? "all" : withdrawType,
+      };
+
+      await axios.post(`${url}withdrawals/request`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       setWithdrawSuccess("Withdrawal request submitted successfully!");
       setTimeout(() => {
         fetchBonuses(true);
@@ -236,8 +284,10 @@ const Bonuses = () => {
       const d = new Date(b.createdAt);
       const k = `${d.toLocaleString("default", { month: "short" })} ${d.getFullYear()}`;
       if (!m[k]) m[k] = { referral: 0, retrading: 0, total: 0 };
-      m[k][b.type] += b.amount;
-      m[k].total += b.amount;
+      if (b.status !== "pending_withdrawal") {
+        m[k][b.type] += b.amount;
+        m[k].total += b.amount;
+      }
     });
     return Object.entries(m)
       .map(([month, data]) => ({ month, ...data }))
@@ -246,9 +296,10 @@ const Bonuses = () => {
 
   const filteredBonuses = getFiltered();
   const monthlyData = getMonthlyData();
-  const canWithdraw = stats.totalAvailable >= stats.minWithdrawal;
-
-  console.log("filtered Bonuse", filteredBonuses);
+  const canWithdraw =
+    stats.totalAvailable >= minBonusWithdrawal &&
+    hasActiveInvestment &&
+    user?.hasBankDetails;
 
   const tabs = [
     { key: "all", label: "All", count: bonuses.length },
@@ -311,6 +362,42 @@ const Bonuses = () => {
             </span>
           </button>
         </motion.div>
+      </motion.div>
+
+      {/* ── MINIMUM AMOUNT INFO BANNER ── */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        custom={0}
+        className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border border-purple-200 dark:border-purple-800 rounded-xl p-4 mb-6"
+      >
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-purple-900 dark:text-purple-300">
+              Bonus Withdrawal Requirements
+            </p>
+            <div className="flex items-center justify-between mt-2 bg-white/50 dark:bg-gray-900/30 rounded-lg px-3 py-2">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Minimum Bonus Withdrawal Amount:
+              </span>
+              <span className="text-xs font-bold text-purple-700 dark:text-purple-400">
+                {fmt(minBonusWithdrawal)}
+              </span>
+            </div>
+            {!hasActiveInvestment && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                ⚠️ You need an active investment to withdraw bonuses
+              </p>
+            )}
+            {!user?.hasBankDetails && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                ⚠️ Please add bank details in your profile before withdrawing
+              </p>
+            )}
+          </div>
+        </div>
       </motion.div>
 
       {/* ── SUMMARY CARDS ── */}
@@ -405,7 +492,7 @@ const Bonuses = () => {
               {c.progress ? (
                 <div>
                   <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mb-1">
-                    <span>Min. ₦10,000</span>
+                    <span>Min. {fmt(minBonusWithdrawal)}</span>
                     <span>{stats.withdrawalProgress.toFixed(0)}%</span>
                   </div>
                   <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -465,27 +552,34 @@ const Bonuses = () => {
             </div>
             <button
               onClick={() => setShowWithdrawModal(true)}
-              className="relative z-10 shrink-0 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 dark:from-emerald-500 dark:to-blue-500 dark:hover:from-emerald-600 dark:hover:to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all duration-300"
+              className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl transition-all duration-300"
             >
-              Withdraw Now
+              Withdraw Bonuses
             </button>
           </div>
         ) : (
-          <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center shrink-0">
-              <Lock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Minimum withdrawal: {fmt(stats.minWithdrawal)}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                You need{" "}
-                <span className="font-semibold text-gray-800 dark:text-gray-200">
-                  {fmt(stats.minWithdrawal - stats.totalAvailable)}
-                </span>{" "}
-                more to unlock withdrawal
-              </p>
+          <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Minimum withdrawal: {fmt(minBonusWithdrawal)}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {stats.totalAvailable < minBonusWithdrawal ? (
+                    <>
+                      You need {fmt(minBonusWithdrawal - stats.totalAvailable)}{" "}
+                      more to unlock withdrawal
+                    </>
+                  ) : !hasActiveInvestment ? (
+                    <>You need an active investment to withdraw bonuses</>
+                  ) : !user?.hasBankDetails ? (
+                    <>Please add bank details in your profile to withdraw</>
+                  ) : null}
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -555,7 +649,7 @@ const Bonuses = () => {
           </h2>
           <div className="flex items-end gap-3 h-36">
             {monthlyData.map((d, i) => {
-              const maxVal = Math.max(...monthlyData.map((x) => x.total));
+              const maxVal = Math.max(...monthlyData.map((x) => x.total), 1);
               return (
                 <div
                   key={i}
@@ -673,7 +767,9 @@ const Bonuses = () => {
                     {bonus.status === "available" && (
                       <button
                         onClick={() => {
-                          setWithdrawType(bonus.type);
+                          setWithdrawType(
+                            isReferral ? "referral" : "retrading",
+                          );
                           setShowWithdrawModal(true);
                         }}
                         className="shrink-0 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
@@ -824,7 +920,7 @@ const Bonuses = () => {
                   Withdraw Bonuses
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Select which bonuses to withdraw
+                  Minimum: {fmt(minBonusWithdrawal)}
                 </p>
               </div>
               <button
@@ -916,11 +1012,29 @@ const Bonuses = () => {
                     ))}
                   </div>
 
-                  {!user?.hasBankDetails && (
-                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+                  {stats.totalAvailable < minBonusWithdrawal && (
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl">
                       <p className="text-xs text-amber-800 dark:text-amber-300">
-                        Add bank details in your profile before withdrawing.
+                        ⚠️ You need at least {fmt(minBonusWithdrawal)} to
+                        withdraw. You have {fmt(stats.totalAvailable)}{" "}
+                        available.
+                      </p>
+                    </div>
+                  )}
+
+                  {!hasActiveInvestment && (
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl">
+                      <p className="text-xs text-amber-800 dark:text-amber-300">
+                        ⚠️ You need an active investment to withdraw bonuses.
+                      </p>
+                    </div>
+                  )}
+
+                  {!user?.hasBankDetails && (
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl">
+                      <p className="text-xs text-amber-800 dark:text-amber-300">
+                        ⚠️ Please add bank details in your profile before
+                        withdrawing.
                       </p>
                     </div>
                   )}
@@ -945,7 +1059,12 @@ const Bonuses = () => {
                     </button>
                     <button
                       onClick={handleWithdraw}
-                      disabled={withdrawLoading || !user?.hasBankDetails}
+                      disabled={
+                        withdrawLoading ||
+                        !user?.hasBankDetails ||
+                        !hasActiveInvestment ||
+                        stats.totalAvailable < minBonusWithdrawal
+                      }
                       className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 dark:from-blue-500 dark:to-emerald-500 dark:hover:from-blue-600 dark:hover:to-emerald-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 hover:shadow-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {withdrawLoading ? (

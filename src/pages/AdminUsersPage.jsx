@@ -31,6 +31,13 @@ import {
   CreditCard,
   Save,
   ChevronLeft,
+  User,
+  Building,
+  Hash,
+  Calendar,
+  EyeOff,
+  Key,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -131,7 +138,17 @@ const AdminUsers = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showReferralsModal, setShowReferralsModal] = useState(false);
+  const [referralsData, setReferralsData] = useState([]);
+  const [referralsLoading, setReferralsLoading] = useState(false);
+  const [referralsStats, setReferralsStats] = useState({
+    totalReferrals: 0,
+    activeReferrals: 0,
+    totalBonus: 0,
+  });
   const [blockAction, setBlockAction] = useState({ show: false, user: null });
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState("");
@@ -143,6 +160,22 @@ const AdminUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [searching, setSearching] = useState(false);
+  const [editUserLoading, setEditUserLoading] = useState(false);
+  const [editUserSuccess, setEditUserSuccess] = useState("");
+  const [editUserError, setEditUserError] = useState("");
+
+  // Password change states
+  const [passwordForm, setPasswordForm] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   const itemsPerPage = 20;
 
   const [bankForm, setBankForm] = useState({
@@ -151,6 +184,16 @@ const AdminUsers = () => {
     bankName: "",
     isLocked: false,
   });
+
+  const [editUserForm, setEditUserForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    role: "",
+    referralCode: "",
+  });
+
   const [filters, setFilters] = useState({
     status: "all",
     role: "all",
@@ -173,14 +216,16 @@ const AdminUsers = () => {
       setFilters((f) => ({ ...f, status: "blocked" }));
   }, [location]);
 
-  const fetchUsers = async (page = currentPage, showRefreshLoader = false) => {
+  const fetchUsers = async (page = 1, showRefreshLoader = false) => {
     if (showRefreshLoader) setRefreshing(true);
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         navigate("/login");
         return;
       }
+
       const params = new URLSearchParams({
         page,
         limit: itemsPerPage,
@@ -190,16 +235,23 @@ const AdminUsers = () => {
           verification: filters.verification,
         }),
         ...(filters.dateRange !== "all" && { dateRange: filters.dateRange }),
-        ...(filters.searchTerm && { search: filters.searchTerm }),
       });
-      const res = await axios.get(`${url}admin/users?${params}`, {
+
+      if (filters.searchTerm?.trim()) {
+        params.append("search", filters.searchTerm.trim());
+      }
+
+      const res = await axios.get(`${url}admin/users?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const data = res.data;
-      setUsers(data.data.users || []);
+
+      setUsers(data.data?.users || []);
       setTotalPages(data.pages || 1);
       setTotalItems(data.total || 0);
-      calculateStats(data.data.users || [], data.stats);
+      calculateStats(data.data?.users || [], data.stats);
+      setCurrentPage(page);
       setError("");
     } catch (err) {
       if (err.response?.status === 401) navigate("/login");
@@ -212,14 +264,24 @@ const AdminUsers = () => {
   };
 
   useEffect(() => {
-    fetchUsers(1);
-  }, [filters.status, filters.role, filters.verification, filters.dateRange]);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      if (filters.searchTerm) fetchUsers(1);
-    }, 500);
-    return () => clearTimeout(t);
-  }, [filters.searchTerm]);
+    setSearching(true);
+
+    const delayDebounce = setTimeout(() => {
+      fetchUsers(1);
+      setSearching(false);
+    }, 400);
+
+    return () => {
+      clearTimeout(delayDebounce);
+      setSearching(false);
+    };
+  }, [
+    filters.status,
+    filters.role,
+    filters.verification,
+    filters.dateRange,
+    filters.searchTerm,
+  ]);
 
   const calculateStats = (usersData, statsData) => {
     if (statsData) {
@@ -275,6 +337,116 @@ const AdminUsers = () => {
     }
   };
 
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    setEditUserLoading(true);
+    setEditUserError("");
+    setEditUserSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${url}admin/users/${selectedUser._id}`,
+        {
+          firstName: editUserForm.firstName,
+          lastName: editUserForm.lastName,
+          email: editUserForm.email,
+          phoneNumber: editUserForm.phoneNumber,
+          role: editUserForm.role,
+          referralCode: editUserForm.referralCode,
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      setEditUserSuccess("User details updated successfully!");
+      setTimeout(() => {
+        fetchUsers(currentPage);
+        setShowEditUserModal(false);
+        setEditUserSuccess("");
+        setEditUserForm({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phoneNumber: "",
+          role: "",
+          referralCode: "",
+        });
+      }, 2000);
+    } catch (err) {
+      setEditUserError(
+        err.response?.data?.message || "Failed to update user details",
+      );
+    } finally {
+      setEditUserLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    setPasswordLoading(true);
+
+    if (!passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError("Please fill in both password fields");
+      setPasswordLoading(false);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      setPasswordLoading(false);
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("Passwords do not match");
+      setPasswordLoading(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `${url}admin/users/${selectedUser._id}/change-password`,
+        {
+          newPassword: passwordForm.newPassword,
+          confirmPassword: passwordForm.confirmPassword,
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      setPasswordSuccess("Password changed successfully!");
+
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess("");
+        setPasswordForm({ newPassword: "", confirmPassword: "" });
+      }, 2000);
+    } catch (err) {
+      setPasswordError(
+        err.response?.data?.message || "Failed to change password",
+      );
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const openEditUserModal = (u) => {
+    setSelectedUser(u);
+    setEditUserForm({
+      firstName: u.firstName || "",
+      lastName: u.lastName || "",
+      email: u.email || "",
+      phoneNumber: u.phoneNumber || "",
+      role: u.role || "user",
+      referralCode: u.referralCode || "",
+    });
+    setEditUserError("");
+    setEditUserSuccess("");
+    setShowEditUserModal(true);
+  };
+
   const handleBankUpdate = async (e) => {
     e.preventDefault();
     setBankActionLoading(true);
@@ -318,6 +490,43 @@ const AdminUsers = () => {
     setBankActionError("");
     setBankActionSuccess("");
     setShowBankModal(true);
+  };
+
+  const fetchUserReferrals = async (userId) => {
+    setReferralsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${url}admin/users/${userId}/referrals`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setReferralsData(response.data.data.referrals || []);
+      setReferralsStats(
+        response.data.data.stats || {
+          totalReferrals: 0,
+          activeReferrals: 0,
+          totalBonus: 0,
+        },
+      );
+    } catch (err) {
+      console.error("Failed to fetch referrals:", err);
+      setReferralsData([]);
+      setReferralsStats({
+        totalReferrals: 0,
+        activeReferrals: 0,
+        totalBonus: 0,
+      });
+    } finally {
+      setReferralsLoading(false);
+    }
+  };
+
+  const openReferralsModal = async (u) => {
+    setSelectedUser(u);
+    setShowReferralsModal(true);
+    await fetchUserReferrals(u._id);
   };
 
   const resetFilters = () => {
@@ -374,8 +583,9 @@ const AdminUsers = () => {
     filters.verification !== "all" ||
     filters.dateRange !== "all" ||
     filters.searchTerm;
+
   const goPage = (p) => {
-    setCurrentPage(p);
+    if (p < 1 || p > totalPages) return;
     fetchUsers(p);
   };
 
@@ -384,10 +594,8 @@ const AdminUsers = () => {
   const userInitial = (u) =>
     (u.firstName?.[0] || u.email?.[0] || "U").toUpperCase();
 
-  /* ── modal close helpers ── */
   const closeModal = (fn) => () => fn(false);
 
-  /* ── loading ── */
   if (loading)
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -532,11 +740,28 @@ const AdminUsers = () => {
               type="text"
               placeholder="Search by name, email, phone…"
               value={filters.searchTerm}
-              onChange={(e) =>
-                setFilters({ ...filters, searchTerm: e.target.value })
-              }
-              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+              onChange={(e) => {
+                setFilters((prev) => ({
+                  ...prev,
+                  searchTerm: e.target.value,
+                }));
+                setCurrentPage(1);
+              }}
+              className="w-full pl-8 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
             />
+            {searching && (
+              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                Searching...
+              </span>
+            )}
+            {filters.searchTerm && (
+              <button
+                onClick={() => setFilters({ ...filters, searchTerm: "" })}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -630,11 +855,11 @@ const AdminUsers = () => {
                     "Financials",
                     "Bank",
                     "Joined",
-                    "",
+                    "Actions",
                   ].map((h) => (
                     <th
                       key={h}
-                      className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest last:text-right"
+                      className={`px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest ${h === "Actions" ? "text-right" : ""}`}
                     >
                       {h}
                     </th>
@@ -655,17 +880,17 @@ const AdminUsers = () => {
                           {userInitial(u)}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {userName(u)}
-                          </p>
-                          <p className="text-[11px] text-gray-400 truncate">
-                            {u.email}
-                          </p>
                           {u.referralCode && (
-                            <p className="text-[10px] text-gray-300 font-mono mt-0.5">
-                              #{u.referralCode}
+                            <p className="text-sm font-semibold text-black mt-0.5">
+                              {u.referralCode}
                             </p>
                           )}
+                          <p className="text-xs text-gray-900 truncate">
+                            {userName(u)}
+                          </p>
+                          <p className="text-xs text-gray-400 font-mono">
+                            {u.email}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -738,44 +963,65 @@ const AdminUsers = () => {
                       {fmtDate(u.createdAt)}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => {
                             setSelectedUser(u);
                             setShowUserModal(true);
                           }}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-600 transition"
-                          title="View"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium"
+                          title="View Details"
                         >
                           <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          onClick={() => openEditUserModal(u)}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium"
+                          title="Edit User"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Edit</span>
                         </button>
                         <button
                           onClick={() => openBankModal(u)}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-emerald-50 text-emerald-600 transition"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 transition text-xs font-medium"
                           title="Edit Bank"
                         >
                           <CreditCard className="w-3.5 h-3.5" />
+                          <span>Bank</span>
+                        </button>
+                        <button
+                          onClick={() => openReferralsModal(u)}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-purple-50 text-purple-600 transition text-xs font-medium"
+                          title="View Referrals"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>Referrals</span>
                         </button>
                         <button
                           onClick={() =>
                             setBlockAction({ show: true, user: u })
                           }
-                          className={`w-7 h-7 flex items-center justify-center rounded-lg transition ${u.isBlocked ? "hover:bg-emerald-50 text-emerald-600" : "hover:bg-red-50 text-red-500"}`}
-                          title={u.isBlocked ? "Unblock" : "Block"}
+                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition text-xs font-medium ${
+                            u.isBlocked
+                              ? "hover:bg-emerald-50 text-emerald-600"
+                              : "hover:bg-red-50 text-red-500"
+                          }`}
+                          title={u.isBlocked ? "Unblock User" : "Block User"}
                         >
                           {u.isBlocked ? (
-                            <UserCheck className="w-3.5 h-3.5" />
+                            <>
+                              <UserCheck className="w-3.5 h-3.5" />
+                              <span>Unblock</span>
+                            </>
                           ) : (
-                            <UserX className="w-3.5 h-3.5" />
+                            <>
+                              <UserX className="w-3.5 h-3.5" />
+                              <span>Block</span>
+                            </>
                           )}
                         </button>
-                        <Link
-                          to={`/admin/users/${u._id}/edit`}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 transition"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Link>
                       </div>
                     </td>
                   </motion.tr>
@@ -806,7 +1052,11 @@ const AdminUsers = () => {
                   <button
                     key={p}
                     onClick={() => goPage(p)}
-                    className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold transition ${currentPage === p ? "bg-red-500 text-white" : "border border-gray-200 text-gray-500 hover:bg-gray-50"}`}
+                    className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold transition ${
+                      currentPage === p
+                        ? "bg-red-500 text-white"
+                        : "border border-gray-200 text-gray-500 hover:bg-gray-50"
+                    }`}
                   >
                     {p}
                   </button>
@@ -974,7 +1224,11 @@ const AdminUsers = () => {
                     <button
                       key={val}
                       onClick={() => setFilters({ ...filters, [key]: val })}
-                      className={`py-2 rounded-xl text-xs font-semibold border transition ${filters[key] === val ? "bg-red-500 text-white border-red-500 shadow-sm" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                      className={`py-2 rounded-xl text-xs font-semibold border transition ${
+                        filters[key] === val
+                          ? "bg-red-500 text-white border-red-500 shadow-sm"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
                     >
                       {lbl}
                     </button>
@@ -997,7 +1251,11 @@ const AdminUsers = () => {
                   <button
                     key={val}
                     onClick={() => setFilters({ ...filters, dateRange: val })}
-                    className={`py-2 rounded-xl text-xs font-semibold border transition ${filters.dateRange === val ? "bg-red-500 text-white border-red-500 shadow-sm" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                    className={`py-2 rounded-xl text-xs font-semibold border transition ${
+                      filters.dateRange === val
+                        ? "bg-red-500 text-white border-red-500 shadow-sm"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
                   >
                     {lbl}
                   </button>
@@ -1128,7 +1386,13 @@ const AdminUsers = () => {
                   <div key={k} className="flex justify-between text-xs">
                     <span className="text-gray-400">{k}</span>
                     <span
-                      className={`font-semibold ${k === "Lock Status" ? (selectedUser.bankDetails.isLocked ? "text-emerald-600" : "text-amber-600") : "text-gray-800"}`}
+                      className={`font-semibold ${
+                        k === "Lock Status"
+                          ? selectedUser.bankDetails.isLocked
+                            ? "text-emerald-600"
+                            : "text-amber-600"
+                          : "text-gray-800"
+                      }`}
                     >
                       {v}
                     </span>
@@ -1145,6 +1409,16 @@ const AdminUsers = () => {
               <button
                 onClick={() => {
                   setShowUserModal(false);
+                  openEditUserModal(selectedUser);
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                Edit User
+              </button>
+              <button
+                onClick={() => {
+                  setShowUserModal(false);
                   openBankModal(selectedUser);
                 }}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition"
@@ -1155,22 +1429,379 @@ const AdminUsers = () => {
               <button
                 onClick={() => {
                   setShowUserModal(false);
-                  setBlockAction({ show: true, user: selectedUser });
+                  openReferralsModal(selectedUser);
                 }}
-                className={`flex-1 py-2.5 text-white text-sm font-semibold rounded-xl transition ${selectedUser.isBlocked ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-500 hover:bg-red-600"}`}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition"
               >
-                {selectedUser.isBlocked ? "Unblock" : "Block"}
+                <UserPlus className="w-3.5 h-3.5" />
+                Referrals
               </button>
               <button
                 onClick={() => {
                   setShowUserModal(false);
-                  navigate(`/admin/users/${selectedUser._id}/edit`);
+                  setBlockAction({ show: true, user: selectedUser });
                 }}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition"
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-white text-sm font-semibold rounded-xl transition ${
+                  selectedUser.isBlocked
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-red-500 hover:bg-red-600"
+                }`}
               >
-                Edit User
+                {selectedUser.isBlocked ? (
+                  <>
+                    <UserCheck className="w-3.5 h-3.5" />
+                    Unblock
+                  </>
+                ) : (
+                  <>
+                    <UserX className="w-3.5 h-3.5" />
+                    Block
+                  </>
+                )}
               </button>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── EDIT USER MODAL ── */}
+      {showEditUserModal && selectedUser && (
+        <Modal
+          title="Edit User"
+          sub={selectedUser.email}
+          onClose={closeModal(setShowEditUserModal)}
+        >
+          <div className="p-6">
+            {editUserSuccess ? (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-6 h-6 text-emerald-500" />
+                </div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {editUserSuccess}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleEditUser}>
+                <div className="space-y-4 mb-5">
+                  {/* Username / Referral Code - Editable */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Username / Referral Code
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Hash className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={editUserForm.referralCode}
+                        onChange={(e) =>
+                          setEditUserForm({
+                            ...editUserForm,
+                            referralCode: e.target.value,
+                          })
+                        }
+                        placeholder="Referral code"
+                        className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email - Editable */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="email"
+                        value={editUserForm.email}
+                        onChange={(e) =>
+                          setEditUserForm({
+                            ...editUserForm,
+                            email: e.target.value,
+                          })
+                        }
+                        placeholder="Email address"
+                        className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* First Name */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      First Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <User className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={editUserForm.firstName}
+                        onChange={(e) =>
+                          setEditUserForm({
+                            ...editUserForm,
+                            firstName: e.target.value,
+                          })
+                        }
+                        placeholder="First name"
+                        className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Last Name */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Last Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <User className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={editUserForm.lastName}
+                        onChange={(e) =>
+                          setEditUserForm({
+                            ...editUserForm,
+                            lastName: e.target.value,
+                          })
+                        }
+                        placeholder="Last name"
+                        className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone Number */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Phone className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="tel"
+                        value={editUserForm.phoneNumber}
+                        onChange={(e) =>
+                          setEditUserForm({
+                            ...editUserForm,
+                            phoneNumber: e.target.value,
+                          })
+                        }
+                        placeholder="+234 000 000 0000"
+                        className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Role Selection */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      User Role
+                    </label>
+                    <select
+                      value={editUserForm.role}
+                      onChange={(e) =>
+                        setEditUserForm({
+                          ...editUserForm,
+                          role: e.target.value,
+                        })
+                      }
+                      className="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 bg-gray-50"
+                    >
+                      <option value="user">Regular User</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+                </div>
+
+                {editUserError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                    {editUserError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(true)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded-xl transition"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    Change Password
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editUserLoading}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                  >
+                    {editUserLoading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        Saving…
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ── PASSWORD CHANGE MODAL ── */}
+      {showPasswordModal && selectedUser && (
+        <Modal
+          title="Change Password"
+          sub={`For: ${selectedUser.email}`}
+          onClose={() => {
+            setShowPasswordModal(false);
+            setPasswordError("");
+            setPasswordSuccess("");
+            setPasswordForm({ newPassword: "", confirmPassword: "" });
+          }}
+        >
+          <div className="p-6">
+            {passwordSuccess ? (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-6 h-6 text-emerald-500" />
+                </div>
+                <p className="text-sm font-semibold text-gray-900 mb-1">
+                  {passwordSuccess}
+                </p>
+                <p className="text-xs text-gray-400">Password updated</p>
+              </div>
+            ) : (
+              <form onSubmit={handlePasswordChange}>
+                <div className="space-y-4 mb-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      New Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Lock className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        value={passwordForm.newPassword}
+                        onChange={(e) =>
+                          setPasswordForm({
+                            ...passwordForm,
+                            newPassword: e.target.value,
+                          })
+                        }
+                        placeholder="••••••••"
+                        required
+                        className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      Must be at least 6 characters
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Lock className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) =>
+                          setPasswordForm({
+                            ...passwordForm,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        placeholder="••••••••"
+                        required
+                        className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {passwordError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                    {passwordError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setPasswordError("");
+                      setPasswordForm({ newPassword: "", confirmPassword: "" });
+                    }}
+                    disabled={passwordLoading}
+                    className="flex-1 py-2.5 border border-gray-200 text-sm text-gray-600 rounded-xl hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                  >
+                    {passwordLoading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        Changing...
+                      </>
+                    ) : (
+                      "Change Password"
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </Modal>
       )}
@@ -1223,25 +1854,30 @@ const AdminUsers = () => {
                       />
                     </div>
                   ))}
+
+                  {/* Bank Name - Now a text input instead of dropdown */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                       Bank Name
                     </label>
-                    <select
-                      value={bankForm.bankName}
-                      onChange={(e) =>
-                        setBankForm({ ...bankForm, bankName: e.target.value })
-                      }
-                      required
-                      className="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 bg-gray-50"
-                    >
-                      <option value="">Select Bank</option>
-                      {Nigerian_Banks.map((b) => (
-                        <option key={b} value={b}>
-                          {b}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Building className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={bankForm.bankName}
+                        onChange={(e) =>
+                          setBankForm({ ...bankForm, bankName: e.target.value })
+                        }
+                        placeholder="Enter bank name (e.g., Access Bank, GTBank, etc.)"
+                        required
+                        className="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 bg-gray-50"
+                      />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      Enter the full name of the bank
+                    </p>
                   </div>
 
                   {/* lock toggle */}
@@ -1271,10 +1907,16 @@ const AdminUsers = () => {
                           isLocked: !bankForm.isLocked,
                         })
                       }
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${bankForm.isLocked ? "bg-emerald-500" : "bg-gray-300"}`}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        bankForm.isLocked ? "bg-emerald-500" : "bg-gray-300"
+                      }`}
                     >
                       <span
-                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${bankForm.isLocked ? "translate-x-4.5" : "translate-x-0.5"}`}
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                          bankForm.isLocked
+                            ? "translate-x-4.5"
+                            : "translate-x-0.5"
+                        }`}
                       />
                     </button>
                   </div>
@@ -1314,6 +1956,107 @@ const AdminUsers = () => {
                   </button>
                 </div>
               </form>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ── REFERRALS MODAL ── */}
+      {showReferralsModal && selectedUser && (
+        <Modal
+          title="User Referrals"
+          sub={`${selectedUser.email} - ${selectedUser.referralCode || "No code"}`}
+          onClose={() => {
+            setShowReferralsModal(false);
+            setReferralsData([]);
+          }}
+          wide
+        >
+          <div className="p-6">
+            {/* Referral Stats Summary */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 text-center">
+                <Users className="w-4 h-4 text-purple-600 mx-auto mb-1" />
+                <p className="text-xl font-bold text-purple-700">
+                  {referralsStats.totalReferrals}
+                </p>
+                <p className="text-[10px] text-purple-600">Total Referrals</p>
+              </div>
+            </div>
+
+            {/* Referrals List */}
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Referred Users
+            </p>
+
+            {referralsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="w-5 h-5 text-purple-500 animate-spin" />
+              </div>
+            ) : referralsData.length > 0 ? (
+              <div className="space-y-2">
+                {referralsData.map((ref, idx) => (
+                  <div
+                    key={ref.user?._id || idx}
+                    className="bg-gray-50 rounded-xl p-3 border border-gray-100 hover:border-purple-200 transition"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                            {ref.user?.firstName?.[0] ||
+                              ref.user?.email?.[0] ||
+                              "U"}
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {ref.user?.referralCode}
+                          </p>
+                        </div>
+                        {ref.user?.email && (
+                          <p className="text-[11px] text-gray-500 truncate ml-8">
+                            {ref.user.email}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-3 mt-1 ml-8">
+                          <span className="text-[10px] text-gray-400">
+                            Invested: {fmt(ref.investmentAmount || 0)}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Date: {fmtDate(ref.date)}
+                          </span>
+                        </div>
+                      </div>
+                      {/* <div className="shrink-0">
+                        {ref.bonusPaid ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
+                            <CheckCircle className="w-2.5 h-2.5" />
+                            Bonus Paid
+                          </span>
+                        ) : ref.investmentAmount > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">
+                            <Clock className="w-2.5 h-2.5" />
+                            Pending
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500">
+                            No Investment
+                          </span>
+                        )}
+                      </div> */}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <UserPlus className="w-6 h-6 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-500">No referrals yet</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  This user hasn't referred anyone
+                </p>
+              </div>
             )}
           </div>
         </Modal>
@@ -1362,7 +2105,11 @@ const AdminUsers = () => {
                   <button
                     onClick={handleToggleBlock}
                     disabled={actionLoading}
-                    className={`flex-1 py-2.5 text-white text-sm font-semibold rounded-xl transition disabled:opacity-50 ${blockAction.user.isBlocked ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-500 hover:bg-red-600"}`}
+                    className={`flex-1 py-2.5 text-white text-sm font-semibold rounded-xl transition disabled:opacity-50 ${
+                      blockAction.user.isBlocked
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : "bg-red-500 hover:bg-red-600"
+                    }`}
                   >
                     {actionLoading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -1403,9 +2150,9 @@ const Modal = ({ title, sub, onClose, children, wide }) => (
       initial={{ opacity: 0, scale: 0.95, y: 12 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-      className={`bg-white rounded-2xl shadow-2xl overflow-hidden ${wide ? "max-w-lg" : "max-w-sm"} w-full`}
+      className={`bg-white rounded-2xl shadow-2xl overflow-hidden ${wide ? "max-w-lg" : "max-w-sm"} w-full max-h-[90vh] overflow-y-auto`}
     >
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
         <div>
           <h3 className="text-sm font-bold text-gray-900">{title}</h3>
           {sub && (

@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Gift,
   Award,
+  XCircle,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -83,7 +84,7 @@ const statusConfig = {
     bg: "bg-red-50 dark:bg-red-900/40",
     text: "text-red-600 dark:text-red-300",
     ring: "ring-red-200 dark:ring-red-800",
-    Icon: AlertCircle,
+    Icon: XCircle,
   },
   active: {
     label: "Active",
@@ -149,6 +150,8 @@ const InvestmentsList = () => {
     activeCount: 0,
     pendingCount: 0,
     completedCount: 0,
+    declinedCount: 0,
+    declinedAmount: 0,
   });
 
   const fetchInvestments = async (showRefreshLoader = false) => {
@@ -183,16 +186,26 @@ const InvestmentsList = () => {
   const calculateStats = (data) => {
     const s = data.reduce(
       (acc, inv) => {
-        acc.totalInvested += inv.amount;
-        acc.totalReturn += inv.expectedReturn;
-        acc.totalWithdrawn += inv.totalWithdrawn || 0;
+        // Only include non-declined investments in totals
+        if (inv.paymentStatus !== "declined") {
+          acc.totalInvested += inv.amount;
+          acc.totalReturn += inv.expectedReturn;
+          acc.totalWithdrawn += inv.totalWithdrawn || 0;
+        } else {
+          // Track declined amount separately
+          acc.declinedAmount += inv.amount;
+        }
+
+        // Count by status
         if (inv.paymentStatus === "pending") acc.pendingCount++;
+        if (inv.paymentStatus === "declined") acc.declinedCount++;
         if (
           inv.paymentStatus === "confirmed" &&
           inv.investmentStatus === "active"
         )
           acc.activeCount++;
         if (inv.investmentStatus === "completed") acc.completedCount++;
+
         return acc;
       },
       {
@@ -202,6 +215,8 @@ const InvestmentsList = () => {
         activeCount: 0,
         pendingCount: 0,
         completedCount: 0,
+        declinedCount: 0,
+        declinedAmount: 0,
       },
     );
     setStats(s);
@@ -218,6 +233,8 @@ const InvestmentsList = () => {
         return false;
       if (filter === "pending" && inv.paymentStatus !== "pending") return false;
       if (filter === "completed" && inv.investmentStatus !== "completed")
+        return false;
+      if (filter === "declined" && inv.paymentStatus !== "declined")
         return false;
       if (selectedPlan !== "all" && inv.plan !== selectedPlan) return false;
       if (searchTerm) {
@@ -305,7 +322,7 @@ const InvestmentsList = () => {
       icon: Wallet,
       color: "text-blue-600 dark:text-blue-400",
       bg: "bg-blue-50 dark:bg-blue-900/30",
-      tooltip: "Total amount you've invested",
+      tooltip: "Total amount invested (excluding declined investments)",
     },
     {
       label: "Expected Return",
@@ -313,7 +330,7 @@ const InvestmentsList = () => {
       icon: TrendingUp,
       color: "text-emerald-600 dark:text-emerald-400",
       bg: "bg-emerald-50 dark:bg-emerald-900/30",
-      tooltip: "Total expected returns including profit",
+      tooltip: "Total expected returns including profit (excluding declined)",
     },
     {
       label: "Total Withdrawn",
@@ -339,13 +356,23 @@ const InvestmentsList = () => {
       bg: "bg-amber-50 dark:bg-amber-900/30",
       tooltip: "Percentage of total returns withdrawn",
     },
-  ];
+    {
+      label: "Declined",
+      value: fmt(stats.declinedAmount),
+      icon: XCircle,
+      color: "text-red-600 dark:text-red-400",
+      bg: "bg-red-50 dark:bg-red-900/30",
+      tooltip: "Total amount of declined investments",
+      showIf: stats.declinedCount > 0,
+    },
+  ].filter((card) => card.showIf !== false);
 
   const tabs = [
     { key: "all", label: "All", count: investments.length },
     { key: "active", label: "Active", count: stats.activeCount },
     { key: "pending", label: "Pending", count: stats.pendingCount },
     { key: "completed", label: "Completed", count: stats.completedCount },
+    { key: "declined", label: "Declined", count: stats.declinedCount },
   ];
 
   /* ── loading ── */
@@ -419,7 +446,7 @@ const InvestmentsList = () => {
         variants={stagger}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6"
+        className={`grid grid-cols-2 sm:grid-cols-3 ${statCards.length > 5 ? "lg:grid-cols-6" : "lg:grid-cols-5"} gap-3 mb-6`}
       >
         {statCards.map((s, i) => {
           const Icon = s.icon;
@@ -532,21 +559,30 @@ const InvestmentsList = () => {
             const isApex1 = inv.plan === "apex1";
             const totalPay = isApex1 ? 2 : 3;
             const pct = getProgress(inv);
+            const isDeclined = inv.paymentStatus === "declined";
 
             return (
               <motion.div
                 key={inv._id}
                 custom={i}
                 variants={fadeUp}
-                onClick={() => navigate(`/investments/${inv._id}`)}
-                className="bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                onClick={() =>
+                  !isDeclined && navigate(`/investments/${inv._id}`)
+                }
+                className={`bg-white dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 ${
+                  !isDeclined
+                    ? "hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-xl cursor-pointer group"
+                    : "opacity-75 cursor-not-allowed"
+                }`}
               >
                 {/* top accent line per plan */}
                 <div
                   className={`h-0.5 w-full ${
-                    isApex1
-                      ? "bg-gradient-to-r from-blue-500 to-blue-300 dark:from-blue-400 dark:to-blue-600"
-                      : "bg-gradient-to-r from-emerald-500 to-teal-300 dark:from-emerald-400 dark:to-teal-500"
+                    isDeclined
+                      ? "bg-gradient-to-r from-red-500 to-red-300 dark:from-red-400 dark:to-red-600"
+                      : isApex1
+                        ? "bg-gradient-to-r from-blue-500 to-blue-300 dark:from-blue-400 dark:to-blue-600"
+                        : "bg-gradient-to-r from-emerald-500 to-teal-300 dark:from-emerald-400 dark:to-teal-500"
                   }`}
                 />
 
@@ -556,12 +592,16 @@ const InvestmentsList = () => {
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                          isApex1
-                            ? "bg-blue-50 dark:bg-blue-900/30"
-                            : "bg-emerald-50 dark:bg-emerald-900/30"
+                          isDeclined
+                            ? "bg-red-50 dark:bg-red-900/30"
+                            : isApex1
+                              ? "bg-blue-50 dark:bg-blue-900/30"
+                              : "bg-emerald-50 dark:bg-emerald-900/30"
                         }`}
                       >
-                        {isApex1 ? (
+                        {isDeclined ? (
+                          <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                        ) : isApex1 ? (
                           <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         ) : (
                           <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -585,83 +625,108 @@ const InvestmentsList = () => {
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
                         Invested
                       </p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                      <p
+                        className={`text-xl font-bold tracking-tight ${
+                          isDeclined
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-gray-900 dark:text-white"
+                        }`}
+                      >
                         {fmt(inv.amount)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
-                        Expected
-                      </p>
-                      <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
-                        {fmt(inv.expectedReturn)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Progress */}
-                  <div className="mb-4">
-                    <div className="flex justify-between text-[11px] text-gray-500 dark:text-gray-400 mb-1.5">
-                      <span>Payments received</span>
-                      <span className="font-semibold text-gray-700 dark:text-gray-300">
-                        {inv.withdrawals.length}/{totalPay}
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-700 ${
-                          isApex1
-                            ? "bg-gradient-to-r from-blue-500 to-blue-300 dark:from-blue-400 dark:to-blue-600"
-                            : "bg-gradient-to-r from-emerald-500 to-teal-300 dark:from-emerald-400 dark:to-teal-500"
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Meta row */}
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2.5">
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
-                        Start Date
-                      </p>
-                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                        {fmtDate(inv.startDate || inv.createdAt)}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2.5">
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
-                        Withdrawn
-                      </p>
-                      <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                        {fmt(inv.totalWithdrawn)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Next withdrawal chip */}
-                  {inv.nextWithdrawalDate &&
-                    inv.investmentStatus === "active" && (
-                      <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/30 rounded-xl px-3 py-2 mb-3">
-                        <span className="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-400">
-                          <Calendar className="w-3.5 h-3.5" /> Next withdrawal
-                        </span>
-                        <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
-                          {fmtDate(inv.nextWithdrawalDate)}
-                        </span>
+                    {!isDeclined && (
+                      <div className="text-right">
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
+                          Expected
+                        </p>
+                        <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+                          {fmt(inv.expectedReturn)}
+                        </p>
                       </div>
                     )}
+                  </div>
+
+                  {/* Show decline message for declined investments */}
+                  {isDeclined && (
+                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 rounded-xl">
+                      <p className="text-xs text-red-700 dark:text-red-400 font-medium text-center">
+                        This investment was declined and is not active
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Progress - only show for non-declined investments */}
+                  {!isDeclined && (
+                    <>
+                      <div className="mb-4">
+                        <div className="flex justify-between text-[11px] text-gray-500 dark:text-gray-400 mb-1.5">
+                          <span>Payments received</span>
+                          <span className="font-semibold text-gray-700 dark:text-gray-300">
+                            {inv.withdrawals.length}/{totalPay}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${
+                              isApex1
+                                ? "bg-gradient-to-r from-blue-500 to-blue-300 dark:from-blue-400 dark:to-blue-600"
+                                : "bg-gradient-to-r from-emerald-500 to-teal-300 dark:from-emerald-400 dark:to-teal-500"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Meta row */}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2.5">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
+                            Start Date
+                          </p>
+                          <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                            {fmtDate(inv.startDate || inv.createdAt)}
+                          </p>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2.5">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
+                            Withdrawn
+                          </p>
+                          <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                            {fmt(inv.totalWithdrawn)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Next withdrawal chip */}
+                      {inv.nextWithdrawalDate &&
+                        inv.investmentStatus === "active" && (
+                          <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/30 rounded-xl px-3 py-2 mb-3">
+                            <span className="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-400">
+                              <Calendar className="w-3.5 h-3.5" /> Next
+                              withdrawal
+                            </span>
+                            <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                              {fmtDate(inv.nextWithdrawalDate)}
+                            </span>
+                          </div>
+                        )}
+                    </>
+                  )}
                 </div>
 
-                {/* Footer */}
-                <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/30 flex items-center justify-between">
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                    {inv.withdrawals.length} of {totalPay} withdrawals complete
-                  </span>
-                  <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
-                    View <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
+                {/* Footer - only show for non-declined */}
+                {!isDeclined && (
+                  <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/30 flex items-center justify-between">
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                      {inv.withdrawals.length} of {totalPay} withdrawals
+                      complete
+                    </span>
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
+                      View <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                )}
               </motion.div>
             );
           })}

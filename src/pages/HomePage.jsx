@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import {
   ArrowRight,
   Shield,
@@ -28,8 +29,13 @@ import {
   Sparkles,
   DollarSign,
   Calendar,
+  Youtube,
+  Send,
+  MessageCircle,
+  Music,
 } from "lucide-react";
 import apex from "../assets/apex.jpeg";
+import { url } from "../../api";
 
 // ─── tiny helpers ────────────────────────────────────────────────────────────
 const formatCurrency = (n) =>
@@ -230,6 +236,18 @@ const faqs = [
   },
 ];
 
+// Social media platform configuration
+const socialPlatforms = [
+  { key: "facebook", icon: Facebook, name: "Facebook", color: "#1877F2" },
+  { key: "twitter", icon: Twitter, name: "Twitter", color: "#1DA1F2" },
+  { key: "instagram", icon: Instagram, name: "Instagram", color: "#E4405F" },
+  { key: "linkedin", icon: Linkedin, name: "LinkedIn", color: "#0A66C2" },
+  { key: "youtube", icon: Youtube, name: "YouTube", color: "#FF0000" },
+  { key: "telegram", icon: Send, name: "Telegram", color: "#26A5E4" },
+  { key: "whatsapp", icon: MessageCircle, name: "WhatsApp", color: "#25D366" },
+  { key: "tiktok", icon: Music, name: "TikTok", color: "#000000" },
+];
+
 // ─── component ───────────────────────────────────────────────────────────────
 const HomePage = () => {
   const navigate = useNavigate();
@@ -241,6 +259,7 @@ const HomePage = () => {
   const [investmentAmount, setInvestmentAmount] = useState(100000);
   const [inputValue, setInputValue] = useState("100000");
   const [isMobile, setIsMobile] = useState(false);
+  const [socialMedia, setSocialMedia] = useState({});
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalInvested: 0,
@@ -248,6 +267,27 @@ const HomePage = () => {
     activeInvestments: 0,
   });
   const [statsReady, setStatsReady] = useState(false);
+
+  // Fetch social media settings
+  useEffect(() => {
+    const fetchSocialMedia = async () => {
+      try {
+        // Option 1: Use the dedicated social-media endpoint
+        const response = await axios.get(`${url}settings/social-media`);
+
+        if (response.data.data?.socialMedia) {
+          setSocialMedia(response.data.data.socialMedia);
+        } else {
+          setSocialMedia({});
+        }
+      } catch (error) {
+        console.error("Failed to fetch social media links:", error);
+        setSocialMedia({});
+      }
+    };
+
+    fetchSocialMedia();
+  }, []);
 
   // Check mobile device
   useEffect(() => {
@@ -509,6 +549,12 @@ const HomePage = () => {
     { id: "features", label: "Features" },
     { id: "faq", label: "FAQ" },
   ];
+
+  // Filter active social media links (non-empty URLs)
+  const activeSocialLinks = socialPlatforms.filter(
+    (platform) =>
+      socialMedia[platform.key] && socialMedia[platform.key].trim() !== "",
+  );
 
   return (
     <div
@@ -823,11 +869,6 @@ const HomePage = () => {
                 viewport={{ once: true }}
                 className="w-full"
               >
-                <div className="inline-flex items-center gap-2 bg-white/10 text-purple-200 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-purple-500/30 backdrop-blur-sm">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Trusted by 15,000+ investors across Nigeria</span>
-                </div>
-
                 <h1 className="serif text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1] mb-5">
                   Grow your wealth
                   <br />
@@ -1193,66 +1234,6 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ── */}
-        {/* <section id="testimonials" className="py-20">
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8">
-            <motion.div {...fadeUp()} className="max-w-2xl mb-12">
-              <p className="text-sm font-semibold text-purple-300 uppercase tracking-widest mb-2">
-                Testimonials
-              </p>
-              <h2 className="serif text-4xl md:text-5xl text-white leading-tight mb-3">
-                Real returns,
-                <br />
-                real people.
-              </h2>
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-5">
-              {testimonials.map((t, i) => (
-                <motion.div
-                  key={t.name}
-                  {...fadeUp(i * 0.1)}
-                  className="glass-card rounded-xl p-5 flex flex-col"
-                >
-                  <div className="flex mb-3">
-                    {[...Array(t.rating)].map((_, j) => (
-                      <Star
-                        key={j}
-                        className="w-4 h-4 fill-purple-400 text-purple-400"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-300 leading-relaxed flex-1 mb-5">
-                    "{t.comment}"
-                  </p>
-                  <div className="flex items-center gap-3 pt-4 border-t border-purple-500/20">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                      style={{ background: t.bg }}
-                    >
-                      {t.initials}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">
-                        {t.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {t.location} · {t.date}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs text-gray-400">{t.investment}</p>
-                      <p className="text-sm font-bold text-purple-300">
-                        {t.profit}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section> */}
-
         {/* ── FAQ ── */}
         <section id="faq" className="py-20">
           <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8">
@@ -1335,7 +1316,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── FOOTER ── */}
+        {/* ── FOOTER with Dynamic Social Links ── */}
         <footer className="py-12 border-t border-purple-500/20">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8">
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
@@ -1357,18 +1338,36 @@ const HomePage = () => {
                   Empowering Nigerians to achieve financial freedom through
                   structured investments.
                 </p>
-                <div className="flex gap-2">
-                  {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                    <a
-                      key={i}
-                      href="#"
-                      className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 transition backdrop-blur-sm border border-purple-500/20"
-                      aria-label={`Social media ${i}`}
-                    >
-                      <Icon size={14} />
-                    </a>
-                  ))}
-                </div>
+                {/* Dynamic Social Links */}
+                {activeSocialLinks.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {activeSocialLinks.map((platform) => {
+                      const Icon = platform.icon;
+                      const url = socialMedia[platform.key];
+                      // Add utm parameters for tracking
+                      const fullUrl = url.includes("?")
+                        ? `${url}&utm_source=website&utm_medium=footer&utm_campaign=social_link`
+                        : `${url}?utm_source=website&utm_medium=footer&utm_campaign=social_link`;
+
+                      return (
+                        <a
+                          key={platform.key}
+                          href={fullUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 transition backdrop-blur-sm border border-purple-500/20 group"
+                          aria-label={`Follow us on ${platform.name}`}
+                          title={`Follow us on ${platform.name}`}
+                        >
+                          <Icon
+                            size={14}
+                            className="group-hover:scale-110 transition-transform"
+                          />
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {[
@@ -1426,7 +1425,7 @@ const HomePage = () => {
                 <ul className="space-y-2">
                   {[
                     { Icon: Phone, text: "+234 800 000 0000" },
-                    { Icon: Mail, text: "support@apextrading.com" },
+                    { Icon: Mail, text: "apextradingsquare@gmail.com" },
                     { Icon: MapPin, text: "Lagos, Nigeria" },
                   ].map(({ Icon, text }) => (
                     <li

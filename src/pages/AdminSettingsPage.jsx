@@ -13,28 +13,36 @@ import {
   Gift,
   TrendingUp,
   Shield,
-  Wallet,
   Banknote,
-  Mail,
-  Phone,
-  Globe,
-  Award,
-  Zap,
+  Ban,
+  Play,
   Loader,
   Plus,
   Trash2,
+  Award,
+  Zap,
+  Info,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
+  Send,
+  MessageCircle,
+  Music,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
 
-// ── Reusable Toggle ───────────────────────────────────────────────────────────
+// Reusable Toggle Component
 const Toggle = ({ checked, onChange, disabled }) => (
   <button
     type="button"
     onClick={onChange}
     disabled={disabled}
     className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none disabled:opacity-40 ${
-      checked ? "bg-blue-600" : "bg-gray-200"
+      checked ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"
     }`}
   >
     <span
@@ -45,13 +53,15 @@ const Toggle = ({ checked, onChange, disabled }) => (
   </button>
 );
 
-// ── Reusable Field ────────────────────────────────────────────────────────────
+// Reusable Field Component
 const Field = ({ label, hint, children }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
       {label}
     </label>
-    {hint && <p className="text-xs text-gray-400 mb-2">{hint}</p>}
+    {hint && (
+      <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">{hint}</p>
+    )}
     {children}
   </div>
 );
@@ -59,41 +69,47 @@ const Field = ({ label, hint, children }) => (
 const Input = ({ className = "", ...props }) => (
   <input
     {...props}
-    className={`w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+    className={`w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 focus:bg-white dark:focus:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
   />
 );
 
-// ── Toggle Row ────────────────────────────────────────────────────────────────
-const ToggleRow = ({ label, description, checked, onChange }) => (
-  <div className="flex items-center justify-between py-3.5 px-4 bg-gray-50 rounded-xl border border-gray-100">
+// Toggle Row Component
+const ToggleRow = ({ label, description, checked, onChange, disabled }) => (
+  <div className="flex items-center justify-between py-3.5 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
     <div className="pr-6">
-      <p className="text-sm font-medium text-gray-900">{label}</p>
+      <p className="text-sm font-medium text-gray-900 dark:text-white">
+        {label}
+      </p>
       {description && (
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          {description}
+        </p>
       )}
     </div>
-    <Toggle checked={checked} onChange={onChange} />
+    <Toggle checked={checked} onChange={onChange} disabled={disabled} />
   </div>
 );
 
-// ── Section Card ─────────────────────────────────────────────────────────────
+// Section Card Component
 const Section = ({
   title,
   icon: Icon,
   iconColor = "text-blue-600",
-  iconBg = "bg-blue-50",
+  iconBg = "bg-blue-50 dark:bg-blue-900/30",
   children,
   action,
 }) => (
-  <div className="border border-gray-200 rounded-xl overflow-hidden">
-    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/60">
+  <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/50">
       <div className="flex items-center gap-2.5">
         <div
           className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center`}
         >
           <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
         </div>
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          {title}
+        </h3>
       </div>
       {action}
     </div>
@@ -101,7 +117,7 @@ const Section = ({
   </div>
 );
 
-// ── Save Button ───────────────────────────────────────────────────────────────
+// Save Button Component
 const SaveButton = ({ onClick, saving, label }) => (
   <div className="flex justify-end pt-2">
     <button
@@ -124,7 +140,30 @@ const SaveButton = ({ onClick, saving, label }) => (
   </div>
 );
 
-// ═════════════════════════════════════════════════════════════════════════════
+// Social Media Input Component
+const SocialInput = ({
+  icon: Icon,
+  platform,
+  value,
+  onChange,
+  placeholder,
+}) => (
+  <div className="flex items-center gap-3">
+    <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+      <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+    </div>
+    <div className="flex-1">
+      <Input
+        type="url"
+        value={value}
+        onChange={(e) => onChange(platform, e.target.value)}
+        placeholder={placeholder || `https://${platform}.com/username`}
+      />
+    </div>
+  </div>
+);
+
+// Main AdminSettings Component
 const AdminSettings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -135,6 +174,25 @@ const AdminSettings = () => {
   const [success, setSuccess] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
+
+  // Separate toggle states
+  const [investmentWithdrawalsEnabled, setInvestmentWithdrawalsEnabled] =
+    useState(true);
+  const [bonusWithdrawalsEnabled, setBonusWithdrawalsEnabled] = useState(true);
+  const [togglingInvestment, setTogglingInvestment] = useState(false);
+  const [togglingBonus, setTogglingBonus] = useState(false);
+
+  // Social media state
+  const [socialMedia, setSocialMedia] = useState({
+    facebook: "",
+    twitter: "",
+    instagram: "",
+    linkedin: "",
+    youtube: "",
+    telegram: "",
+    whatsapp: "",
+    tiktok: "",
+  });
 
   const [generalForm, setGeneralForm] = useState({
     siteName: "Apex Trading Square",
@@ -154,13 +212,16 @@ const AdminSettings = () => {
     apex2_rate: 50,
     investments_enabled: true,
     workingDaysOnly: true,
-    minWithdrawal: 10000,
+  });
+
+  const [withdrawalForm, setWithdrawalForm] = useState({
+    min_investment_withdrawal: 10000,
+    min_bonus_withdrawal: 10000,
   });
 
   const [bonusForm, setBonusForm] = useState({
     referral_bonus_rate: 5,
     retrading_bonus_rate: 3,
-    min_bonus_withdrawal: 10000,
     referralBonusEnabled: true,
     retradingBonusEnabled: true,
   });
@@ -183,14 +244,55 @@ const AdminSettings = () => {
         navigate("/login");
         return;
       }
-      const response = await axios.get(`${url}admin/settings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = response.data.data.settings;
+
+      // Fetch all settings in parallel
+      const [
+        settingsRes,
+        withdrawalTogglesRes,
+        withdrawalMinimumsRes,
+        socialMediaRes,
+      ] = await Promise.all([
+        axios.get(`${url}admin/settings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${url}admin/withdrawal-toggles-status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${url}admin/withdrawal-minimums`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${url}admin/social-media`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      const data = settingsRes.data.data.settings;
       const obj = {};
       data.forEach((s) => {
         obj[s.key] = s.value;
       });
+
+      // Set withdrawal toggles
+      setInvestmentWithdrawalsEnabled(
+        withdrawalTogglesRes.data.data.investmentWithdrawalsEnabled,
+      );
+      setBonusWithdrawalsEnabled(
+        withdrawalTogglesRes.data.data.bonusWithdrawalsEnabled,
+      );
+
+      // Set withdrawal minimums
+      setWithdrawalForm({
+        min_investment_withdrawal:
+          withdrawalMinimumsRes.data.data.minInvestmentWithdrawal || 10000,
+        min_bonus_withdrawal:
+          withdrawalMinimumsRes.data.data.minBonusWithdrawal || 10000,
+      });
+
+      // Set social media
+      if (socialMediaRes.data.data.socialMedia) {
+        setSocialMedia(socialMediaRes.data.data.socialMedia);
+      }
+
       populateForms(obj);
       setError("");
     } catch (err) {
@@ -216,6 +318,7 @@ const AdminSettings = () => {
       supportHours: data.supportHours || "24/7",
       maintenanceMode: data.maintenanceMode || false,
     });
+
     setInvestmentForm({
       apex1_min: data.apex1_min || 10000,
       apex1_max: data.apex1_max || 500000,
@@ -229,12 +332,11 @@ const AdminSettings = () => {
           : true,
       workingDaysOnly:
         data.workingDaysOnly !== undefined ? data.workingDaysOnly : true,
-      minWithdrawal: data.minWithdrawal || 10000,
     });
+
     setBonusForm({
       referral_bonus_rate: data.referral_bonus_rate || 5,
       retrading_bonus_rate: data.retrading_bonus_rate || 3,
-      min_bonus_withdrawal: data.min_bonus_withdrawal || 10000,
       referralBonusEnabled:
         data.referralBonusEnabled !== undefined
           ? data.referralBonusEnabled
@@ -244,6 +346,7 @@ const AdminSettings = () => {
           ? data.retradingBonusEnabled
           : true,
     });
+
     setBankAccounts(
       data.bankAccounts || [
         {
@@ -256,6 +359,7 @@ const AdminSettings = () => {
         },
       ],
     );
+
     setSecurityForm({
       twoFactorRequired: data.twoFactorRequired || false,
       sessionTimeout: data.sessionTimeout || 30,
@@ -266,24 +370,151 @@ const AdminSettings = () => {
     });
   };
 
-  const save = async (formData, label) => {
+  const saveGeneralSettings = async () => {
     setSaving(true);
     setError("");
     setSuccess("");
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${url}admin/settings`, formData, {
+      await axios.post(`${url}admin/settings`, generalForm, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSuccess(`${label} saved successfully!`);
+      setSuccess("General settings saved successfully!");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(
-        err.response?.data?.message || `Failed to save ${label.toLowerCase()}`,
+        err.response?.data?.message || "Failed to save general settings",
       );
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveInvestmentSettings = async () => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`${url}admin/settings`, investmentForm, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess("Investment settings saved successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to save investment settings",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveWithdrawalSettings = async () => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`${url}admin/withdrawal-minimums`, withdrawalForm, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess("Withdrawal settings saved successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to save withdrawal settings",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBonusSettings = async () => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`${url}admin/settings`, bonusForm, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess("Bonus settings saved successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save bonus settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBankSettings = async () => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${url}admin/settings`,
+        { bankAccounts },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setSuccess("Bank details saved successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save bank details");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSecuritySettings = async () => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`${url}admin/settings`, securityForm, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess("Security settings saved successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to save security settings",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSocialMediaSettings = async () => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`${url}admin/social-media`, socialMedia, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess("Social media settings saved successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to save social media settings",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSocialMediaChange = (platform, value) => {
+    setSocialMedia({
+      ...socialMedia,
+      [platform]: value,
+    });
   };
 
   const toggleInvestments = async () => {
@@ -300,6 +531,55 @@ const AdminSettings = () => {
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to toggle investments");
+    }
+  };
+
+  const toggleInvestmentWithdrawals = async () => {
+    setTogglingInvestment(true);
+    try {
+      const token = localStorage.getItem("token");
+      const next = !investmentWithdrawalsEnabled;
+      await axios.post(
+        `${url}admin/toggle-investment-withdrawals`,
+        { enabled: next },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setInvestmentWithdrawalsEnabled(next);
+      setSuccess(
+        `Investment withdrawals ${next ? "enabled" : "disabled"} successfully!`,
+      );
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to toggle investment withdrawals",
+      );
+    } finally {
+      setTogglingInvestment(false);
+    }
+  };
+
+  const toggleBonusWithdrawals = async () => {
+    setTogglingBonus(true);
+    try {
+      const token = localStorage.getItem("token");
+      const next = !bonusWithdrawalsEnabled;
+      await axios.post(
+        `${url}admin/toggle-bonus-withdrawals`,
+        { enabled: next },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setBonusWithdrawalsEnabled(next);
+      setSuccess(
+        `Bonus withdrawals ${next ? "enabled" : "disabled"} successfully!`,
+      );
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to toggle bonus withdrawals",
+      );
+    } finally {
+      setTogglingBonus(false);
     }
   };
 
@@ -321,10 +601,12 @@ const AdminSettings = () => {
         isDefault: false,
       },
     ]);
+
   const removeBankAccount = (i) => {
     if (bankAccounts.length > 1)
       setBankAccounts(bankAccounts.filter((_, idx) => idx !== i));
   };
+
   const setDefaultBank = (i) =>
     setBankAccounts(
       bankAccounts.map((a, idx) => ({ ...a, isDefault: idx === i })),
@@ -333,7 +615,9 @@ const AdminSettings = () => {
   const tabs = [
     { id: "general", label: "General", icon: Settings },
     { id: "investment", label: "Investment", icon: TrendingUp },
+    { id: "withdrawal", label: "Withdrawal", icon: DollarSign },
     { id: "bonuses", label: "Bonuses", icon: Gift },
+    { id: "social", label: "Social Media", icon: Globe },
     { id: "bank", label: "Bank details", icon: Banknote },
     { id: "security", label: "Security", icon: Shield },
   ];
@@ -343,37 +627,46 @@ const AdminSettings = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
   };
 
+  const fmt = (n) =>
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 0,
+    }).format(n || 0);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-12 h-12">
-            <div className="w-12 h-12 rounded-full border-2 border-gray-200" />
+            <div className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700" />
             <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
           </div>
-          <p className="text-sm text-gray-500 font-medium">Loading settings</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+            Loading settings
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/70">
+    <div className="min-h-screen bg-gray-50/70 dark:bg-gray-900/70">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
               Settings
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
               Configure and manage all platform settings
             </p>
           </div>
           <button
             onClick={() => fetchSettings(true)}
             disabled={refreshing}
-            className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm disabled:opacity-50"
+            className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm disabled:opacity-50"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -382,14 +675,14 @@ const AdminSettings = () => {
           </button>
         </div>
 
-        {/* ── Alerts ── */}
+        {/* Alerts */}
         <AnimatePresence>
           {success && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700"
+              className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm text-emerald-700 dark:text-emerald-300"
             >
               <CheckCircle className="w-4 h-4 flex-shrink-0" /> {success}
             </motion.div>
@@ -399,30 +692,34 @@ const AdminSettings = () => {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700"
+              className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-300"
             >
               <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ── Layout: sidebar + content ── */}
+        {/* Layout: sidebar + content */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar tabs */}
           <div className="lg:w-52 flex-shrink-0">
-            <nav className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <nav className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
               {tabs.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all border-b border-gray-100 last:border-0 ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all border-b border-gray-100 dark:border-gray-700 last:border-0 ${
                     activeTab === id
-                      ? "bg-blue-50 text-blue-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
                   <Icon
-                    className={`w-4 h-4 flex-shrink-0 ${activeTab === id ? "text-blue-600" : "text-gray-400"}`}
+                    className={`w-4 h-4 flex-shrink-0 ${
+                      activeTab === id
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-gray-400 dark:text-gray-500"
+                    }`}
                   />
                   {label}
                   {activeTab === id && (
@@ -433,49 +730,85 @@ const AdminSettings = () => {
             </nav>
 
             {/* Quick stats */}
-            <div className="mt-4 bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <div className="mt-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 space-y-3">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                 Quick overview
               </p>
               {[
                 {
                   label: "Apex 1 rate",
                   value: `${investmentForm.apex1_rate}%`,
-                  color: "text-blue-600",
+                  color: "text-blue-600 dark:text-blue-400",
                 },
                 {
                   label: "Apex 2 rate",
                   value: `${investmentForm.apex2_rate}%`,
-                  color: "text-teal-600",
+                  color: "text-teal-600 dark:text-teal-400",
                 },
                 {
                   label: "Referral bonus",
                   value: `${bonusForm.referral_bonus_rate}%`,
-                  color: "text-purple-600",
+                  color: "text-purple-600 dark:text-purple-400",
                 },
                 {
                   label: "Retrading bonus",
                   value: `${bonusForm.retrading_bonus_rate}%`,
-                  color: "text-amber-600",
+                  color: "text-amber-600 dark:text-amber-400",
                 },
               ].map((s) => (
                 <div
                   key={s.label}
                   className="flex items-center justify-between"
                 >
-                  <span className="text-xs text-gray-500">{s.label}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {s.label}
+                  </span>
                   <span className={`text-sm font-bold ${s.color}`}>
                     {s.value}
                   </span>
                 </div>
               ))}
-              <div className="pt-1 border-t border-gray-100">
+              <div className="pt-1 border-t border-gray-100 dark:border-gray-700 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Investments</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Investments
+                  </span>
                   <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${investmentForm.investments_enabled ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      investmentForm.investments_enabled
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    }`}
                   >
                     {investmentForm.investments_enabled ? "Active" : "Off"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Investment WD
+                  </span>
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      investmentWithdrawalsEnabled
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                        : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                    }`}
+                  >
+                    {investmentWithdrawalsEnabled ? "Active" : "Disabled"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Bonus WD
+                  </span>
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      bonusWithdrawalsEnabled
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                        : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                    }`}
+                  >
+                    {bonusWithdrawalsEnabled ? "Active" : "Disabled"}
                   </span>
                 </div>
               </div>
@@ -490,12 +823,12 @@ const AdminSettings = () => {
                 variants={fadeUp}
                 initial="hidden"
                 animate="visible"
-                className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sm:p-6 space-y-5"
+                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 sm:p-6 space-y-5"
               >
-                {/* ── General ── */}
+                {/* General Tab */}
                 {activeTab === "general" && (
                   <>
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                       General settings
                     </h2>
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -570,23 +903,23 @@ const AdminSettings = () => {
                       }
                     />
                     <SaveButton
-                      onClick={() => save(generalForm, "General settings")}
+                      onClick={saveGeneralSettings}
                       saving={saving}
                       label="Save general settings"
                     />
                   </>
                 )}
 
-                {/* ── Investment ── */}
+                {/* Investment Tab */}
                 {activeTab === "investment" && (
                   <>
                     <div className="flex items-center justify-between">
-                      <h2 className="text-base font-semibold text-gray-900">
+                      <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                         Investment settings
                       </h2>
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xs text-gray-500">
-                          Investments
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          New Investments
                         </span>
                         <Toggle
                           checked={investmentForm.investments_enabled}
@@ -599,7 +932,7 @@ const AdminSettings = () => {
                       title="Apex 1 plan"
                       icon={Zap}
                       iconColor="text-blue-600"
-                      iconBg="bg-blue-50"
+                      iconBg="bg-blue-50 dark:bg-blue-900/30"
                     >
                       <div className="grid sm:grid-cols-3 gap-4">
                         <Field label="Min amount (NGN)">
@@ -645,7 +978,7 @@ const AdminSettings = () => {
                       title="Apex 2 plan"
                       icon={TrendingUp}
                       iconColor="text-teal-600"
-                      iconBg="bg-teal-50"
+                      iconBg="bg-teal-50 dark:bg-teal-900/30"
                     >
                       <div className="grid sm:grid-cols-3 gap-4">
                         <Field label="Min amount (NGN)">
@@ -687,11 +1020,11 @@ const AdminSettings = () => {
                       </div>
                     </Section>
 
-                    <Section
+                    {/* <Section
                       title="General rules"
                       icon={Settings}
                       iconColor="text-gray-600"
-                      iconBg="bg-gray-100"
+                      iconBg="bg-gray-100 dark:bg-gray-700"
                     >
                       <div className="space-y-4">
                         <ToggleRow
@@ -705,36 +1038,167 @@ const AdminSettings = () => {
                             })
                           }
                         />
-                        <Field label="Min withdrawal amount (NGN)">
-                          <Input
-                            type="number"
-                            value={investmentForm.minWithdrawal}
-                            onChange={(e) =>
-                              setInvestmentForm({
-                                ...investmentForm,
-                                minWithdrawal: parseInt(e.target.value),
-                              })
-                            }
-                            className="max-w-xs"
-                          />
-                        </Field>
                       </div>
-                    </Section>
+                    </Section> */}
 
                     <SaveButton
-                      onClick={() =>
-                        save(investmentForm, "Investment settings")
-                      }
+                      onClick={saveInvestmentSettings}
                       saving={saving}
                       label="Save investment settings"
                     />
                   </>
                 )}
 
-                {/* ── Bonuses ── */}
+                {/* Withdrawal Tab */}
+                {activeTab === "withdrawal" && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                        Withdrawal settings
+                      </h2>
+                    </div>
+
+                    {/* Investment Withdrawal Toggle */}
+                    <Section
+                      title="Investment Withdrawals"
+                      icon={DollarSign}
+                      iconColor="text-blue-600"
+                      iconBg="bg-blue-50 dark:bg-blue-900/30"
+                      action={
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">Enable</span>
+                          <Toggle
+                            checked={investmentWithdrawalsEnabled}
+                            onChange={toggleInvestmentWithdrawals}
+                            disabled={togglingInvestment}
+                          />
+                        </div>
+                      }
+                    >
+                      <div className="space-y-4">
+                        {/* <Field label="Minimum investment withdrawal amount (NGN)">
+                          <Input
+                            type="number"
+                            value={withdrawalForm.min_investment_withdrawal}
+                            onChange={(e) =>
+                              setWithdrawalForm({
+                                ...withdrawalForm,
+                                min_investment_withdrawal: parseInt(
+                                  e.target.value,
+                                ),
+                              })
+                            }
+                            className="max-w-xs"
+                            disabled={!investmentWithdrawalsEnabled}
+                          />
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            Users cannot request investment withdrawals below
+                            this amount
+                          </p>
+                        </Field> */}
+                        {!investmentWithdrawalsEnabled && (
+                          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                            <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                              <Info className="w-3.5 h-3.5" />
+                              Investment withdrawals are currently disabled.
+                              Users cannot request new investment withdrawals.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </Section>
+
+                    {/* Bonus Withdrawal Toggle */}
+                    <Section
+                      title="Bonus Withdrawals"
+                      icon={Gift}
+                      iconColor="text-purple-600"
+                      iconBg="bg-purple-50 dark:bg-purple-900/30"
+                      action={
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">Enable</span>
+                          <Toggle
+                            checked={bonusWithdrawalsEnabled}
+                            onChange={toggleBonusWithdrawals}
+                            disabled={togglingBonus}
+                          />
+                        </div>
+                      }
+                    >
+                      <div className="space-y-4">
+                        <Field label="Minimum bonus withdrawal amount (NGN)">
+                          <Input
+                            type="number"
+                            value={withdrawalForm.min_bonus_withdrawal}
+                            onChange={(e) =>
+                              setWithdrawalForm({
+                                ...withdrawalForm,
+                                min_bonus_withdrawal: parseInt(e.target.value),
+                              })
+                            }
+                            className="max-w-xs"
+                            disabled={!bonusWithdrawalsEnabled}
+                          />
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            Users cannot withdraw bonuses below this amount
+                          </p>
+                        </Field>
+                        {!bonusWithdrawalsEnabled && (
+                          <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                            <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                              <Info className="w-3.5 h-3.5" />
+                              Bonus withdrawals are currently disabled. Users
+                              cannot request new bonus withdrawals.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </Section>
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          Investment WD Status
+                        </p>
+                        <p
+                          className={`text-sm font-semibold ${investmentWithdrawalsEnabled ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                        >
+                          {investmentWithdrawalsEnabled
+                            ? "Enabled"
+                            : "Disabled"}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          Min: {fmt(withdrawalForm.min_investment_withdrawal)}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          Bonus WD Status
+                        </p>
+                        <p
+                          className={`text-sm font-semibold ${bonusWithdrawalsEnabled ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                        >
+                          {bonusWithdrawalsEnabled ? "Enabled" : "Disabled"}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          Min: {fmt(withdrawalForm.min_bonus_withdrawal)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <SaveButton
+                      onClick={saveWithdrawalSettings}
+                      saving={saving}
+                      label="Save withdrawal settings"
+                    />
+                  </>
+                )}
+
+                {/* Bonuses Tab */}
                 {activeTab === "bonuses" && (
                   <>
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                       Bonus settings
                     </h2>
 
@@ -742,7 +1206,7 @@ const AdminSettings = () => {
                       title="Referral bonus"
                       icon={Users}
                       iconColor="text-blue-600"
-                      iconBg="bg-blue-50"
+                      iconBg="bg-blue-50 dark:bg-blue-900/30"
                       action={
                         <Toggle
                           checked={bonusForm.referralBonusEnabled}
@@ -776,7 +1240,7 @@ const AdminSettings = () => {
                       title="Retrading bonus"
                       icon={TrendingUp}
                       iconColor="text-purple-600"
-                      iconBg="bg-purple-50"
+                      iconBg="bg-purple-50 dark:bg-purple-900/30"
                       action={
                         <Toggle
                           checked={bonusForm.retradingBonusEnabled}
@@ -806,39 +1270,110 @@ const AdminSettings = () => {
                       </Field>
                     </Section>
 
-                    <Section
-                      title="General bonus rules"
-                      icon={Gift}
-                      iconColor="text-amber-600"
-                      iconBg="bg-amber-50"
-                    >
-                      <Field label="Min bonus withdrawal (NGN)">
-                        <Input
-                          type="number"
-                          value={bonusForm.min_bonus_withdrawal}
-                          onChange={(e) =>
-                            setBonusForm({
-                              ...bonusForm,
-                              min_bonus_withdrawal: parseInt(e.target.value),
-                            })
-                          }
-                          className="max-w-xs"
-                        />
-                      </Field>
-                    </Section>
-
                     <SaveButton
-                      onClick={() => save(bonusForm, "Bonus settings")}
+                      onClick={saveBonusSettings}
                       saving={saving}
                       label="Save bonus settings"
                     />
                   </>
                 )}
 
-                {/* ── Bank ── */}
+                {/* Social Media Tab */}
+                {activeTab === "social" && (
+                  <>
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                      Social Media Settings
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2">
+                      Add your social media links to display on the website
+                    </p>
+
+                    <div className="space-y-4">
+                      <SocialInput
+                        icon={Facebook}
+                        platform="facebook"
+                        value={socialMedia.facebook}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://facebook.com/yourpage"
+                      />
+
+                      <SocialInput
+                        icon={Twitter}
+                        platform="twitter"
+                        value={socialMedia.twitter}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://twitter.com/yourhandle"
+                      />
+
+                      <SocialInput
+                        icon={Instagram}
+                        platform="instagram"
+                        value={socialMedia.instagram}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://instagram.com/yourusername"
+                      />
+
+                      <SocialInput
+                        icon={Linkedin}
+                        platform="linkedin"
+                        value={socialMedia.linkedin}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://linkedin.com/company/yourcompany"
+                      />
+
+                      <SocialInput
+                        icon={Youtube}
+                        platform="youtube"
+                        value={socialMedia.youtube}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://youtube.com/c/yourchannel"
+                      />
+
+                      <SocialInput
+                        icon={Send}
+                        platform="telegram"
+                        value={socialMedia.telegram}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://t.me/yourusername"
+                      />
+
+                      <SocialInput
+                        icon={MessageCircle}
+                        platform="whatsapp"
+                        value={socialMedia.whatsapp}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://wa.me/1234567890"
+                      />
+
+                      <SocialInput
+                        icon={Music}
+                        platform="tiktok"
+                        value={socialMedia.tiktok}
+                        onChange={handleSocialMediaChange}
+                        placeholder="https://tiktok.com/@yourusername"
+                      />
+                    </div>
+
+                    <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-4">
+                      <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        Leave fields empty to hide the social media icon. All
+                        links will open in a new tab.
+                      </p>
+                    </div>
+
+                    <SaveButton
+                      onClick={saveSocialMediaSettings}
+                      saving={saving}
+                      label="Save social media settings"
+                    />
+                  </>
+                )}
+
+                {/* Bank Tab */}
                 {activeTab === "bank" && (
                   <>
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                       Bank details
                     </h2>
 
@@ -846,18 +1381,18 @@ const AdminSettings = () => {
                       {bankAccounts.map((account, index) => (
                         <div
                           key={index}
-                          className="border border-gray-200 rounded-xl overflow-hidden"
+                          className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
                         >
-                          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/60">
+                          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/50">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                                <Banknote className="w-3.5 h-3.5 text-blue-600" />
+                              <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                                <Banknote className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                               </div>
-                              <span className="text-sm font-semibold text-gray-900">
+                              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                                 Account {index + 1}
                               </span>
                               {account.isDefault && (
-                                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full ring-1 ring-blue-200">
+                                <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full ring-1 ring-blue-200 dark:ring-blue-800">
                                   Default
                                 </span>
                               )}
@@ -866,14 +1401,14 @@ const AdminSettings = () => {
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => setDefaultBank(index)}
-                                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
                                   title="Set as default"
                                 >
                                   <Award className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => removeBankAccount(index)}
-                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
                                   title="Remove"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -948,24 +1483,24 @@ const AdminSettings = () => {
 
                       <button
                         onClick={addBankAccount}
-                        className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/30 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 transition-all flex items-center justify-center gap-2"
                       >
                         <Plus className="w-4 h-4" /> Add another bank account
                       </button>
                     </div>
 
                     <SaveButton
-                      onClick={() => save({ bankAccounts }, "Bank details")}
+                      onClick={saveBankSettings}
                       saving={saving}
                       label="Save bank details"
                     />
                   </>
                 )}
 
-                {/* ── Security ── */}
+                {/* Security Tab */}
                 {activeTab === "security" && (
                   <>
-                    <h2 className="text-base font-semibold text-gray-900">
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                       Security settings
                     </h2>
 
@@ -1034,7 +1569,7 @@ const AdminSettings = () => {
                     </div>
 
                     <SaveButton
-                      onClick={() => save(securityForm, "Security settings")}
+                      onClick={saveSecuritySettings}
                       saving={saving}
                       label="Save security settings"
                     />

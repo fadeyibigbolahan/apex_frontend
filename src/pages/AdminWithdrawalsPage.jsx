@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
@@ -30,6 +30,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader,
+  Zap,
+  Layers,
+  Building,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -99,9 +103,85 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+/* ── Plan badge component ── */
+const PlanBadge = ({ plan, phase }) => {
+  const getPlanConfig = (planType) => {
+    if (planType === "apex1") {
+      return {
+        label: "APEX 1",
+        bg: "bg-blue-50",
+        text: "text-blue-700",
+        ring: "ring-blue-200",
+        Icon: Zap,
+      };
+    } else if (planType === "apex2") {
+      return {
+        label: "APEX 2",
+        bg: "bg-teal-50",
+        text: "text-teal-700",
+        ring: "ring-teal-200",
+        Icon: TrendingUp,
+      };
+    }
+    return {
+      label: "Unknown",
+      bg: "bg-gray-50",
+      text: "text-gray-600",
+      ring: "ring-gray-200",
+      Icon: null,
+    };
+  };
+
+  const config = getPlanConfig(plan);
+  const Icon = config.Icon;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${config.bg} ${config.text} ring-1 ${config.ring}`}
+      >
+        {Icon && <Icon className="w-3 h-3" />}
+        {config.label}
+      </span>
+      {phase && (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200">
+          <Layers className="w-2.5 h-2.5" />
+          Phase {phase}
+        </span>
+      )}
+    </div>
+  );
+};
+
+/* ── Bank Details Component ── */
+const BankDetailsDisplay = ({ bankDetails }) => {
+  if (!bankDetails || !bankDetails.accountNumber) {
+    return <span className="text-[11px] text-gray-400">No bank details</span>;
+  }
+  return (
+    <div className="text-xs">
+      <p className="font-medium text-gray-800 truncate max-w-[150px]">
+        {bankDetails.accountName}
+      </p>
+      <p className="text-[14px] text-gray-500 truncate max-w-[150px]">
+        {bankDetails.bankName}
+      </p>
+      <p className="text-[14px] font-mono text-gray-400">
+        {bankDetails.accountNumber}
+      </p>
+      {bankDetails.isLocked && (
+        <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-600 mt-0.5">
+          <Lock className="w-2 h-2" /> Locked
+        </span>
+      )}
+    </div>
+  );
+};
+
 const AdminWithdrawals = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,7 +194,7 @@ const AdminWithdrawals = () => {
   const [processLoading, setProcessLoading] = useState(false);
   const [processSuccess, setProcessSuccess] = useState("");
   const [processError, setProcessError] = useState("");
-  const [processAction, setProcessAction] = useState("approve"); // 'approve' or 'reject'
+  const [processAction, setProcessAction] = useState("approve");
   const [rejectReason, setRejectReason] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -149,16 +229,24 @@ const AdminWithdrawals = () => {
         navigate("/login");
         return;
       }
-      const params = new URLSearchParams({
-        page,
-        limit: itemsPerPage,
-        ...(filters.status !== "all" && { status: filters.status }),
-        ...(filters.dateRange !== "all" && { dateRange: filters.dateRange }),
-        ...(filters.searchTerm && { search: filters.searchTerm }),
-      });
-      const res = await axios.get(`${url}admin/withdrawals?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+
+      const params = new URLSearchParams();
+      params.append("page", page);
+      params.append("limit", itemsPerPage);
+
+      if (filters.status !== "all") params.append("status", filters.status);
+      if (filters.dateRange !== "all")
+        params.append("dateRange", filters.dateRange);
+      if (filters.searchTerm && filters.searchTerm.trim() !== "") {
+        params.append("search", filters.searchTerm.trim());
+      }
+
+      const res = await axios.get(
+        `${url}admin/withdrawals?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const data = res.data;
       console.log("Fetched withdrawals:", data);
       setWithdrawals(data.data.withdrawals || []);
@@ -167,6 +255,7 @@ const AdminWithdrawals = () => {
       calculateStats(data.data.withdrawals || []);
       setError("");
     } catch (err) {
+      console.error("Fetch error:", err);
       if (err.response?.status === 401) navigate("/login");
       else if (err.response?.status === 403) navigate("/dashboard");
       else
@@ -182,10 +271,13 @@ const AdminWithdrawals = () => {
   }, [filters.status, filters.dateRange]);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (filters.searchTerm) fetchWithdrawals(1);
+    const delayDebounceFn = setTimeout(() => {
+      if (filters.searchTerm !== undefined) {
+        fetchWithdrawals(1);
+      }
     }, 500);
-    return () => clearTimeout(t);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [filters.searchTerm]);
 
   const calculateStats = (data) => {
@@ -256,13 +348,19 @@ const AdminWithdrawals = () => {
       User: w.user?.email || "Unknown",
       Amount: w.amount,
       Type: w.type || "Investment",
+      Plan: w.metadata?.plan ? w.metadata.plan.toUpperCase() : "N/A",
+      Phase: w.phase || "N/A",
       Status: w.status,
       "Requested Date": new Date(w.createdAt).toLocaleDateString(),
       "Processed Date": w.processedAt
         ? new Date(w.processedAt).toLocaleDateString()
         : "N/A",
+      "Bank Name": w.metadata?.bankDetails?.bankName || "N/A",
+      "Account Name": w.metadata?.bankDetails?.accountName || "N/A",
+      "Account Number": w.metadata?.bankDetails?.accountNumber || "N/A",
       Reference: w.reference || "",
     }));
+    if (!rows.length) return;
     const csv = [
       Object.keys(rows[0]).join(","),
       ...rows.map((r) => Object.values(r).join(",")),
@@ -294,7 +392,7 @@ const AdminWithdrawals = () => {
   const hasFilters =
     filters.status !== "all" ||
     filters.dateRange !== "all" ||
-    filters.searchTerm;
+    (filters.searchTerm && filters.searchTerm.trim() !== "");
 
   const goPage = (p) => {
     setCurrentPage(p);
@@ -553,15 +651,16 @@ const AdminWithdrawals = () => {
                   {[
                     "User",
                     "Type",
+                    "Plan / Phase",
                     "Amount",
+                    "Bank Details",
                     "Status",
                     "Requested",
-                    "Processed",
                     "Actions",
                   ].map((h) => (
                     <th
                       key={h}
-                      className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest last:text-right"
+                      className={`px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest ${h === "Actions" ? "text-right" : ""}`}
                     >
                       {h}
                     </th>
@@ -582,11 +681,16 @@ const AdminWithdrawals = () => {
                           {wd.user?.email?.[0] || "U"}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">
-                            {wd.user?.email || "Unknown User"}
+                          <p className="font-medium text-gray-900 truncate max-w-[180px]">
+                            {`${wd.user?.firstName || ""} ${wd.user?.lastName || ""}`}
+                          </p>
+                          <p className="text-xs text-gray-900">
+                            {wd.user?.referralCode
+                              ? `@${wd.user.referralCode}`
+                              : "No referral code"}
                           </p>
                           <p className="text-[10px] text-gray-400">
-                            ID: {wd.user?._id?.slice(-8) || "N/A"}
+                            {wd.user?.email || "Unknown User"}
                           </p>
                         </div>
                       </div>
@@ -594,18 +698,27 @@ const AdminWithdrawals = () => {
                     <td className="px-5 py-3.5">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${
-                          wd.type === "bonus"
+                          wd.type === "bonus" || wd.type === "all_bonus"
                             ? "bg-violet-50 text-violet-700"
                             : "bg-blue-50 text-blue-700"
                         }`}
                       >
-                        {wd.type === "bonus" ? (
+                        {wd.type === "bonus" || wd.type === "all_bonus" ? (
                           <Gift className="w-3 h-3" />
                         ) : (
                           <ArrowUpRight className="w-3 h-3" />
                         )}
-                        {wd.type === "bonus" ? "Bonus" : "Investment"}
+                        {wd.type === "bonus" || wd.type === "all_bonus"
+                          ? "Bonus"
+                          : "Investment"}
                       </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {wd.type === "investment" ? (
+                        <PlanBadge plan={wd.metadata?.plan} phase={wd.phase} />
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="text-sm font-bold text-gray-800">
@@ -613,25 +726,28 @@ const AdminWithdrawals = () => {
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
+                      <BankDetailsDisplay
+                        bankDetails={wd.metadata?.bankDetails}
+                      />
+                    </td>
+                    <td className="px-5 py-3.5">
                       <StatusBadge status={wd.status} />
                     </td>
                     <td className="px-5 py-3.5 text-xs text-gray-400 whitespace-nowrap">
                       {fmtDate(wd.createdAt)}
                     </td>
-                    <td className="px-5 py-3.5 text-xs text-gray-400 whitespace-nowrap">
-                      {wd.processedAt ? fmtDate(wd.processedAt) : "—"}
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => {
                             setSelectedWithdrawal(wd);
                             setShowDetailsModal(true);
                           }}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium"
                           title="View Details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
                         </button>
                         {wd.status === "pending" && (
                           <>
@@ -641,10 +757,11 @@ const AdminWithdrawals = () => {
                                 setProcessAction("approve");
                                 setShowProcessModal(true);
                               }}
-                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 transition text-xs font-medium"
                               title="Approve"
                             >
-                              <ThumbsUp className="w-4 h-4" />
+                              <ThumbsUp className="w-3.5 h-3.5" />
+                              <span>Approve</span>
                             </button>
                             <button
                               onClick={() => {
@@ -652,10 +769,11 @@ const AdminWithdrawals = () => {
                                 setProcessAction("reject");
                                 setShowProcessModal(true);
                               }}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-red-50 text-red-600 transition text-xs font-medium"
                               title="Reject"
                             >
-                              <ThumbsDown className="w-4 h-4" />
+                              <ThumbsDown className="w-3.5 h-3.5" />
+                              <span>Reject</span>
                             </button>
                           </>
                         )}
@@ -766,7 +884,6 @@ const AdminWithdrawals = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Status Filter */}
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                   Status
@@ -790,7 +907,6 @@ const AdminWithdrawals = () => {
                 </div>
               </div>
 
-              {/* Date Range Filter */}
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                   Date Range
@@ -847,9 +963,9 @@ const AdminWithdrawals = () => {
             initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden"
+            className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-y-auto h-[90vh]"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
               <div>
                 <h3 className="text-sm font-bold text-gray-900">
                   Withdrawal Details
@@ -871,12 +987,14 @@ const AdminWithdrawals = () => {
               <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-100">
                 <div
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                    selectedWithdrawal.type === "bonus"
+                    selectedWithdrawal.type === "bonus" ||
+                    selectedWithdrawal.type === "all_bonus"
                       ? "bg-violet-50"
                       : "bg-blue-50"
                   }`}
                 >
-                  {selectedWithdrawal.type === "bonus" ? (
+                  {selectedWithdrawal.type === "bonus" ||
+                  selectedWithdrawal.type === "all_bonus" ? (
                     <Gift className="w-5 h-5 text-violet-600" />
                   ) : (
                     <ArrowUpRight className="w-5 h-5 text-blue-600" />
@@ -884,14 +1002,16 @@ const AdminWithdrawals = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-base font-bold text-gray-900">
-                    {selectedWithdrawal.type === "bonus"
+                    {selectedWithdrawal.type === "bonus" ||
+                    selectedWithdrawal.type === "all_bonus"
                       ? "Bonus Withdrawal"
                       : "Investment Withdrawal"}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {selectedWithdrawal.type === "bonus"
+                    {selectedWithdrawal.type === "bonus" ||
+                    selectedWithdrawal.type === "all_bonus"
                       ? "From bonuses"
-                      : `Phase ${selectedWithdrawal.phase || "?"}`}
+                      : `${selectedWithdrawal.metadata?.plan?.toUpperCase()} - Phase ${selectedWithdrawal.phase || "?"}`}
                   </p>
                 </div>
                 <p className="text-xl font-bold text-gray-900 shrink-0">
@@ -912,6 +1032,22 @@ const AdminWithdrawals = () => {
                     val: selectedWithdrawal.type || "Investment",
                     mono: false,
                   },
+                  ...(selectedWithdrawal.type === "investment"
+                    ? [
+                        {
+                          label: "Plan",
+                          val:
+                            selectedWithdrawal.metadata?.plan?.toUpperCase() ||
+                            "N/A",
+                          mono: false,
+                        },
+                        {
+                          label: "Phase",
+                          val: selectedWithdrawal.phase || "N/A",
+                          mono: false,
+                        },
+                      ]
+                    : []),
                   {
                     label: "Requested",
                     val: fmtDate(selectedWithdrawal.createdAt),
@@ -944,36 +1080,92 @@ const AdminWithdrawals = () => {
                 </div>
               </div>
 
-              {/* bank details */}
-              {selectedWithdrawal.metadata?.bankDetails && (
+              {/* Expected Return */}
+              {selectedWithdrawal.metadata?.expectedReturn && (
                 <div className="mb-5">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Expected Return
+                  </p>
+                  <div className="bg-emerald-50 rounded-xl p-3">
+                    <p className="text-sm font-bold text-emerald-700">
+                      {fmt(selectedWithdrawal.metadata.expectedReturn)}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* bank details - Enhanced */}
+              {selectedWithdrawal.metadata?.bankDetails && (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <Banknote className="w-3.5 h-3.5" />
                     Bank Details
                   </p>
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-2.5">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 space-y-2.5 border border-blue-100">
                     {[
                       [
                         "Account Name",
                         selectedWithdrawal.metadata.bankDetails.accountName,
+                        <User className="w-3.5 h-3.5 text-blue-500" />,
                       ],
                       [
                         "Account Number",
                         selectedWithdrawal.metadata.bankDetails.accountNumber,
+                        <CreditCard className="w-3.5 h-3.5 text-blue-500" />,
                       ],
                       [
                         "Bank Name",
                         selectedWithdrawal.metadata.bankDetails.bankName,
+                        <Building className="w-3.5 h-3.5 text-blue-500" />,
+                      ],
+                      [
+                        "Lock Status",
+                        selectedWithdrawal.metadata.bankDetails.isLocked
+                          ? "Locked"
+                          : "Unlocked",
+                        <Lock className="w-3.5 h-3.5 text-blue-500" />,
                       ],
                     ].map(
-                      ([k, v]) =>
+                      ([k, v, icon]) =>
                         v && (
-                          <div key={k} className="flex justify-between text-xs">
-                            <span className="text-gray-500">{k}</span>
+                          <div
+                            key={k}
+                            className="flex items-center justify-between text-xs"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              {icon}
+                              <span className="text-gray-500">{k}</span>
+                            </div>
                             <span className="font-semibold text-gray-800">
                               {v}
                             </span>
                           </div>
                         ),
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Bonus details for bonus withdrawals */}
+              {selectedWithdrawal.metadata?.bonusCount && (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Bonus Details
+                  </p>
+                  <div className="bg-violet-50 rounded-xl p-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Bonuses Withdrawn</span>
+                      <span className="font-semibold text-violet-700">
+                        {selectedWithdrawal.metadata.bonusCount}
+                      </span>
+                    </div>
+                    {selectedWithdrawal.metadata.bonusTypes && (
+                      <div className="flex justify-between text-xs mt-2">
+                        <span className="text-gray-500">Types</span>
+                        <span className="font-mono text-gray-600">
+                          {selectedWithdrawal.metadata.bonusTypes.join(", ")}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1065,6 +1257,43 @@ const AdminWithdrawals = () => {
                         {fmt(selectedWithdrawal.amount)}
                       </span>
                     </div>
+                    {selectedWithdrawal.metadata?.plan && (
+                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl mb-4">
+                        <span className="text-sm text-gray-600">Plan</span>
+                        <span className="text-sm font-semibold text-blue-700">
+                          {selectedWithdrawal.metadata.plan.toUpperCase()}
+                          {selectedWithdrawal.phase &&
+                            ` - Phase ${selectedWithdrawal.phase}`}
+                        </span>
+                      </div>
+                    )}
+                    {selectedWithdrawal.metadata?.bankDetails && (
+                      <div className="p-3 bg-gray-50 rounded-xl mb-4">
+                        <p className="text-xs font-semibold text-gray-500 mb-2">
+                          Bank Details
+                        </p>
+                        <div className="space-y-1 text-xs">
+                          <p>
+                            <span className="text-gray-500">Account:</span>{" "}
+                            {
+                              selectedWithdrawal.metadata.bankDetails
+                                .accountName
+                            }
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Number:</span>{" "}
+                            {
+                              selectedWithdrawal.metadata.bankDetails
+                                .accountNumber
+                            }
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Bank:</span>{" "}
+                            {selectedWithdrawal.metadata.bankDetails.bankName}
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {processAction === "reject" && (
                       <div>
@@ -1103,17 +1332,17 @@ const AdminWithdrawals = () => {
                     <button
                       onClick={handleProcessWithdrawal}
                       disabled={processLoading}
-                      className={`flex-1 py-2.5 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md transition-all ${
                         processAction === "approve"
                           ? "bg-gradient-to-r from-emerald-500 to-green-500"
                           : "bg-gradient-to-r from-red-500 to-rose-500"
                       } disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
                       {processLoading ? (
-                        <span className="flex items-center justify-center gap-2">
+                        <>
                           <Loader className="w-3.5 h-3.5 animate-spin" />
                           Processing…
-                        </span>
+                        </>
                       ) : processAction === "approve" ? (
                         "Approve"
                       ) : (

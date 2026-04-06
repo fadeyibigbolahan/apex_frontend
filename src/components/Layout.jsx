@@ -36,63 +36,71 @@ const Layout = () => {
     navigate("/");
   };
 
-  const navigation = [
+  // Combined navigation items (main + bottom)
+  const navigationItems = [
+    // Main navigation
     {
       name: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
       current: location.pathname === "/dashboard",
+      section: "main",
     },
     {
       name: "Investments",
       href: "/investments",
       icon: TrendingUp,
       current: location.pathname.startsWith("/investments"),
-    },
-    {
-      name: "Referrals",
-      href: "/referrals",
-      icon: Users,
-      current: location.pathname === "/referrals",
-    },
-    {
-      name: "Bonuses",
-      href: "/bonuses",
-      icon: Gift,
-      current: location.pathname === "/bonuses",
-    },
-    {
-      name: "Transactions",
-      href: "/transactions",
-      icon: History,
-      current: location.pathname === "/transactions",
+      section: "main",
     },
     {
       name: "Withdrawals",
       href: "/withdrawals",
       icon: Wallet,
       current: location.pathname === "/withdrawals",
+      section: "main",
     },
-  ];
-
-  const bottomNavigation = [
     {
-      name: "Profile",
+      name: "Bank Details",
       href: "/profile",
       icon: User,
       current: location.pathname === "/profile",
+      section: "bottom",
     },
+    {
+      name: "Referrals",
+      href: "/referrals",
+      icon: Users,
+      current: location.pathname === "/referrals",
+      section: "main",
+    },
+    {
+      name: "Bonuses",
+      href: "/bonuses",
+      icon: Gift,
+      current: location.pathname === "/bonuses",
+      section: "main",
+    },
+    {
+      name: "Transactions",
+      href: "/transactions",
+      icon: History,
+      current: location.pathname === "/transactions",
+      section: "main",
+    },
+    // Bottom navigation items (now part of main menu)
+
     {
       name: "Help & Support",
       href: "/support",
       icon: HelpCircle,
       current: location.pathname === "/support",
+      section: "bottom",
     },
   ];
 
   const currentPage =
-    [...navigation, ...bottomNavigation].find((item) => item.current)?.name ||
-    "Dashboard";
+    navigationItems.find((item) => item.current)?.name || "Dashboard";
 
   return (
     <div className="min-h-screen bg-[#f4f6f9] dark:bg-gray-900 font-sans transition-colors duration-200">
@@ -145,14 +153,14 @@ const Layout = () => {
           </div>
         </div>
 
-        {/* Section label */}
+        {/* Main Navigation Section */}
         <p className="px-5 text-[10px] font-semibold uppercase tracking-widest text-white/25 mb-1.5">
-          Menu
+          Main Menu
         </p>
 
-        {/* Main nav */}
+        {/* Navigation - All items together */}
         <nav className="flex-1 overflow-y-auto px-3 space-y-0.5 pb-4">
-          {navigation.map((item) => {
+          {navigationItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
@@ -182,27 +190,8 @@ const Layout = () => {
           })}
         </nav>
 
-        {/* Bottom nav */}
-        <div className="px-3 pb-4 border-t border-white/8 pt-3 space-y-0.5">
-          {bottomNavigation.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
-                  ${
-                    item.current
-                      ? "bg-white/10 text-white"
-                      : "text-white/40 hover:text-white hover:bg-white/6"
-                  }`}
-              >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+        {/* Sign Out Button - Now at bottom with consistent styling */}
+        <div className="px-3 pb-4 border-t border-white/8 pt-3">
           <button
             onClick={() => {
               handleLogout();

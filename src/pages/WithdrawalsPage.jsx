@@ -25,6 +25,7 @@ import {
   TrendingUp,
   Gift,
   Shield,
+  Info,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -117,6 +118,10 @@ const Withdrawals = () => {
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
+  // 👇 NEW: State for minimum withdrawal amounts
+  const [minInvestmentAmount, setMinInvestmentAmount] = useState(10000);
+  const [minBonusAmount, setMinBonusAmount] = useState(10000);
+
   const [requestForm, setRequestForm] = useState({
     amount: "",
     fromBonus: false,
@@ -184,8 +189,17 @@ const Withdrawals = () => {
       const res = await axios.get(`${url}withdrawals/available`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const avail = res.data.data.available || [];
-      console.log("available withdrawals:", avail);
+      const data = res.data.data;
+      const avail = data.available || [];
+
+      // 👇 Store minimum withdrawal amounts from backend
+      setMinInvestmentAmount(data.investmentMinAmount || 10000);
+      setMinBonusAmount(data.bonusAvailable?.minAmount || 10000);
+
+      console.log("Available withdrawals:", avail);
+      console.log("Min investment amount:", data.investmentMinAmount);
+      console.log("Min bonus amount:", data.bonusAvailable?.minAmount);
+
       setAvailableWithdrawals(avail);
       if (avail.length > 0) {
         const next = avail
@@ -232,9 +246,51 @@ const Withdrawals = () => {
     }));
   };
 
+  // 👇 NEW: Validate withdrawal amount before submitting
+  const validateWithdrawalRequest = () => {
+    if (requestForm.fromBonus) {
+      // Get total bonus amount from available withdrawals
+      const totalBonusAmount = availableWithdrawals.reduce(
+        (sum, w) => sum + w.amount,
+        0,
+      );
+
+      if (totalBonusAmount < minBonusAmount) {
+        setRequestError(
+          `Minimum bonus withdrawal amount is ${formatCurrency(minBonusAmount)} NGN. ` +
+            `Your total available bonus is ${formatCurrency(totalBonusAmount)} NGN.`,
+        );
+        return false;
+      }
+    } else {
+      // Find the selected investment
+      const selectedInvestment = availableWithdrawals.find(
+        (w) => w.id === requestForm.investmentId,
+      );
+
+      if (
+        selectedInvestment &&
+        selectedInvestment.amount < minInvestmentAmount
+      ) {
+        setRequestError(
+          `Minimum investment withdrawal amount is ${formatCurrency(minInvestmentAmount)} NGN. ` +
+            `This withdrawal amount is ${formatCurrency(selectedInvestment.amount)} NGN.`,
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleRequestWithdrawal = async (e) => {
     e.preventDefault();
     setRequestError("");
+
+    // 👇 Validate against minimum amounts before sending to backend
+    if (!validateWithdrawalRequest()) {
+      return;
+    }
+
     setRequestLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -308,6 +364,8 @@ const Withdrawals = () => {
       currency: "NGN",
       minimumFractionDigits: 0,
     }).format(n || 0);
+
+  const formatCurrency = fmt; // Alias for clarity
 
   const fmtDate = (d) =>
     d
@@ -401,6 +459,42 @@ const Withdrawals = () => {
             <Wallet className="w-4 h-4" /> Request Withdrawal
           </button>
         </motion.div>
+      </motion.div>
+
+      {/* ── MINIMUM AMOUNT INFO BANNER ── */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        custom={0}
+        className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6"
+      >
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-blue-900 dark:text-blue-300">
+              Withdrawal Requirements
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+              <div className="flex items-center justify-between bg-white/50 dark:bg-gray-900/30 rounded-lg px-3 py-2">
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  Minimum Investment Withdrawal:
+                </span>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                  {fmt(minInvestmentAmount)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between bg-white/50 dark:bg-gray-900/30 rounded-lg px-3 py-2">
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  Minimum Bonus Withdrawal:
+                </span>
+                <span className="text-xs font-bold text-purple-700 dark:text-purple-400">
+                  {fmt(minBonusAmount)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
       {/* ── STAT CARDS ── */}
@@ -512,6 +606,11 @@ const Withdrawals = () => {
                 className="px-3 py-1 bg-white/8 border border-white/10 rounded-full text-xs text-white/60"
               >
                 {fmt(w.amount)} · {w.plan?.toUpperCase()}
+                {w.amount < minInvestmentAmount && (
+                  <span className="ml-1 text-red-400 text-[10px]">
+                    (Below min: {fmt(minInvestmentAmount)})
+                  </span>
+                )}
               </span>
             ))}
           </div>
@@ -729,7 +828,7 @@ const Withdrawals = () => {
                             setSelectedWithdrawal(wd);
                             setShowDetailsModal(true);
                           }}
-                          className="text-xs text-blue-600 dark:text-blue-400 font-semibold inline-flex items-center gap-0.5 hover:gap-1.5 transition-all opacity-0 group-hover:opacity-100"
+                          className="text-xs text-blue-600 dark:text-blue-400 font-semibold inline-flex items-center gap-0.5 transition-all"
                         >
                           <Eye className="w-3.5 h-3.5" /> View
                         </button>
@@ -849,7 +948,7 @@ const Withdrawals = () => {
             border: "border-violet-200 dark:border-violet-800",
             titleColor: "text-violet-900 dark:text-violet-300",
             iconColor: "text-violet-600 dark:text-violet-400",
-            body: "Bonus withdrawals require a minimum of ₦10,000 and can be requested separately from your investment withdrawals.",
+            body: `Bonus withdrawals require a minimum of ${fmt(minBonusAmount)} and can be requested separately from your investment withdrawals.`,
             bodyColor: "text-violet-800 dark:text-violet-300",
           },
         ].map((c) => {
@@ -862,7 +961,7 @@ const Withdrawals = () => {
               <h3
                 className={`text-sm font-bold ${c.titleColor} mb-2 flex items-center gap-2`}
               >
-                <Icon className={`w-4 h-4 ${c.iconColor}`} />
+                <Icon className={`w-5 h-5 ${c.iconColor}`} />
                 {c.title}
               </h3>
               <p className={`text-xs ${c.bodyColor} leading-relaxed`}>
@@ -1029,14 +1128,14 @@ const Withdrawals = () => {
                       {
                         fromBonus: false,
                         label: "Investment Withdrawal",
-                        sub: "Withdraw from active investments",
+                        sub: `Min: ${fmt(minInvestmentAmount)}`,
                         active:
                           "border-blue-500 bg-blue-50 dark:bg-blue-900/30",
                       },
                       {
                         fromBonus: true,
                         label: "Bonus Withdrawal",
-                        sub: "Withdraw from available bonuses",
+                        sub: `Min: ${fmt(minBonusAmount)}`,
                         active:
                           "border-violet-500 bg-violet-50 dark:bg-violet-900/30",
                       },
@@ -1107,13 +1206,34 @@ const Withdrawals = () => {
                           <option key={w.id} value={w.id}>
                             {w.plan?.toUpperCase()} · {fmt(w.amount)} ·{" "}
                             {fmtDate(w.nextWithdrawalDate)}
+                            {w.amount < minInvestmentAmount &&
+                              " ⚠️ Below minimum"}
                           </option>
                         ))}
                       </select>
+                      {requestForm.investmentId &&
+                        (() => {
+                          const selected = availableWithdrawals.find(
+                            (w) => w.id === requestForm.investmentId,
+                          );
+                          if (
+                            selected &&
+                            selected.amount < minInvestmentAmount
+                          ) {
+                            return (
+                              <p className="text-xs text-red-500 mt-2">
+                                ⚠️ This withdrawal amount (
+                                {fmt(selected.amount)}) is below the minimum
+                                requirement of {fmt(minInvestmentAmount)}.
+                              </p>
+                            );
+                          }
+                          return null;
+                        })()}
                     </div>
                   )}
 
-                  {/* bonus type selection (optional) */}
+                  {/* bonus type selection */}
                   {requestForm.fromBonus && (
                     <div className="mb-5">
                       <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">

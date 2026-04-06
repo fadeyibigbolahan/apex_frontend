@@ -573,7 +573,7 @@ const Referrals = () => {
                   {[
                     "Referral",
                     "Joined",
-                    "Investment",
+                    // "Investment",
                     "Your Bonus",
                     "Status",
                     "",
@@ -623,7 +623,7 @@ const Referrals = () => {
                       <td className="px-5 py-3.5 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         {fmtDate(ref.date)}
                       </td>
-                      <td className="px-5 py-3.5 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      {/* <td className="px-5 py-3.5 text-sm font-semibold text-gray-800 dark:text-gray-200">
                         {ref.investmentAmount > 0 ? (
                           fmt(ref.investmentAmount)
                         ) : (
@@ -631,7 +631,7 @@ const Referrals = () => {
                             —
                           </span>
                         )}
-                      </td>
+                      </td> */}
                       <td className="px-5 py-3.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                         {bonus > 0 ? (
                           fmt(bonus)
@@ -644,7 +644,7 @@ const Referrals = () => {
                       <td className="px-5 py-3.5">
                         <ReferralStatus referral={ref} />
                       </td>
-                      <td className="px-5 py-3.5 text-right">
+                      {/* <td className="px-5 py-3.5 text-right">
                         {ref.user && (
                           <button
                             onClick={() => navigate(`/profile/${ref.user._id}`)}
@@ -653,7 +653,7 @@ const Referrals = () => {
                             View <ChevronRight className="w-3.5 h-3.5" />
                           </button>
                         )}
-                      </td>
+                      </td> */}
                     </motion.tr>
                   );
                 })}

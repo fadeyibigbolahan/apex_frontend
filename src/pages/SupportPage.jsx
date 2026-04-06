@@ -104,7 +104,7 @@ const Support = () => {
     {
       question: "Can I change my bank details?",
       answer:
-        "Bank details are locked after first save for security reasons. If you need to change them, please contact admin through this support page or email support@apextrading.com.",
+        "Bank details are locked after first save for security reasons. If you need to change them, please contact admin through this support page or email apextradingsquare@gmail.com.",
       category: "account",
     },
     {
@@ -221,8 +221,8 @@ const Support = () => {
       icon: Mail,
       title: "Email Support",
       description: "Get a response within 24 hours",
-      action: "support@apextrading.com",
-      link: "mailto:support@apextrading.com",
+      action: "apextradingsquare@gmail.com",
+      link: "mailto:apextradingsquare@gmail.com",
       color: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
     },
     {
@@ -403,7 +403,7 @@ const Support = () => {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() =>
-                  (window.location.href = "mailto:support@apextrading.com")
+                  (window.location.href = "mailto:apextradingsquare@gmail.com")
                 }
                 className="px-4 py-2 bg-white text-blue-600 rounded-lg text-sm font-semibold hover:shadow-lg transition-all hover:scale-105"
               >

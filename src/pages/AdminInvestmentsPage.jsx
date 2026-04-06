@@ -37,6 +37,8 @@ import {
   ChevronLeft,
   ChevronDown,
   SlidersHorizontal,
+  XCircle,
+  RotateCcw,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -78,6 +80,8 @@ const AdminInvestments = () => {
     pendingAmount: 0,
     confirmed: 0,
     confirmedAmount: 0,
+    declined: 0,
+    declinedAmount: 0,
     active: 0,
     activeAmount: 0,
     completed: 0,
@@ -97,6 +101,9 @@ const AdminInvestments = () => {
     const params = new URLSearchParams(location.search);
     if (params.get("filter") === "pending") {
       setFilters((prev) => ({ ...prev, status: "pending" }));
+    }
+    if (params.get("filter") === "declined") {
+      setFilters((prev) => ({ ...prev, status: "declined" }));
     }
   }, [location]);
 
@@ -126,7 +133,7 @@ const AdminInvestments = () => {
       setInvestments(data.data.investments || []);
       setTotalPages(data.pages || 1);
       setTotalItems(data.total || 0);
-      calculateStats(data.data.investments || [], data.stats);
+      calculateStats(data.data.investments || [], data.data.stats);
       setError("");
     } catch (err) {
       if (err.response?.status === 401) navigate("/login");
@@ -154,6 +161,9 @@ const AdminInvestments = () => {
     const confirmed = investmentsData.filter(
       (i) => i.paymentStatus === "confirmed",
     );
+    const declined = investmentsData.filter(
+      (i) => i.paymentStatus === "declined",
+    );
     const active = investmentsData.filter(
       (i) => i.investmentStatus === "active",
     );
@@ -169,6 +179,8 @@ const AdminInvestments = () => {
       pendingAmount: pending.reduce((s, i) => s + i.amount, 0),
       confirmed: confirmed.length,
       confirmedAmount: confirmed.reduce((s, i) => s + i.amount, 0),
+      declined: declined.length,
+      declinedAmount: declined.reduce((s, i) => s + i.amount, 0),
       active: active.length,
       activeAmount: active.reduce((s, i) => s + i.amount, 0),
       completed: completed.length,
@@ -185,6 +197,14 @@ const AdminInvestments = () => {
       if (filters.searchTerm) fetchInvestments(1);
     }, 500);
     return () => clearTimeout(timer);
+  }, [filters.searchTerm]);
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      setCurrentPage(1);
+      fetchInvestments(1);
+    }, 400);
+    return () => clearTimeout(delay);
   }, [filters.searchTerm]);
 
   const handleConfirmInvestment = async () => {
@@ -438,8 +458,8 @@ const AdminInvestments = () => {
           </div>
         </div>
 
-        {/* ── Stats Grid ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {/* ── Stats Grid with Declined Card ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           {[
             {
               label: "Total",
@@ -466,6 +486,15 @@ const AdminInvestments = () => {
               amtColor: "text-emerald-500",
               bg: "bg-emerald-50/60",
               border: "border-emerald-100",
+            },
+            {
+              label: "Declined",
+              value: stats.declined,
+              amount: stats.declinedAmount,
+              color: "text-red-600",
+              amtColor: "text-red-500",
+              bg: "bg-red-50/60",
+              border: "border-red-100",
             },
             {
               label: "Active",
@@ -501,7 +530,12 @@ const AdminInvestments = () => {
               variants={fadeUp}
               initial="hidden"
               animate="visible"
-              className={`${s.bg} rounded-xl border ${s.border || "border-gray-200/80"} p-4 shadow-sm`}
+              className={`${s.bg} rounded-xl border ${s.border || "border-gray-200/80"} p-4 shadow-sm cursor-help group relative`}
+              title={
+                s.label === "Declined"
+                  ? "Investments that were declined by admin"
+                  : ""
+              }
             >
               <p className="text-xs text-gray-500 font-medium mb-1.5">
                 {s.label}
@@ -517,50 +551,103 @@ const AdminInvestments = () => {
               {s.sub && (
                 <p className="text-xs text-gray-400 mt-1.5 truncate">{s.sub}</p>
               )}
+              {s.label === "Declined" && stats.declined > 0 && (
+                <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                  <span className="text-[10px] text-gray-500">ⓘ</span>
+                </span>
+              )}
             </motion.div>
           ))}
         </div>
 
-        {/* ── Pending Alert ── */}
+        {/* ── Pending & Declined Alerts ── */}
         <AnimatePresence>
-          {stats.pending > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 p-5 sm:p-6 text-white shadow-lg shadow-amber-200"
-            >
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)",
-                  backgroundSize: "24px 24px",
-                }}
-              />
-              <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-base">
-                      {stats.pending} investment{stats.pending > 1 ? "s" : ""}{" "}
-                      awaiting review
-                    </p>
-                    <p className="text-sm text-white/80 mt-0.5">
-                      Total pending: {formatCurrency(stats.pendingAmount)}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setFilters({ ...filters, status: "pending" })}
-                  className="self-start sm:self-auto inline-flex items-center gap-1.5 px-4 py-2 bg-white text-amber-600 rounded-lg text-sm font-semibold hover:bg-amber-50 transition-all shadow-md"
+          {(stats.pending > 0 || stats.declined > 0) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {stats.pending > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 p-5 sm:p-6 text-white shadow-lg shadow-amber-200"
                 >
-                  Review now <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </motion.div>
+                  <div
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      backgroundImage:
+                        "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)",
+                      backgroundSize: "24px 24px",
+                    }}
+                  />
+                  <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-base">
+                          {stats.pending} investment
+                          {stats.pending > 1 ? "s" : ""} awaiting review
+                        </p>
+                        <p className="text-sm text-white/80 mt-0.5">
+                          Total pending: {formatCurrency(stats.pendingAmount)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setFilters({ ...filters, status: "pending" })
+                      }
+                      className="self-start sm:self-auto inline-flex items-center gap-1.5 px-4 py-2 bg-white text-amber-600 rounded-lg text-sm font-semibold hover:bg-amber-50 transition-all shadow-md"
+                    >
+                      Review now <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {stats.declined > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-500 to-rose-500 p-5 sm:p-6 text-white shadow-lg shadow-red-200"
+                >
+                  <div
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      backgroundImage:
+                        "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)",
+                      backgroundSize: "24px 24px",
+                    }}
+                  />
+                  <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <XCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-base">
+                          {stats.declined} investment
+                          {stats.declined > 1 ? "s" : ""} declined
+                        </p>
+                        <p className="text-sm text-white/80 mt-0.5">
+                          Total declined: {formatCurrency(stats.declinedAmount)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setFilters({ ...filters, status: "declined" })
+                      }
+                      className="self-start sm:self-auto inline-flex items-center gap-1.5 px-4 py-2 bg-white text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-all shadow-md"
+                    >
+                      View details <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
           )}
         </AnimatePresence>
 
@@ -648,7 +735,7 @@ const AdminInvestments = () => {
           </div>
         )}
 
-        {/* ── Table ── */}
+        {/* ── Table with text action buttons ── */}
         {investments.length > 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             {/* Desktop table */}
@@ -664,11 +751,11 @@ const AdminInvestments = () => {
                       "Investment",
                       "Progress",
                       "Date",
-                      "",
+                      "Actions",
                     ].map((h) => (
                       <th
                         key={h}
-                        className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap last:text-right"
+                        className={`px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap ${h === "Actions" ? "text-right" : ""}`}
                       >
                         {h}
                       </th>
@@ -690,6 +777,7 @@ const AdminInvestments = () => {
                         : inv.paymentStatus === "confirmed"
                           ? Math.round((done / total) * 100)
                           : 0;
+                    const isDeclined = inv.paymentStatus === "declined";
 
                     return (
                       <motion.tr
@@ -698,15 +786,23 @@ const AdminInvestments = () => {
                         variants={fadeUp}
                         initial="hidden"
                         animate="visible"
-                        className="hover:bg-gray-50/60 transition-colors"
+                        className={`hover:bg-gray-50/60 transition-colors ${isDeclined ? "bg-red-50/30" : ""}`}
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${isDeclined ? "bg-red-500" : "bg-gradient-to-br from-blue-500 to-indigo-600"}`}
+                            >
                               {(inv.user?.email?.[0] || "U").toUpperCase()}
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium text-gray-900 truncate max-w-[180px]">
+                                {`${inv.user?.firstName || ""} ${inv.user?.lastName || ""}`}
+                              </p>
+                              <p className="font-medium text-xs text-gray-900 truncate max-w-[180px]">
+                                {`@${inv.user?.referralCode}` || "Unknown"}
+                              </p>
+                              <p className="text-xs text-gray-900 truncate max-w-[180px]">
                                 {inv.user?.email || "Unknown"}
                               </p>
                               <p className="text-xs text-gray-400 font-mono mt-0.5">
@@ -728,12 +824,16 @@ const AdminInvestments = () => {
                           </span>
                         </td>
                         <td className="px-5 py-4">
-                          <p className="font-semibold text-gray-900">
+                          <p
+                            className={`font-semibold ${isDeclined ? "text-red-600" : "text-gray-900"}`}
+                          >
                             {formatCurrency(inv.amount)}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            ↑ {formatCurrency(inv.expectedReturn)}
-                          </p>
+                          {!isDeclined && (
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              ↑ {formatCurrency(inv.expectedReturn)}
+                            </p>
+                          )}
                         </td>
                         <td className="px-5 py-4">
                           <StatusBadge config={payConf} />
@@ -742,76 +842,94 @@ const AdminInvestments = () => {
                           <StatusBadge config={invConf} />
                         </td>
                         <td className="px-5 py-4">
-                          <div className="w-28">
-                            <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-                              <span>
-                                {done}/{total} phases
-                              </span>
-                              <span className="font-medium">{pct}%</span>
+                          {!isDeclined ? (
+                            <div className="w-28">
+                              <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+                                <span>
+                                  {done}/{total} phases
+                                </span>
+                                <span className="font-medium">{pct}%</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
                             </div>
-                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                          </div>
+                          ) : (
+                            <span className="text-xs text-red-500 font-medium">
+                              Declined
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-4 text-xs text-gray-500 whitespace-nowrap">
                           {formatDate(inv.createdAt)}
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex items-center justify-end gap-1">
-                            {inv.paymentProof && (
-                              <button
-                                onClick={() => viewPaymentProof(inv)}
-                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                title="View proof"
-                              >
-                                <Image className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => viewPaymentProof(inv)}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium"
+                              title="View proof"
+                            >
+                              <Image className="w-3.5 h-3.5" />
+                              <span>Proof</span>
+                            </button>
                             <button
                               onClick={() => {
                                 setSelectedInvestment(inv);
                                 setShowDetailsModal(true);
                               }}
-                              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 text-gray-600 transition text-xs font-medium"
                               title="Details"
                             >
                               <Eye className="w-3.5 h-3.5" />
+                              <span>View</span>
                             </button>
-                            {inv.paymentStatus === "pending" && (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    setConfirmAction({
-                                      show: true,
-                                      investment: inv,
-                                      type: "confirm",
-                                    })
-                                  }
-                                  className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                  title="Confirm"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    setConfirmAction({
-                                      show: true,
-                                      investment: inv,
-                                      type: "decline",
-                                      reason: "",
-                                    })
-                                  }
-                                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                  title="Decline"
-                                >
-                                  <Ban className="w-3.5 h-3.5" />
-                                </button>
-                              </>
-                            )}
+                            <button
+                              onClick={() =>
+                                setConfirmAction({
+                                  show: true,
+                                  investment: inv,
+                                  type: "confirm",
+                                })
+                              }
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 transition text-xs font-medium"
+                              title="Confirm"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Confirm</span>
+                            </button>
+                            <button
+                              onClick={() =>
+                                setConfirmAction({
+                                  show: true,
+                                  investment: inv,
+                                  type: "decline",
+                                  reason: "",
+                                })
+                              }
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-red-50 text-red-600 transition text-xs font-medium"
+                              title="Decline"
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                              <span>Decline</span>
+                            </button>
+                            <button
+                              onClick={() =>
+                                setConfirmAction({
+                                  show: true,
+                                  investment: inv,
+                                  type: "confirm",
+                                })
+                              }
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 transition text-xs font-medium"
+                              title="Confirm and make active"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Activate</span>
+                            </button>
                           </div>
                         </td>
                       </motion.tr>
@@ -821,7 +939,7 @@ const AdminInvestments = () => {
               </table>
             </div>
 
-            {/* Mobile cards */}
+            {/* Mobile cards with text action buttons */}
             <div className="lg:hidden divide-y divide-gray-100">
               {investments.map((inv, idx) => {
                 const payConf = getPaymentStatusConfig(inv.paymentStatus);
@@ -835,6 +953,8 @@ const AdminInvestments = () => {
                     : inv.paymentStatus === "confirmed"
                       ? Math.round((done / total) * 100)
                       : 0;
+                const isDeclined = inv.paymentStatus === "declined";
+
                 return (
                   <motion.div
                     key={inv._id}
@@ -842,11 +962,13 @@ const AdminInvestments = () => {
                     variants={fadeUp}
                     initial="hidden"
                     animate="visible"
-                    className="p-4 hover:bg-gray-50/50 transition-colors"
+                    className={`p-4 hover:bg-gray-50/50 transition-colors ${isDeclined ? "bg-red-50/30" : ""}`}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                        <div
+                          className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${isDeclined ? "bg-red-500" : "bg-gradient-to-br from-blue-500 to-indigo-600"}`}
+                        >
                           {(inv.user?.email?.[0] || "U").toUpperCase()}
                         </div>
                         <div>
@@ -867,35 +989,50 @@ const AdminInvestments = () => {
                     <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
                       <div>
                         <p className="text-xs text-gray-400">Amount</p>
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p
+                          className={`text-sm font-semibold ${isDeclined ? "text-red-600" : "text-gray-900"}`}
+                        >
                           {formatCurrency(inv.amount)}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Expected</p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {formatCurrency(inv.expectedReturn)}
-                        </p>
-                      </div>
+                      {!isDeclined && (
+                        <div>
+                          <p className="text-xs text-gray-400">Expected</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {formatCurrency(inv.expectedReturn)}
+                          </p>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       <StatusBadge config={payConf} />
                       <StatusBadge config={invConf} />
                     </div>
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs text-gray-400 mb-1">
-                        <span>
-                          {done}/{total} phases
-                        </span>
-                        <span>{pct}%</span>
+                    {!isDeclined && (
+                      <>
+                        <div className="mb-3">
+                          <div className="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>
+                              {done}/{total} phases
+                            </span>
+                            <span>{pct}%</span>
+                          </div>
+                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {isDeclined && (
+                      <div className="mb-3 p-2 bg-red-100 rounded-lg">
+                        <p className="text-xs text-red-700 font-medium text-center">
+                          This investment was declined
+                        </p>
                       </div>
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-gray-400">
                         {formatDate(inv.createdAt)}
@@ -904,9 +1041,10 @@ const AdminInvestments = () => {
                         {inv.paymentProof && (
                           <button
                             onClick={() => viewPaymentProof(inv)}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition"
                           >
-                            <Image className="w-4 h-4" />
+                            <Image className="w-3.5 h-3.5" />
+                            Proof
                           </button>
                         )}
                         <button
@@ -914,9 +1052,10 @@ const AdminInvestments = () => {
                             setSelectedInvestment(inv);
                             setShowDetailsModal(true);
                           }}
-                          className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
+                          className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
+                          View
                         </button>
                         {inv.paymentStatus === "pending" && (
                           <>
@@ -928,9 +1067,10 @@ const AdminInvestments = () => {
                                   type: "confirm",
                                 })
                               }
-                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
                             >
-                              <Check className="w-4 h-4" />
+                              <Check className="w-3.5 h-3.5" />
+                              Confirm
                             </button>
                             <button
                               onClick={() =>
@@ -941,11 +1081,29 @@ const AdminInvestments = () => {
                                   reason: "",
                                 })
                               }
-                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
                             >
-                              <Ban className="w-4 h-4" />
+                              <Ban className="w-3.5 h-3.5" />
+                              Decline
                             </button>
                           </>
+                        )}
+                        {/* Add confirm button for declined investments in mobile view */}
+                        {inv.paymentStatus === "declined" && (
+                          <button
+                            onClick={() =>
+                              setConfirmAction({
+                                show: true,
+                                investment: inv,
+                                type: "confirm",
+                              })
+                            }
+                            className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                            title="Confirm and make active"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            Activate
+                          </button>
                         )}
                       </div>
                     </div>
@@ -1016,7 +1174,7 @@ const AdminInvestments = () => {
           </div>
         )}
 
-        {/* ── Summary Cards ── */}
+        {/* ── Summary Cards with Declined Stats ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Plan Distribution */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -1063,7 +1221,7 @@ const AdminInvestments = () => {
             </div>
           </div>
 
-          {/* Status Breakdown */}
+          {/* Status Breakdown - Updated with Declined */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
@@ -1084,6 +1242,11 @@ const AdminInvestments = () => {
                   label: "Confirmed",
                   value: stats.confirmed,
                   color: "text-emerald-600",
+                },
+                {
+                  label: "Declined",
+                  value: stats.declined,
+                  color: "text-red-600",
                 },
                 {
                   label: "Active",
@@ -1109,7 +1272,7 @@ const AdminInvestments = () => {
             </div>
           </div>
 
-          {/* Financial Summary */}
+          {/* Financial Summary - Updated with Declined */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center">
@@ -1123,6 +1286,12 @@ const AdminInvestments = () => {
               {[
                 { label: "Total", value: stats.totalAmount },
                 { label: "Pending", value: stats.pendingAmount },
+                { label: "Confirmed", value: stats.confirmedAmount },
+                {
+                  label: "Declined",
+                  value: stats.declinedAmount,
+                  color: "text-red-600",
+                },
                 { label: "Active", value: stats.activeAmount },
                 { label: "Completed", value: stats.completedAmount },
               ].map((s) => (
@@ -1131,7 +1300,9 @@ const AdminInvestments = () => {
                   className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0"
                 >
                   <span className="text-sm text-gray-600">{s.label}</span>
-                  <span className="text-sm font-semibold text-gray-900">
+                  <span
+                    className={`text-sm font-semibold ${s.color || "text-gray-900"}`}
+                  >
                     {formatCurrency(s.value)}
                   </span>
                 </div>
@@ -1141,8 +1312,7 @@ const AdminInvestments = () => {
         </div>
       </div>
 
-      {/* ══════════════════════════════════ MODALS ══════════════════════════════════ */}
-
+      {/* Modals - Same as before but with text buttons */}
       {/* Filter Modal */}
       <AnimatePresence>
         {showFilterModal && (
@@ -1319,7 +1489,9 @@ const AdminInvestments = () => {
 
                 {/* Investor */}
                 <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${selectedInvestment.paymentStatus === "declined" ? "bg-red-500" : "bg-gradient-to-br from-blue-500 to-indigo-600"}`}
+                  >
                     {(selectedInvestment.user?.email?.[0] || "U").toUpperCase()}
                   </div>
                   <div>
@@ -1338,8 +1510,14 @@ const AdminInvestments = () => {
                     {
                       label: "Amount",
                       value: selectedInvestment.amount,
-                      color: "text-blue-700",
-                      bg: "bg-blue-50",
+                      color:
+                        selectedInvestment.paymentStatus === "declined"
+                          ? "text-red-700"
+                          : "text-blue-700",
+                      bg:
+                        selectedInvestment.paymentStatus === "declined"
+                          ? "bg-red-50"
+                          : "bg-blue-50",
                     },
                     {
                       label: "Expected",
@@ -1450,36 +1628,59 @@ const AdminInvestments = () => {
                   </div>
                 )}
 
-                {/* Actions */}
-                {selectedInvestment.paymentStatus === "pending" && (
+                {/* Actions - Show for pending AND declined with text buttons */}
+                {(selectedInvestment.paymentStatus === "pending" ||
+                  selectedInvestment.paymentStatus === "declined") && (
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
-                    <button
-                      onClick={() => {
-                        setShowDetailsModal(false);
-                        setConfirmAction({
-                          show: true,
-                          investment: selectedInvestment,
-                          type: "decline",
-                          reason: "",
-                        });
-                      }}
-                      className="flex-1 py-2.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition font-medium"
-                    >
-                      Decline
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowDetailsModal(false);
-                        setConfirmAction({
-                          show: true,
-                          investment: selectedInvestment,
-                          type: "confirm",
-                        });
-                      }}
-                      className="flex-1 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-                    >
-                      Confirm payment
-                    </button>
+                    {selectedInvestment.paymentStatus === "pending" && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowDetailsModal(false);
+                            setConfirmAction({
+                              show: true,
+                              investment: selectedInvestment,
+                              type: "decline",
+                              reason: "",
+                            });
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition font-medium"
+                        >
+                          <Ban className="w-4 h-4" />
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowDetailsModal(false);
+                            setConfirmAction({
+                              show: true,
+                              investment: selectedInvestment,
+                              type: "confirm",
+                            });
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                        >
+                          <Check className="w-4 h-4" />
+                          Confirm payment
+                        </button>
+                      </>
+                    )}
+                    {selectedInvestment.paymentStatus === "declined" && (
+                      <button
+                        onClick={() => {
+                          setShowDetailsModal(false);
+                          setConfirmAction({
+                            show: true,
+                            investment: selectedInvestment,
+                            type: "confirm",
+                          });
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Confirm & Activate
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -1488,7 +1689,7 @@ const AdminInvestments = () => {
         )}
       </AnimatePresence>
 
-      {/* Confirm / Decline Modal */}
+      {/* Confirm/Decline Modal */}
       <AnimatePresence>
         {confirmAction.show && confirmAction.investment && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1511,7 +1712,9 @@ const AdminInvestments = () => {
                   </div>
                   <h3 className="font-semibold text-gray-900 text-sm">
                     {confirmAction.type === "confirm"
-                      ? "Confirm investment"
+                      ? confirmAction.investment.paymentStatus === "declined"
+                        ? "Confirm Declined Investment"
+                        : "Confirm investment"
                       : "Decline investment"}
                   </h3>
                 </div>
@@ -1543,7 +1746,9 @@ const AdminInvestments = () => {
                   <>
                     <p className="text-sm text-gray-600 mb-4">
                       {confirmAction.type === "confirm"
-                        ? `Confirm this ${formatCurrency(confirmAction.investment.amount)} investment?`
+                        ? confirmAction.investment.paymentStatus === "declined"
+                          ? `Confirm this previously declined ${formatCurrency(confirmAction.investment.amount)} investment? This will make it active.`
+                          : `Confirm this ${formatCurrency(confirmAction.investment.amount)} investment?`
                         : `Decline this ${formatCurrency(confirmAction.investment.amount)} investment?`}
                     </p>
                     {confirmAction.type === "decline" && (
@@ -1587,15 +1792,23 @@ const AdminInvestments = () => {
                             : handleDeclineInvestment
                         }
                         disabled={actionLoading}
-                        className={`flex-1 py-2.5 text-sm text-white rounded-lg transition font-medium flex items-center justify-center gap-2 ${confirmAction.type === "confirm" ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"} disabled:opacity-60`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm text-white rounded-lg transition font-medium ${confirmAction.type === "confirm" ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"} disabled:opacity-60`}
                       >
                         {actionLoading ? (
                           <>
-                            <Loader className="w-3.5 h-3.5 animate-spin" />{" "}
+                            <Loader className="w-3.5 h-3.5 animate-spin" />
                             Processing…
                           </>
                         ) : confirmAction.type === "confirm" ? (
-                          "Confirm"
+                          confirmAction.investment.paymentStatus ===
+                          "declined" ? (
+                            <>
+                              <RotateCcw className="w-4 h-4" />
+                              Confirm & Activate
+                            </>
+                          ) : (
+                            "Confirm"
+                          )
                         ) : (
                           "Decline"
                         )}
