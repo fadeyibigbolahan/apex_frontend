@@ -894,7 +894,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {/* <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     {
                       label: "Users",
@@ -918,7 +918,7 @@ const HomePage = () => {
                       </p>
                     </div>
                   ))}
-                </div>
+                </div> */}
               </motion.div>
 
               {/* Right — calculator card */}

@@ -33,6 +33,7 @@ import {
   Zap,
   Layers,
   Building,
+  Lock,
   CreditCard,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";

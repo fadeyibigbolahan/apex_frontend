@@ -408,7 +408,7 @@ const Register = () => {
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Registration failed. Please try again.",
+        err.response?.data?.message || "Network error. Please try again",
       );
     } finally {
       setLoading(false);

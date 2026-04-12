@@ -1076,26 +1076,6 @@ const AdminSettings = () => {
                       }
                     >
                       <div className="space-y-4">
-                        {/* <Field label="Minimum investment withdrawal amount (NGN)">
-                          <Input
-                            type="number"
-                            value={withdrawalForm.min_investment_withdrawal}
-                            onChange={(e) =>
-                              setWithdrawalForm({
-                                ...withdrawalForm,
-                                min_investment_withdrawal: parseInt(
-                                  e.target.value,
-                                ),
-                              })
-                            }
-                            className="max-w-xs"
-                            disabled={!investmentWithdrawalsEnabled}
-                          />
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                            Users cannot request investment withdrawals below
-                            this amount
-                          </p>
-                        </Field> */}
                         {!investmentWithdrawalsEnabled && (
                           <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800">
                             <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">

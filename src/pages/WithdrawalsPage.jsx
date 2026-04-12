@@ -475,15 +475,7 @@ const Withdrawals = () => {
             <p className="text-sm font-semibold text-blue-900 dark:text-blue-300">
               Withdrawal Requirements
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-              <div className="flex items-center justify-between bg-white/50 dark:bg-gray-900/30 rounded-lg px-3 py-2">
-                <span className="text-xs text-gray-600 dark:text-gray-400">
-                  Minimum Investment Withdrawal:
-                </span>
-                <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
-                  {fmt(minInvestmentAmount)}
-                </span>
-              </div>
+            <div className="grid grid-cols-1 gap-2 mt-2">
               <div className="flex items-center justify-between bg-white/50 dark:bg-gray-900/30 rounded-lg px-3 py-2">
                 <span className="text-xs text-gray-600 dark:text-gray-400">
                   Minimum Bonus Withdrawal:
@@ -1128,7 +1120,7 @@ const Withdrawals = () => {
                       {
                         fromBonus: false,
                         label: "Investment Withdrawal",
-                        sub: `Min: ${fmt(minInvestmentAmount)}`,
+                        // sub: `Min: ${fmt(minInvestmentAmount)}`,
                         active:
                           "border-blue-500 bg-blue-50 dark:bg-blue-900/30",
                       },

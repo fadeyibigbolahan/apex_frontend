@@ -1,4 +1,3 @@
-// Refresh
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -27,6 +26,7 @@ import {
   Camera,
   Calendar,
   ChevronRight,
+  Building,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -55,6 +55,7 @@ const Input = ({
   required,
   hint,
   right,
+  disabled = false,
 }) => (
   <div className="w-full">
     <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
@@ -67,7 +68,8 @@ const Input = ({
         onChange={onChange}
         placeholder={placeholder}
         required={required}
-        className="w-full pl-3 pr-10 py-3 text-base border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+        disabled={disabled}
+        className={`w-full pl-3 pr-10 py-3 text-base border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
         style={{ fontSize: "16px" }}
       />
       {right && (
@@ -81,29 +83,6 @@ const Input = ({
         {hint}
       </p>
     )}
-  </div>
-);
-
-/* ── FIXED: Select with minimum font size ── */
-const Select = ({ label, value, onChange, options, placeholder, required }) => (
-  <div className="w-full">
-    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-      {label}
-    </label>
-    <select
-      value={value}
-      onChange={onChange}
-      required={required}
-      className="w-full py-3 px-3 text-base border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 dark:focus:border-blue-500 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white"
-      style={{ fontSize: "16px" }}
-    >
-      <option value="">{placeholder || "Select an option"}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
   </div>
 );
 
@@ -181,12 +160,13 @@ const Profile = () => {
         lastName: data.lastName || "",
         phoneNumber: data.phoneNumber || "",
       });
-      if (data.bankDetails)
+      if (data.bankDetails) {
         setBankForm({
           accountName: data.bankDetails.accountName || "",
           accountNumber: data.bankDetails.accountNumber || "",
           bankName: data.bankDetails.bankName || "",
         });
+      }
       setError("");
     } catch (err) {
       if (user) {
@@ -196,12 +176,13 @@ const Profile = () => {
           lastName: user.lastName || "",
           phoneNumber: user.phoneNumber || "",
         });
-        if (user.bankDetails)
+        if (user.bankDetails) {
           setBankForm({
             accountName: user.bankDetails.accountName || "",
             accountNumber: user.bankDetails.accountNumber || "",
             bankName: user.bankDetails.bankName || "",
           });
+        }
       } else {
         if (err.response?.status === 401) navigate("/login");
         else setError(err.response?.data?.message || "Failed to load profile");
@@ -315,18 +296,22 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log("Updated profile data with bank details:", res.data);
+
       // Update local profile data
       setProfileData(res.data.data.user);
 
-      // UPDATE AUTH CONTEXT - Only need hasBankDetails flag
+      // UPDATE AUTH CONTEXT
       updateUser({
         hasBankDetails: true,
+        // bankDetails: res.data.data.user.bankDetails,
       });
 
       setSuccess("Bank details saved successfully!");
       fetchProfileData();
       setEditingBank(false);
     } catch (err) {
+      console.log("Bank update error:", err);
       setError(err.response?.data?.message || "Failed to update bank details");
     } finally {
       setSaving(false);
@@ -410,6 +395,10 @@ const Profile = () => {
     return user?.email?.[0].toUpperCase() || "U";
   };
 
+  // Check if bank details are locked
+  const isBankLocked = profileData?.bankDetails?.isLocked === true;
+  const hasBankDetails = !!profileData?.bankDetails?.accountNumber;
+
   /* ── loading ── */
   if (loading)
     return (
@@ -425,7 +414,6 @@ const Profile = () => {
 
   return (
     <>
-      {/* CRITICAL FIX: Ensure no overflow at root level */}
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* ── HEADER ── */}
         <motion.div
@@ -774,7 +762,7 @@ const Profile = () => {
               )}
             </motion.div>
 
-            {/* Bank Details */}
+            {/* Bank Details with Lock Functionality */}
             <motion.div
               custom={4}
               variants={fadeUp}
@@ -791,23 +779,22 @@ const Profile = () => {
                     Used for processing all withdrawals
                   </p>
                 </div>
-                {!editingBank &&
-                  (!profileData?.bankDetails?.accountNumber ||
-                    !profileData?.bankDetails?.isLocked) && (
-                    <button
-                      onClick={() => setEditingBank(true)}
-                      className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition shrink-0 ml-1 sm:ml-2"
-                    >
-                      <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                      {profileData?.bankDetails?.accountNumber ? "Edit" : "Add"}
-                    </button>
-                  )}
-                {profileData?.bankDetails?.isLocked &&
-                  profileData?.bankDetails?.accountNumber && (
-                    <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 shrink-0 ml-1 sm:ml-2">
-                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked
-                    </span>
-                  )}
+                {/* Show Edit button only if not locked OR no bank details */}
+                {!editingBank && (!isBankLocked || !hasBankDetails) && (
+                  <button
+                    onClick={() => setEditingBank(true)}
+                    className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition shrink-0 ml-1 sm:ml-2"
+                  >
+                    <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    {hasBankDetails ? "Edit" : "Add"}
+                  </button>
+                )}
+                {/* Show Locked badge if locked */}
+                {isBankLocked && hasBankDetails && (
+                  <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 shrink-0 ml-1 sm:ml-2">
+                    <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked
+                  </span>
+                )}
               </div>
 
               {editingBank ? (
@@ -849,6 +836,17 @@ const Profile = () => {
                     />
                   </div>
 
+                  {/* Warning about lock after saving */}
+                  {!hasBankDetails && (
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                        <Lock className="w-3.5 h-3.5" />
+                        Bank details will be locked after saving. Contact admin
+                        to make changes later.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex justify-end gap-2 sm:gap-3 flex-wrap">
                     <button
                       type="button"
@@ -885,7 +883,7 @@ const Profile = () => {
                     </button>
                   </div>
                 </form>
-              ) : profileData?.bankDetails?.accountNumber ? (
+              ) : hasBankDetails ? (
                 <div className="space-y-2 sm:space-y-3 w-full">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 w-full">
                     <InfoTile
@@ -896,15 +894,26 @@ const Profile = () => {
                       label="Account Number"
                       value={profileData.bankDetails.accountNumber}
                     />
-                    <InfoTile
-                      label="Bank Name"
-                      value={profileData.bankDetails.bankName}
-                    />
+                    <div className="sm:col-span-2">
+                      <InfoTile
+                        label="Bank Name"
+                        value={profileData.bankDetails.bankName}
+                      />
+                    </div>
                   </div>
-                  {profileData.bankDetails.isLocked && (
+                  {isBankLocked ? (
+                    <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                        <Lock className="w-3.5 h-3.5" />
+                        Bank details are locked for security. Contact admin to
+                        request changes.
+                      </p>
+                    </div>
+                  ) : (
                     <p className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 pt-1">
-                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Locked for
-                      security — contact admin to request changes
+                      <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Your bank
+                      details will be locked for security after your next
+                      update.
                     </p>
                   )}
                 </div>
@@ -918,6 +927,10 @@ const Profile = () => {
                   </p>
                   <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                     Click "Add" above to set up your withdrawal account
+                  </p>
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-2">
+                    <Lock className="w-2.5 h-2.5 inline mr-0.5" /> Will be
+                    locked after saving
                   </p>
                 </div>
               )}

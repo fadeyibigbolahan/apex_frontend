@@ -192,13 +192,12 @@ const InvestmentDetails = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("Fetched investment data:", {
-        withdrawals: res.data.data.investment.withdrawals,
-        totalWithdrawn: res.data.data.investment.totalWithdrawn,
-        investmentStatus: res.data.data.investment.investmentStatus,
-        nextWithdrawalDate: res.data.data.investment.nextWithdrawalDate,
-        startDate: res.data.data.investment.startDate,
-      });
+      // 👇 ADD THIS CONSOLE LOG HERE
+      console.log("===== PAYMENT PROOF FROM API =====");
+      console.log("Full investment data:", res.data.data.investment);
+      console.log("Payment proof:", res.data.data.investment.paymentProof);
+      console.log("Filename:", res.data.data.investment.paymentProof?.filename);
+      console.log("==================================");
 
       setInvestment(res.data.data.investment);
       setError("");

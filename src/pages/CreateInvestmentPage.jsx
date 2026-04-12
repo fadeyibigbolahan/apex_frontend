@@ -22,6 +22,8 @@ import {
   RefreshCw,
   Building,
   CreditCard,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -50,6 +52,7 @@ const CreateInvestment = () => {
   const [success, setSuccess] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [showAllBanks, setShowAllBanks] = useState(false);
 
   const [formData, setFormData] = useState({
     plan: "",
@@ -254,16 +257,14 @@ const CreateInvestment = () => {
   const max =
     formData.plan === "apex1" ? settings.apex1_max : settings.apex2_max;
 
-  // Get the default bank account (first one or marked as default)
+  // Get bank accounts
+  const bankAccounts = settings.bankAccounts || [];
+  const hasMultipleBanks = bankAccounts.length > 1;
   const defaultBankAccount =
-    settings.bankAccounts?.find((acc) => acc.isDefault) ||
-    settings.bankAccounts?.[0];
+    bankAccounts.find((acc) => acc.isDefault) || bankAccounts[0];
 
-  const bankDetails = {
-    bankName: defaultBankAccount?.bankName || "First Bank Nigeria",
-    accountName: defaultBankAccount?.accountName || "Apex Trading Square",
-    accountNumber: defaultBankAccount?.accountNumber || "1234567890",
-  };
+  // Display banks - show first one by default, show all when expanded
+  const displayedBanks = showAllBanks ? bankAccounts : bankAccounts.slice(0, 1);
 
   /* ── investments disabled ── */
   if (!settings.investments_enabled)
@@ -603,51 +604,99 @@ const CreateInvestment = () => {
                 Upload Payment Proof
               </h2>
 
-              {/* Payment instructions - WITH DYNAMIC BANK ACCOUNTS */}
+              {/* Payment instructions - WITH DYNAMIC BANK ACCOUNTS AND EXPANDABLE LIST */}
               <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Building className="w-4 h-4 text-blue-600" />
-                  <p className="text-sm font-bold text-blue-900">
-                    Transfer to this account
-                  </p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Building className="w-4 h-4 text-blue-600" />
+                    <p className="text-sm font-bold text-blue-900">
+                      Transfer to these accounts
+                    </p>
+                  </div>
+                  {hasMultipleBanks && (
+                    <span className="text-[10px] font-semibold text-blue-600 bg-white/70 px-2 py-0.5 rounded-full">
+                      {bankAccounts.length} Accounts
+                    </span>
+                  )}
                 </div>
-                <div className="bg-white rounded-xl p-4 space-y-2.5">
-                  {[
-                    {
-                      label: "Bank Name",
-                      val: bankDetails.bankName,
-                      icon: Building,
-                    },
-                    {
-                      label: "Account Name",
-                      val: bankDetails.accountName,
-                      icon: CreditCard,
-                    },
-                    {
-                      label: "Account Number",
-                      val: bankDetails.accountNumber,
-                      icon: CreditCard,
-                    },
-                    {
-                      label: "Amount",
-                      val: fmt(parseFloat(formData.amount)),
-                      highlight: true,
-                    },
-                  ].map(({ label, val, highlight }) => (
-                    <div key={label} className="flex justify-between text-xs">
-                      <span className="text-gray-400">{label}</span>
-                      <span
-                        className={`font-semibold ${highlight ? "text-emerald-600 text-sm" : "text-gray-800"}`}
-                      >
-                        {val}
-                      </span>
+
+                <div className="space-y-3">
+                  {displayedBanks.map((bank, index) => (
+                    <div
+                      key={index}
+                      className={`bg-white rounded-xl p-4 space-y-2.5 ${!bank.isDefault && index > 0 ? "border border-blue-100" : ""}`}
+                    >
+                      {bank.isDefault && (
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
+                            Default
+                          </span>
+                        </div>
+                      )}
+                      {[
+                        {
+                          label: "Bank Name",
+                          val: bank.bankName,
+                          icon: Building,
+                        },
+                        {
+                          label: "Account Name",
+                          val: bank.accountName,
+                          icon: CreditCard,
+                        },
+                        {
+                          label: "Account Number",
+                          val: bank.accountNumber,
+                          icon: CreditCard,
+                        },
+                      ].map(({ label, val, icon: Icon }) => (
+                        <div
+                          key={label}
+                          className="flex justify-between text-xs"
+                        >
+                          <span className="text-gray-400 flex items-center gap-1">
+                            <Icon className="w-3 h-3" />
+                            {label}
+                          </span>
+                          <span className="font-semibold text-gray-800">
+                            {val}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-xs pt-1 border-t border-gray-50">
+                        <span className="text-gray-400">Amount</span>
+                        <span className="font-bold text-emerald-600 text-sm">
+                          {fmt(parseFloat(formData.amount))}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
-                {settings.bankAccounts?.length > 1 && (
-                  <p className="text-[11px] text-blue-600 mt-3 text-center">
-                    {settings.bankAccounts.length} bank accounts available.
-                    Contact support for other payment options.
+
+                {/* Expand/Collapse button for multiple banks */}
+                {hasMultipleBanks && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllBanks(!showAllBanks)}
+                    className="w-full mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
+                  >
+                    {showAllBanks ? (
+                      <>
+                        <ChevronUp className="w-3.5 h-3.5" />
+                        Show Less
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                        Show All {bankAccounts.length} Accounts
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {hasMultipleBanks && (
+                  <p className="text-[11px] text-blue-600 mt-3 text-center bg-white/50 py-2 rounded-lg">
+                    You can pay into any of the accounts above.
                   </p>
                 )}
               </div>

@@ -507,30 +507,7 @@ const Login = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.25 }}
           className="relative z-10 grid grid-cols-2 gap-3"
-        >
-          {[
-            { value: "15,000+", label: "Active investors", color: "#C084FC" },
-            { value: "₦1.25B+", label: "Total invested", color: "#A855F7" },
-            { value: "₦875M+", label: "Paid out to date", color: "#9333EA" },
-            { value: "99.8%", label: "On-time payments", color: "#D8B4FE" },
-          ].map((s, i) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 + i * 0.07 }}
-              className="glass-card rounded-xl px-4 py-3.5"
-            >
-              <p
-                className="text-xl font-bold mb-0.5"
-                style={{ color: s.color }}
-              >
-                {s.value}
-              </p>
-              <p className="text-xs text-gray-400">{s.label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+        ></motion.div>
       </div>
 
       {/* ── RIGHT PANEL ── */}

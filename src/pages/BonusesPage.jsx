@@ -134,6 +134,7 @@ const Bonuses = () => {
       const minAmount = data.minBonusWithdrawal || 10000;
       setMinBonusWithdrawal(minAmount);
 
+      console.log("Fetched bonuses:", data.bonuses);
       // 👇 Update active investment and bank details from response
       setHasActiveInvestment(data.hasActiveInvestment || false);
 
