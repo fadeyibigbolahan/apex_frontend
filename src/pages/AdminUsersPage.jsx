@@ -1,3 +1,4 @@
+// ACTIONS
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -38,6 +39,7 @@ import {
   EyeOff,
   Key,
   UserPlus,
+  ArrowUpRight,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
@@ -105,26 +107,6 @@ const InfoTile = ({ label, value, mono }) => (
     </p>
   </div>
 );
-
-const Nigerian_Banks = [
-  "Access Bank",
-  "Citibank",
-  "Ecobank",
-  "Fidelity Bank",
-  "First Bank",
-  "FCMB",
-  "GTBank",
-  "Heritage Bank",
-  "Keystone Bank",
-  "Polaris Bank",
-  "Stanbic IBTC",
-  "Standard Chartered",
-  "Sterling Bank",
-  "Union Bank",
-  "UBA",
-  "Wema Bank",
-  "Zenith Bank",
-];
 
 /* ═══════════════════════════════════════════════ */
 const AdminUsers = () => {
@@ -549,8 +531,7 @@ const AdminUsers = () => {
       Status: u.isBlocked ? "Blocked" : u.isActive ? "Active" : "Inactive",
       "Total Invested": u.totalInvested || 0,
       "Total Withdrawn": u.totalWithdrawn || 0,
-      "Referral Bonus": u.referralBonus || 0,
-      "Retrading Bonus": u.retradingBonus || 0,
+      Upline: u.upline?.fullName || u.upline?.email || "None",
       "Bank Details": u.bankDetails?.accountNumber ? "Yes" : "No",
       "Bank Locked": u.bankDetails?.isLocked ? "Yes" : "No",
       Joined: new Date(u.createdAt).toLocaleDateString(),
@@ -850,6 +831,7 @@ const AdminUsers = () => {
                 <tr className="border-b border-gray-100 bg-gray-50/60">
                   {[
                     "User",
+                    "Upline",
                     "Role / Status",
                     "Contact",
                     "Financials",
@@ -859,7 +841,7 @@ const AdminUsers = () => {
                   ].map((h) => (
                     <th
                       key={h}
-                      className={`px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest ${h === "Actions" ? "text-right" : ""}`}
+                      className={`px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap ${h === "Actions" ? "text-right" : ""}`}
                     >
                       {h}
                     </th>
@@ -880,11 +862,9 @@ const AdminUsers = () => {
                           {userInitial(u)}
                         </div>
                         <div className="min-w-0">
-                          {u.referralCode && (
-                            <p className="text-sm font-semibold text-black mt-0.5">
-                              {u.referralCode}
-                            </p>
-                          )}
+                          <p className="text-sm font-semibold text-black">
+                            {u.referralCode}
+                          </p>
                           <p className="text-xs text-gray-900 truncate">
                             {userName(u)}
                           </p>
@@ -893,6 +873,23 @@ const AdminUsers = () => {
                           </p>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {u.upline ? (
+                        <div className="flex items-center gap-1.5">
+                          <ArrowUpRight className="w-3 h-3 text-emerald-500" />
+                          <div>
+                            <p className="text-xs font-semibold text-gray-900">
+                              {u.upline.referralCode}
+                            </p>
+                            <p className="text-[10px] text-gray-400 truncate max-w-[120px]">
+                              {u.upline.email}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex flex-col gap-1">
@@ -923,16 +920,6 @@ const AdminUsers = () => {
                       <p className="text-[11px] text-gray-400 mt-0.5">
                         W: {fmt(u.totalWithdrawn)}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-violet-600 flex items-center gap-0.5">
-                          <Gift className="w-3 h-3" />
-                          {fmt(u.referralBonus)}
-                        </span>
-                        <span className="text-[10px] text-emerald-600 flex items-center gap-0.5">
-                          <TrendingUp className="w-3 h-3" />
-                          {fmt(u.retradingBonus)}
-                        </span>
-                      </div>
                     </td>
                     <td className="px-5 py-3.5">
                       {u.bankDetails?.accountNumber ? (
@@ -969,7 +956,7 @@ const AdminUsers = () => {
                             setSelectedUser(u);
                             setShowUserModal(true);
                           }}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium whitespace-nowrap"
                           title="View Details"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -977,7 +964,7 @@ const AdminUsers = () => {
                         </button>
                         <button
                           onClick={() => openEditUserModal(u)}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition text-xs font-medium whitespace-nowrap"
                           title="Edit User"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -985,7 +972,7 @@ const AdminUsers = () => {
                         </button>
                         <button
                           onClick={() => openBankModal(u)}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 transition text-xs font-medium"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 transition text-xs font-medium whitespace-nowrap"
                           title="Edit Bank"
                         >
                           <CreditCard className="w-3.5 h-3.5" />
@@ -993,7 +980,7 @@ const AdminUsers = () => {
                         </button>
                         <button
                           onClick={() => openReferralsModal(u)}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-purple-50 text-purple-600 transition text-xs font-medium"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-purple-50 text-purple-600 transition text-xs font-medium whitespace-nowrap"
                           title="View Referrals"
                         >
                           <UserPlus className="w-3.5 h-3.5" />
@@ -1003,7 +990,7 @@ const AdminUsers = () => {
                           onClick={() =>
                             setBlockAction({ show: true, user: u })
                           }
-                          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition text-xs font-medium ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition text-xs font-medium whitespace-nowrap ${
                             u.isBlocked
                               ? "hover:bg-emerald-50 text-emerald-600"
                               : "hover:bg-red-50 text-red-500"
@@ -1311,6 +1298,33 @@ const AdminUsers = () => {
               </div>
             </div>
 
+            {/* Upline Info */}
+            {selectedUser.upline && (
+              <div className="bg-emerald-50 rounded-xl p-4 mb-5">
+                <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2">
+                  Referred By (Upline)
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                    {selectedUser.upline.firstName?.[0] ||
+                      selectedUser.upline.email?.[0] ||
+                      "U"}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {selectedUser.upline.fullName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {selectedUser.upline.email}
+                    </p>
+                    <p className="text-[10px] text-emerald-600 font-mono">
+                      Referral Code: {selectedUser.upline.referralCode}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* info tiles */}
             <div className="grid grid-cols-2 gap-3 mb-5">
               <InfoTile label="User ID" value={selectedUser._id} mono />
@@ -1344,18 +1358,6 @@ const AdminUsers = () => {
                   color: "text-emerald-600",
                   bg: "bg-emerald-50",
                 },
-                {
-                  label: "Referral Bonus",
-                  val: fmt(selectedUser.referralBonus),
-                  color: "text-violet-600",
-                  bg: "bg-violet-50",
-                },
-                {
-                  label: "Retrading Bonus",
-                  val: fmt(selectedUser.retradingBonus),
-                  color: "text-amber-600",
-                  bg: "bg-amber-50",
-                },
               ].map(({ label, val, color, bg }) => (
                 <div key={label} className={`${bg} rounded-xl p-3`}>
                   <p
@@ -1366,6 +1368,122 @@ const AdminUsers = () => {
                   <p className={`text-base font-bold ${color}`}>{val}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Bonus Breakdown */}
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Bonus Breakdown
+            </p>
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              {/* Referral Bonus */}
+              <div className="bg-violet-50 rounded-xl p-3">
+                <p className="text-[10px] text-violet-700 uppercase tracking-wide mb-2">
+                  Referral Bonus
+                </p>
+                <div className="space-y-1.5">
+                  {[
+                    {
+                      label: "Available",
+                      value:
+                        selectedUser.bonusBreakdown?.referral?.available || 0,
+                      color: "text-emerald-600",
+                    },
+                    {
+                      label: "Pending",
+                      value:
+                        selectedUser.bonusBreakdown?.referral?.pending || 0,
+                      color: "text-amber-600",
+                    },
+                    {
+                      label: "Withdrawn",
+                      value:
+                        selectedUser.bonusBreakdown?.referral?.withdrawn || 0,
+                      color: "text-gray-500",
+                    },
+                    {
+                      label: "Pending Withdrawal",
+                      value:
+                        selectedUser.bonusBreakdown?.referral
+                          ?.pending_withdrawal || 0,
+                      color: "text-blue-600",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex justify-between text-xs"
+                    >
+                      <span className="text-gray-600">{item.label}:</span>
+                      <span className={`font-semibold ${item.color}`}>
+                        {fmt(item.value)}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="pt-1 mt-1 border-t border-violet-200">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-700">Total:</span>
+                      <span className="text-violet-700">
+                        {fmt(selectedUser.bonusBreakdown?.referral?.total || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Retrading Bonus */}
+              <div className="bg-amber-50 rounded-xl p-3">
+                <p className="text-[10px] text-amber-700 uppercase tracking-wide mb-2">
+                  Retrading Bonus
+                </p>
+                <div className="space-y-1.5">
+                  {[
+                    {
+                      label: "Available",
+                      value:
+                        selectedUser.bonusBreakdown?.retrading?.available || 0,
+                      color: "text-emerald-600",
+                    },
+                    {
+                      label: "Pending",
+                      value:
+                        selectedUser.bonusBreakdown?.retrading?.pending || 0,
+                      color: "text-amber-600",
+                    },
+                    {
+                      label: "Withdrawn",
+                      value:
+                        selectedUser.bonusBreakdown?.retrading?.withdrawn || 0,
+                      color: "text-gray-500",
+                    },
+                    {
+                      label: "Pending Withdrawal",
+                      value:
+                        selectedUser.bonusBreakdown?.retrading
+                          ?.pending_withdrawal || 0,
+                      color: "text-blue-600",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex justify-between text-xs"
+                    >
+                      <span className="text-gray-600">{item.label}:</span>
+                      <span className={`font-semibold ${item.color}`}>
+                        {fmt(item.value)}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="pt-1 mt-1 border-t border-amber-200">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-gray-700">Total:</span>
+                      <span className="text-amber-700">
+                        {fmt(
+                          selectedUser.bonusBreakdown?.retrading?.total || 0,
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* bank */}
@@ -1982,6 +2100,22 @@ const AdminUsers = () => {
                 </p>
                 <p className="text-[10px] text-purple-600">Total Referrals</p>
               </div>
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-3 text-center">
+                <CheckCircle className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
+                <p className="text-xl font-bold text-emerald-700">
+                  {referralsStats.activeReferrals}
+                </p>
+                <p className="text-[10px] text-emerald-600">
+                  Active (Bonus Paid)
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-3 text-center">
+                <Gift className="w-4 h-4 text-amber-600 mx-auto mb-1" />
+                <p className="text-base font-bold text-amber-700">
+                  {fmt(referralsStats.totalBonus)}
+                </p>
+                <p className="text-[10px] text-amber-600">Total Bonus Earned</p>
+              </div>
             </div>
 
             {/* Referrals List */}
@@ -1994,7 +2128,7 @@ const AdminUsers = () => {
                 <RefreshCw className="w-5 h-5 text-purple-500 animate-spin" />
               </div>
             ) : referralsData.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {referralsData.map((ref, idx) => (
                   <div
                     key={ref.user?._id || idx}
@@ -2009,7 +2143,7 @@ const AdminUsers = () => {
                               "U"}
                           </div>
                           <p className="text-sm font-semibold text-gray-900 truncate">
-                            {ref.user?.referralCode}
+                            {ref.user?.referralCode || "No Code"}
                           </p>
                         </div>
                         {ref.user?.email && (
@@ -2026,7 +2160,7 @@ const AdminUsers = () => {
                           </span>
                         </div>
                       </div>
-                      {/* <div className="shrink-0">
+                      <div className="shrink-0">
                         {ref.bonusPaid ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
                             <CheckCircle className="w-2.5 h-2.5" />
@@ -2042,7 +2176,7 @@ const AdminUsers = () => {
                             No Investment
                           </span>
                         )}
-                      </div> */}
+                      </div>
                     </div>
                   </div>
                 ))}
