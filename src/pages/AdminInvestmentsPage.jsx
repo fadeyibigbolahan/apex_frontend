@@ -45,6 +45,9 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
 
+// Define upload base URL (without /api)
+const UPLOAD_BASE_URL = "https://api.apextradingsquare.com";
+
 const AdminInvestments = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -101,6 +104,32 @@ const AdminInvestments = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 20;
+
+  // Helper to get image URL from payment proof object
+  const getProofImageUrl = (proof) => {
+    if (!proof) return "";
+
+    // If it has a URL property, use it
+    if (proof.url) return proof.url;
+
+    // Get filename from either filename or path property
+    const filename =
+      proof.filename || (proof.path ? proof.path.split("/").pop() : "");
+
+    if (!filename) return "";
+
+    // If filename already includes http, return as is
+    if (filename.startsWith("http")) return filename;
+
+    // Construct the URL using the upload base URL
+    return `${UPLOAD_BASE_URL}/uploads/${filename}`;
+  };
+
+  // Helper to get filename from payment proof object
+  const getProofFilename = (proof) => {
+    if (!proof) return "";
+    return proof.filename || (proof.path ? proof.path.split("/").pop() : "");
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1029,7 +1058,7 @@ const AdminInvestments = () => {
                         variants={fadeUp}
                         initial="hidden"
                         animate="visible"
-                        className={`hover:bg-gray-50/60 transition-colors ${isDeclined ? "bg-red-50/30" : ""}`}
+                        className={`hover:bg-gray/50/60 transition-colors ${isDeclined ? "bg-red-50/30" : ""}`}
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
@@ -2074,7 +2103,7 @@ const AdminInvestments = () => {
         )}
       </AnimatePresence>
 
-      {/* Payment Proof Modal */}
+      {/* Payment Proof Modal - FIXED */}
       <AnimatePresence>
         {showProofModal && proofImage && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -2096,28 +2125,39 @@ const AdminInvestments = () => {
                 </button>
               </div>
               <div className="p-4 bg-gray-50">
-                {proofImage.filename?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                  <img
-                    src={`${url}uploads/${proofImage.filename}`}
-                    alt="Payment proof"
-                    className="w-full rounded-lg object-contain max-h-[60vh]"
-                  />
-                ) : (
-                  <div className="text-center py-12">
-                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-sm text-gray-600 mb-3">
-                      {proofImage.filename}
-                    </p>
-                    <a
-                      href={`${url}uploads/${proofImage.filename}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
-                    >
-                      <DownloadIcon className="w-4 h-4" /> Download file
-                    </a>
-                  </div>
-                )}
+                {(() => {
+                  const imageUrl = getProofImageUrl(proofImage);
+                  const filename = getProofFilename(proofImage);
+
+                  return filename?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <img
+                      src={imageUrl}
+                      alt="Payment proof"
+                      className="w-full rounded-lg object-contain max-h-[60vh]"
+                      onError={(e) => {
+                        console.error("Failed to load image:", imageUrl);
+                        // Optionally show a fallback
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center py-12">
+                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-sm text-gray-600 mb-3">
+                        {filename || "Unknown file"}
+                      </p>
+                      {imageUrl && (
+                        <a
+                          href={imageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
+                        >
+                          <DownloadIcon className="w-4 h-4" /> Download file
+                        </a>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </motion.div>
           </div>

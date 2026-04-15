@@ -27,6 +27,32 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { url } from "../../api";
 
+// Helper to get image URL from payment proof object
+const getProofImageUrl = (proof) => {
+  if (!proof) return "";
+
+  // If it has a URL property, use it
+  if (proof.url) return proof.url;
+
+  // Get filename from either filename or path property
+  const filename =
+    proof.filename || (proof.path ? proof.path.split("/").pop() : "");
+
+  if (!filename) return "";
+
+  // If filename already includes http, return as is
+  if (filename.startsWith("http")) return filename;
+
+  // Construct the URL using the correct base URL (without /api)
+  return `https://api.apextradingsquare.com/uploads/${filename}`;
+};
+
+// Helper to get filename from payment proof object
+const getProofFilename = (proof) => {
+  if (!proof) return "";
+  return proof.filename || (proof.path ? proof.path.split("/").pop() : "");
+};
+
 /* ── animation ── */
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -1197,30 +1223,38 @@ const InvestmentDetails = () => {
             </div>
 
             <div className="p-6">
-              {investment.paymentProof.filename?.match(
-                /\.(jpg|jpeg|png|gif)$/i,
-              ) ? (
-                <img
-                  src={`${url}uploads/${investment.paymentProof.filename}`}
-                  alt="Payment Proof"
-                  className="w-full rounded-xl border border-gray-100"
-                />
-              ) : (
-                <div className="flex flex-col items-center text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
-                  <FileText className="w-12 h-12 text-gray-300 mb-3" />
-                  <p className="text-sm text-gray-600 mb-4">
-                    {investment.paymentProof.filename}
-                  </p>
-                  <a
-                    href={`${url}uploads/${investment.paymentProof.filename}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition"
-                  >
-                    <Download className="w-3.5 h-3.5" /> Download File
-                  </a>
-                </div>
-              )}
+              {(() => {
+                const imageUrl = getProofImageUrl(investment.paymentProof);
+                const filename = getProofFilename(investment.paymentProof);
+
+                return filename?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                  <img
+                    src={imageUrl}
+                    alt="Payment Proof"
+                    className="w-full rounded-xl border border-gray-100"
+                    onError={(e) => {
+                      console.error("Failed to load image:", imageUrl);
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
+                    <FileText className="w-12 h-12 text-gray-300 mb-3" />
+                    <p className="text-sm text-gray-600 mb-4">
+                      {filename || "Unknown file"}
+                    </p>
+                    {imageUrl && (
+                      <a
+                        href={imageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download File
+                      </a>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </motion.div>
         </div>
