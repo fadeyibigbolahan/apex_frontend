@@ -118,8 +118,7 @@ const Withdrawals = () => {
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
-  // 👇 NEW: State for minimum withdrawal amounts
-  const [minInvestmentAmount, setMinInvestmentAmount] = useState(10000);
+  // State for minimum bonus withdrawal amount
   const [minBonusAmount, setMinBonusAmount] = useState(10000);
 
   const [requestForm, setRequestForm] = useState({
@@ -192,13 +191,8 @@ const Withdrawals = () => {
       const data = res.data.data;
       const avail = data.available || [];
 
-      // 👇 Store minimum withdrawal amounts from backend
-      setMinInvestmentAmount(data.investmentMinAmount || 10000);
+      // Store minimum bonus withdrawal amount from backend
       setMinBonusAmount(data.bonusAvailable?.minAmount || 10000);
-
-      console.log("Available withdrawals:", avail);
-      console.log("Min investment amount:", data.investmentMinAmount);
-      console.log("Min bonus amount:", data.bonusAvailable?.minAmount);
 
       setAvailableWithdrawals(avail);
       if (avail.length > 0) {
@@ -246,50 +240,9 @@ const Withdrawals = () => {
     }));
   };
 
-  // 👇 NEW: Validate withdrawal amount before submitting
-  const validateWithdrawalRequest = () => {
-    if (requestForm.fromBonus) {
-      // Get total bonus amount from available withdrawals
-      const totalBonusAmount = availableWithdrawals.reduce(
-        (sum, w) => sum + w.amount,
-        0,
-      );
-
-      if (totalBonusAmount < minBonusAmount) {
-        setRequestError(
-          `Minimum bonus withdrawal amount is ${formatCurrency(minBonusAmount)} NGN. ` +
-            `Your total available bonus is ${formatCurrency(totalBonusAmount)} NGN.`,
-        );
-        return false;
-      }
-    } else {
-      // Find the selected investment
-      const selectedInvestment = availableWithdrawals.find(
-        (w) => w.id === requestForm.investmentId,
-      );
-
-      if (
-        selectedInvestment &&
-        selectedInvestment.amount < minInvestmentAmount
-      ) {
-        setRequestError(
-          `Minimum investment withdrawal amount is ${formatCurrency(minInvestmentAmount)} NGN. ` +
-            `This withdrawal amount is ${formatCurrency(selectedInvestment.amount)} NGN.`,
-        );
-        return false;
-      }
-    }
-    return true;
-  };
-
   const handleRequestWithdrawal = async (e) => {
     e.preventDefault();
     setRequestError("");
-
-    // 👇 Validate against minimum amounts before sending to backend
-    if (!validateWithdrawalRequest()) {
-      return;
-    }
 
     setRequestLoading(true);
     try {
@@ -461,7 +414,7 @@ const Withdrawals = () => {
         </motion.div>
       </motion.div>
 
-      {/* ── MINIMUM AMOUNT INFO BANNER ── */}
+      {/* ── MINIMUM BONUS INFO BANNER ── */}
       <motion.div
         variants={fadeUp}
         initial="hidden"
@@ -598,11 +551,6 @@ const Withdrawals = () => {
                 className="px-3 py-1 bg-white/8 border border-white/10 rounded-full text-xs text-white/60"
               >
                 {fmt(w.amount)} · {w.plan?.toUpperCase()}
-                {w.amount < minInvestmentAmount && (
-                  <span className="ml-1 text-red-400 text-[10px]">
-                    (Below min: {fmt(minInvestmentAmount)})
-                  </span>
-                )}
               </span>
             ))}
           </div>
@@ -1120,7 +1068,6 @@ const Withdrawals = () => {
                       {
                         fromBonus: false,
                         label: "Investment Withdrawal",
-                        // sub: `Min: ${fmt(minInvestmentAmount)}`,
                         active:
                           "border-blue-500 bg-blue-50 dark:bg-blue-900/30",
                       },
@@ -1198,30 +1145,9 @@ const Withdrawals = () => {
                           <option key={w.id} value={w.id}>
                             {w.plan?.toUpperCase()} · {fmt(w.amount)} ·{" "}
                             {fmtDate(w.nextWithdrawalDate)}
-                            {w.amount < minInvestmentAmount &&
-                              " ⚠️ Below minimum"}
                           </option>
                         ))}
                       </select>
-                      {requestForm.investmentId &&
-                        (() => {
-                          const selected = availableWithdrawals.find(
-                            (w) => w.id === requestForm.investmentId,
-                          );
-                          if (
-                            selected &&
-                            selected.amount < minInvestmentAmount
-                          ) {
-                            return (
-                              <p className="text-xs text-red-500 mt-2">
-                                ⚠️ This withdrawal amount (
-                                {fmt(selected.amount)}) is below the minimum
-                                requirement of {fmt(minInvestmentAmount)}.
-                              </p>
-                            );
-                          }
-                          return null;
-                        })()}
                     </div>
                   )}
 

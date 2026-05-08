@@ -454,8 +454,8 @@ const CreateInvestment = () => {
                 })}
               </div>
 
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
-                <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
+                <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-blue-800">
                     Investment Rule

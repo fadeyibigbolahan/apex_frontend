@@ -215,7 +215,6 @@ const AdminSettings = () => {
   });
 
   const [withdrawalForm, setWithdrawalForm] = useState({
-    min_investment_withdrawal: 10000,
     min_bonus_withdrawal: 10000,
   });
 
@@ -282,8 +281,6 @@ const AdminSettings = () => {
 
       // Set withdrawal minimums
       setWithdrawalForm({
-        min_investment_withdrawal:
-          withdrawalMinimumsRes.data.data.minInvestmentWithdrawal || 10000,
         min_bonus_withdrawal:
           withdrawalMinimumsRes.data.data.minBonusWithdrawal || 10000,
       });
@@ -1020,27 +1017,6 @@ const AdminSettings = () => {
                       </div>
                     </Section>
 
-                    {/* <Section
-                      title="General rules"
-                      icon={Settings}
-                      iconColor="text-gray-600"
-                      iconBg="bg-gray-100 dark:bg-gray-700"
-                    >
-                      <div className="space-y-4">
-                        <ToggleRow
-                          label="Count working days only"
-                          description="Exclude weekends from investment duration"
-                          checked={investmentForm.workingDaysOnly}
-                          onChange={() =>
-                            setInvestmentForm({
-                              ...investmentForm,
-                              workingDaysOnly: !investmentForm.workingDaysOnly,
-                            })
-                          }
-                        />
-                      </div>
-                    </Section> */}
-
                     <SaveButton
                       onClick={saveInvestmentSettings}
                       saving={saving}
@@ -1147,9 +1123,6 @@ const AdminSettings = () => {
                           {investmentWithdrawalsEnabled
                             ? "Enabled"
                             : "Disabled"}
-                        </p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          Min: {fmt(withdrawalForm.min_investment_withdrawal)}
                         </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
